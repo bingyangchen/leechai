@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-
-import 'package:mobile/features/accounting/presentation/pages/new_record.dart';
+import 'package:mobile/app/main_shell.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
 
 void main() {
   runApp(const MainApp());
@@ -12,23 +12,11 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Builder(
-        builder: (context) => Scaffold(
-          body: const Center(
-            child: Text('Hello World!'),
-          ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (context) => const NewRecordPage(),
-                ),
-              );
-            },
-            child: const Icon(Icons.add),
-          ),
-        ),
-      ),
+      title: 'Leechai',
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: ThemeMode.system,
+      home: const MainShell(),
     );
   }
 }
