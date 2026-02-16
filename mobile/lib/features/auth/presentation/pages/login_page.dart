@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// 登入/註冊頁（之後實作）
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
 

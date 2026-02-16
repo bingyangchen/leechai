@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// 資產 — 管理現金、銀行卡、信用卡、電子支付的餘額
 class AssetsPage extends StatelessWidget {
   const AssetsPage({super.key});
 
