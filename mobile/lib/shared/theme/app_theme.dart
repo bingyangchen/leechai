@@ -4,35 +4,55 @@ import 'package:mobile/core/constants/category_constants.dart';
 class AppTheme {
   AppTheme._();
 
-  static ThemeData get light => ThemeData(
-    useMaterial3: true,
-    colorScheme: ColorScheme.fromSeed(
+  static ThemeData get light {
+    final colorScheme = ColorScheme.fromSeed(
       seedColor: Colors.teal,
       brightness: Brightness.light,
       primary: Colors.teal,
-    ),
-    extensions: [
-      _AccountingColors(
-        income: CategoryConstants.incomeColor,
-        expense: CategoryConstants.expenseColor,
+    );
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: colorScheme,
+      appBarTheme: AppBarTheme(
+        toolbarHeight: 36,
+        titleTextStyle: TextStyle(
+          fontSize: 16,
+          color: colorScheme.onSurface,
+        ),
       ),
-    ],
-  );
+      extensions: [
+        _AccountingColors(
+          income: CategoryConstants.incomeColor,
+          expense: CategoryConstants.expenseColor,
+        ),
+      ],
+    );
+  }
 
-  static ThemeData get dark => ThemeData(
-    useMaterial3: true,
-    colorScheme: ColorScheme.fromSeed(
+  static ThemeData get dark {
+    final colorScheme = ColorScheme.fromSeed(
       seedColor: Colors.teal,
       brightness: Brightness.dark,
       primary: Colors.teal,
-    ),
-    extensions: [
-      _AccountingColors(
-        income: CategoryConstants.incomeColor,
-        expense: CategoryConstants.expenseColor,
+    );
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: colorScheme,
+      appBarTheme: AppBarTheme(
+        toolbarHeight: 36,
+        titleTextStyle: TextStyle(
+          fontSize: 16,
+          color: colorScheme.onSurface,
+        ),
       ),
-    ],
-  );
+      extensions: [
+        _AccountingColors(
+          income: CategoryConstants.incomeColor,
+          expense: CategoryConstants.expenseColor,
+        ),
+      ],
+    );
+  }
 }
 
 class _AccountingColors extends ThemeExtension<_AccountingColors> {
