@@ -19,7 +19,6 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-# Launcher name（各平台 app 顯示名稱），改這裡後執行: dart run names_launcher:change
 names_launcher:
   name: "Leechai"
   platforms:
@@ -28,10 +27,4 @@ names_launcher:
     ios:
       enable: true
     macos:
-      enable: true
-    web:
-      enable: true
-    linux:
-      enable: true
-    windows:
       enable: true
