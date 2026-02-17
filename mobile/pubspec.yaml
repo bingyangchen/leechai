@@ -26,5 +26,3 @@ names_launcher:
       enable: true
     ios:
       enable: true
-    macos:
-      enable: true
