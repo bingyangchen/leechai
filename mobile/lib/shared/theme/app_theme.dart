@@ -13,6 +13,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
+      dividerColor: Colors.grey.shade200,
       appBarTheme: AppBarTheme(
         toolbarHeight: 36,
         titleTextStyle: TextStyle(
@@ -38,6 +39,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
+      dividerColor: Colors.grey.shade600,
       appBarTheme: AppBarTheme(
         toolbarHeight: 36,
         titleTextStyle: TextStyle(
