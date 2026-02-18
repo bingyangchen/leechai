@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// 設定 — 分類管理、預算設定、固定收支、匯出資料、帳號資訊
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
