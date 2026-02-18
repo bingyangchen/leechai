@@ -45,12 +45,21 @@ class _MainShellState extends State<MainShell> {
       ),
       floatingActionButton: _currentIndex < 3
           ? FloatingActionButton(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
+              onPressed: () async {
+                final added = await Navigator.of(context).push<bool>(
+                  MaterialPageRoute<bool>(
                     builder: (context) => const NewRecordPage(),
                   ),
                 );
+                if (!context.mounted) return;
+                if (added == true) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('紀錄已新增'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
               },
               child: const Icon(Icons.add),
             )
