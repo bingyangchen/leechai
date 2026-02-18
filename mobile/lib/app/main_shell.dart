@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/features/accounting/presentation/pages/journal_page.dart';
+import 'package:mobile/features/accounting/presentation/pages/new_record_page.dart';
 import 'package:mobile/features/assets/presentation/pages/assets_page.dart';
 import 'package:mobile/features/settings/presentation/pages/settings_page.dart';
 import 'package:mobile/features/statistics/presentation/pages/analysis_page.dart';
@@ -42,6 +43,18 @@ class _MainShellState extends State<MainShell> {
         onPageChanged: (index) => setState(() => _currentIndex = index),
         children: _pages,
       ),
+      floatingActionButton: _currentIndex < 3
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (context) => const NewRecordPage(),
+                  ),
+                );
+              },
+              child: const Icon(Icons.add),
+            )
+          : null,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
