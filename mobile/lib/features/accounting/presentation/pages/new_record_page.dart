@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile/core/constants/record_type_constants.dart';
 import 'package:mobile/features/accounting/domain/account_item.dart';
+import 'package:mobile/shared/utils/date_time_utils.dart';
 import 'package:mobile/shared/widgets/date_time_picker_sheet.dart';
 
 class NewRecordPage extends StatefulWidget {
@@ -47,6 +48,7 @@ class _NewRecordPageState extends State<NewRecordPage>
     _notesController.addListener(() => setState(() {}));
     _tabController.addListener(_syncRecordTypeFromTab);
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _applyDefaultAccounts();
       _amountFocusNode.requestFocus();
     });
   }
@@ -55,6 +57,7 @@ class _NewRecordPageState extends State<NewRecordPage>
     if (!_tabController.indexIsChanging && mounted) {
       final index = _tabController.index;
       setState(() => _recordType = RecordType.values[index]);
+      _applyDefaultAccounts();
       _pageController.jumpToPage(index);
     }
   }
@@ -64,6 +67,7 @@ class _NewRecordPageState extends State<NewRecordPage>
       _tabController.animateTo(index);
     }
     setState(() => _recordType = RecordType.values[index]);
+    _applyDefaultAccounts();
   }
 
   @override
@@ -108,6 +112,41 @@ class _NewRecordPageState extends State<NewRecordPage>
 
   List<AccountItem> get _accounts => placeholderAccounts;
 
+  void _applyDefaultAccounts() {
+    if (_recordType.isDualAccount) {
+      final fromList = filterAccountsForRecordType(
+        _accounts,
+        recordType: _recordType,
+        isFrom: true,
+      );
+      final toList = filterAccountsForRecordType(
+        _accounts,
+        recordType: _recordType,
+        isFrom: false,
+      );
+      setState(() {
+        _selectedAccountFromId = fromList.isNotEmpty ? fromList.first.id : null;
+        if (toList.isEmpty) {
+          _selectedAccountToId = null;
+        } else {
+          final other = toList
+              .where((a) => a.id != _selectedAccountFromId)
+              .toList();
+          _selectedAccountToId = other.isNotEmpty ? other.first.id : null;
+        }
+      });
+    } else {
+      final list = filterAccountsForRecordType(
+        _accounts,
+        recordType: _recordType,
+        isFrom: _recordType == RecordType.expense,
+      );
+      setState(() {
+        _selectedAccountId = list.isNotEmpty ? list.first.id : null;
+      });
+    }
+  }
+
   String? _accountName(String? id) {
     if (id == null) return null;
     try {
@@ -149,6 +188,7 @@ class _NewRecordPageState extends State<NewRecordPage>
       context,
       list,
       (a) => setState(() => _selectedAccountFromId = a.id),
+      excludeAccountId: _selectedAccountToId,
     );
   }
 
@@ -162,14 +202,16 @@ class _NewRecordPageState extends State<NewRecordPage>
       context,
       list,
       (a) => setState(() => _selectedAccountToId = a.id),
+      excludeAccountId: _selectedAccountFromId,
     );
   }
 
   static void _showAccountBottomSheet(
     BuildContext context,
     List<AccountItem> accounts,
-    ValueChanged<AccountItem> onSelect,
-  ) {
+    ValueChanged<AccountItem> onSelect, {
+    String? excludeAccountId,
+  }) {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -201,16 +243,33 @@ class _NewRecordPageState extends State<NewRecordPage>
                 itemCount: accounts.length,
                 itemBuilder: (context, index) {
                   final a = accounts[index];
+                  final isDisabled =
+                      excludeAccountId != null && a.id == excludeAccountId;
                   return ListTile(
                     leading: Icon(
                       a.displayIcon,
-                      color: Theme.of(context).colorScheme.primary,
+                      color: isDisabled
+                          ? Theme.of(context).colorScheme.onSurfaceVariant
+                                .withValues(alpha: 0.5)
+                          : Theme.of(context).colorScheme.primary,
                     ),
-                    title: Text(a.name),
-                    onTap: () {
-                      onSelect(a);
-                      Navigator.of(ctx).pop();
-                    },
+                    title: Text(
+                      a.name,
+                      style: isDisabled
+                          ? TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant
+                                  .withValues(alpha: 0.5),
+                            )
+                          : null,
+                    ),
+                    onTap: isDisabled
+                        ? null
+                        : () {
+                            onSelect(a);
+                            Navigator.of(ctx).pop();
+                          },
                   );
                 },
               ),
@@ -553,19 +612,6 @@ class _MetaDataBar extends StatelessWidget {
   final VoidCallback onAccountFromTap;
   final VoidCallback onAccountToTap;
 
-  static String _formatDateTime(DateTime d) {
-    final h24 = d.hour;
-    final hour12 = h24 == 0 ? 12 : (h24 > 12 ? h24 - 12 : h24);
-    final ampm = h24 < 12 ? 'AM' : 'PM';
-    final timeStr =
-        '${hour12.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')} $ampm';
-    final now = DateTime.now();
-    if (d.year != now.year) {
-      return '${d.year}/${d.month}/${d.day} $timeStr';
-    }
-    return '${d.month}/${d.day} $timeStr';
-  }
-
   @override
   Widget build(BuildContext context) {
     final isDual = recordType.isDualAccount;
@@ -579,7 +625,7 @@ class _MetaDataBar extends StatelessWidget {
             children: [
               _MetaChip(
                 icon: Icons.calendar_today_outlined,
-                label: _formatDateTime(selectedDate),
+                label: formatDateTimeShort(selectedDate),
                 onTap: onDateTap,
               ),
             ],
