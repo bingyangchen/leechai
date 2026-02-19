@@ -517,7 +517,11 @@ class _MetaDataBar extends StatelessWidget {
                 label: _formatDateTime(selectedDate),
                 onTap: onDateTap,
               ),
-              const SizedBox(width: 12),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
               if (isDual) ...[
                 _AccountChip(
                   account: fromAccount,
