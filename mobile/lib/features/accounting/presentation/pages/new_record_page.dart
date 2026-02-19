@@ -699,7 +699,7 @@ class _CategorySection extends StatelessWidget {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: _mainCategories.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              separatorBuilder: (_, index) => const SizedBox(width: 8),
               itemBuilder: (context, index) {
                 final cat = _mainCategories[index];
                 final selected = index == selectedMainIndex;
