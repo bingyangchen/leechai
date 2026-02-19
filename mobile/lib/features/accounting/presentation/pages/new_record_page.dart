@@ -22,7 +22,6 @@ class _NewRecordPageState extends State<NewRecordPage>
   late TabController _tabController;
   late PageController _pageController;
   bool _isSubmitting = false;
-
   RecordType _recordType = RecordType.expense;
   DateTime _selectedDate = DateTime.now();
   int _selectedMainCategoryIndex = 0;
@@ -180,23 +179,43 @@ class _NewRecordPageState extends State<NewRecordPage>
         minChildSize: 0.3,
         maxChildSize: 0.9,
         expand: false,
-        builder: (_, scrollController) => ListView.builder(
-          controller: scrollController,
-          itemCount: accounts.length,
-          itemBuilder: (context, index) {
-            final a = accounts[index];
-            return ListTile(
-              leading: Icon(
-                a.displayIcon,
-                color: Theme.of(context).colorScheme.primary,
+        builder: (_, scrollController) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 12, bottom: 8),
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Theme.of(
+                    ctx,
+                  ).colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-              title: Text(a.name),
-              onTap: () {
-                onSelect(a);
-                Navigator.of(ctx).pop();
-              },
-            );
-          },
+            ),
+            Expanded(
+              child: ListView.builder(
+                controller: scrollController,
+                itemCount: accounts.length,
+                itemBuilder: (context, index) {
+                  final a = accounts[index];
+                  return ListTile(
+                    leading: Icon(
+                      a.displayIcon,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    title: Text(a.name),
+                    onTap: () {
+                      onSelect(a);
+                      Navigator.of(ctx).pop();
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -379,6 +398,52 @@ class _NewRecordPageState extends State<NewRecordPage>
         ),
       ),
     );
+  }
+}
+
+String _stripAmount(String value) => value.replaceAll(',', '').trim();
+
+class _ThousandsSeparatorInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final raw = newValue.text.replaceAll(',', '');
+    final buffer = StringBuffer();
+    var hasDot = false;
+    var decimalCount = 0;
+    for (var i = 0; i < raw.length; i++) {
+      final c = raw[i];
+      if (c == '.') {
+        if (hasDot) break;
+        hasDot = true;
+        buffer.write(c);
+      } else if (c.codeUnitAt(0) >= 0x30 && c.codeUnitAt(0) <= 0x39) {
+        if (hasDot) {
+          if (decimalCount >= 2) continue;
+          decimalCount++;
+        }
+        buffer.write(c);
+      }
+    }
+    final valid = buffer.toString();
+    final formatted = _addThousandsSeparators(valid);
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+
+  static final _integerFormat = NumberFormat('#,##0');
+
+  static String _addThousandsSeparators(String numStr) {
+    if (numStr.isEmpty) return numStr;
+    final parts = numStr.split('.');
+    final intPart = parts[0].isEmpty ? '0' : parts[0];
+    final decPart = parts.length > 1 ? parts[1] : '';
+    final formatted = _integerFormat.format(int.tryParse(intPart) ?? 0);
+    return decPart.isEmpty ? formatted : '$formatted.$decPart';
   }
 }
 
