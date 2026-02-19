@@ -14,6 +14,11 @@ class AppTheme {
       useMaterial3: true,
       colorScheme: colorScheme,
       dividerColor: Colors.grey.shade200,
+      inputDecorationTheme: InputDecorationTheme(
+        hintStyle: TextStyle(
+          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+        ),
+      ),
       appBarTheme: AppBarTheme(
         toolbarHeight: 36,
         titleTextStyle: TextStyle(
@@ -40,6 +45,11 @@ class AppTheme {
       useMaterial3: true,
       colorScheme: colorScheme,
       dividerColor: Colors.grey.shade600,
+      inputDecorationTheme: InputDecorationTheme(
+        hintStyle: TextStyle(
+          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+        ),
+      ),
       appBarTheme: AppBarTheme(
         toolbarHeight: 36,
         titleTextStyle: TextStyle(

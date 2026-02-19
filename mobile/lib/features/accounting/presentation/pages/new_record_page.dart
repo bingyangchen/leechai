@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:mobile/core/constants/record_type_constants.dart';
 import 'package:mobile/features/accounting/domain/account_item.dart';
+import 'package:mobile/shared/utils/date_time_utils.dart';
 import 'package:mobile/shared/widgets/date_time_picker_sheet.dart';
 
 class NewRecordPage extends StatefulWidget {
@@ -21,7 +23,6 @@ class _NewRecordPageState extends State<NewRecordPage>
   late TabController _tabController;
   late PageController _pageController;
   bool _isSubmitting = false;
-
   RecordType _recordType = RecordType.expense;
   DateTime _selectedDate = DateTime.now();
   int _selectedMainCategoryIndex = 0;
@@ -47,6 +48,7 @@ class _NewRecordPageState extends State<NewRecordPage>
     _notesController.addListener(() => setState(() {}));
     _tabController.addListener(_syncRecordTypeFromTab);
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _applyDefaultAccounts();
       _amountFocusNode.requestFocus();
     });
   }
@@ -55,6 +57,7 @@ class _NewRecordPageState extends State<NewRecordPage>
     if (!_tabController.indexIsChanging && mounted) {
       final index = _tabController.index;
       setState(() => _recordType = RecordType.values[index]);
+      _applyDefaultAccounts();
       _pageController.jumpToPage(index);
     }
   }
@@ -64,6 +67,7 @@ class _NewRecordPageState extends State<NewRecordPage>
       _tabController.animateTo(index);
     }
     setState(() => _recordType = RecordType.values[index]);
+    _applyDefaultAccounts();
   }
 
   @override
@@ -108,6 +112,41 @@ class _NewRecordPageState extends State<NewRecordPage>
 
   List<AccountItem> get _accounts => placeholderAccounts;
 
+  void _applyDefaultAccounts() {
+    if (_recordType.isDualAccount) {
+      final fromList = filterAccountsForRecordType(
+        _accounts,
+        recordType: _recordType,
+        isFrom: true,
+      );
+      final toList = filterAccountsForRecordType(
+        _accounts,
+        recordType: _recordType,
+        isFrom: false,
+      );
+      setState(() {
+        _selectedAccountFromId = fromList.isNotEmpty ? fromList.first.id : null;
+        if (toList.isEmpty) {
+          _selectedAccountToId = null;
+        } else {
+          final other = toList
+              .where((a) => a.id != _selectedAccountFromId)
+              .toList();
+          _selectedAccountToId = other.isNotEmpty ? other.first.id : null;
+        }
+      });
+    } else {
+      final list = filterAccountsForRecordType(
+        _accounts,
+        recordType: _recordType,
+        isFrom: _recordType == RecordType.expense,
+      );
+      setState(() {
+        _selectedAccountId = list.isNotEmpty ? list.first.id : null;
+      });
+    }
+  }
+
   String? _accountName(String? id) {
     if (id == null) return null;
     try {
@@ -149,6 +188,7 @@ class _NewRecordPageState extends State<NewRecordPage>
       context,
       list,
       (a) => setState(() => _selectedAccountFromId = a.id),
+      excludeAccountId: _selectedAccountToId,
     );
   }
 
@@ -162,14 +202,16 @@ class _NewRecordPageState extends State<NewRecordPage>
       context,
       list,
       (a) => setState(() => _selectedAccountToId = a.id),
+      excludeAccountId: _selectedAccountFromId,
     );
   }
 
   static void _showAccountBottomSheet(
     BuildContext context,
     List<AccountItem> accounts,
-    ValueChanged<AccountItem> onSelect,
-  ) {
+    ValueChanged<AccountItem> onSelect, {
+    String? excludeAccountId,
+  }) {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -179,23 +221,60 @@ class _NewRecordPageState extends State<NewRecordPage>
         minChildSize: 0.3,
         maxChildSize: 0.9,
         expand: false,
-        builder: (_, scrollController) => ListView.builder(
-          controller: scrollController,
-          itemCount: accounts.length,
-          itemBuilder: (context, index) {
-            final a = accounts[index];
-            return ListTile(
-              leading: Icon(
-                a.displayIcon,
-                color: Theme.of(context).colorScheme.primary,
+        builder: (_, scrollController) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 12, bottom: 8),
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Theme.of(
+                    ctx,
+                  ).colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-              title: Text(a.name),
-              onTap: () {
-                onSelect(a);
-                Navigator.of(ctx).pop();
-              },
-            );
-          },
+            ),
+            Expanded(
+              child: ListView.builder(
+                controller: scrollController,
+                itemCount: accounts.length,
+                itemBuilder: (context, index) {
+                  final a = accounts[index];
+                  final isDisabled =
+                      excludeAccountId != null && a.id == excludeAccountId;
+                  return ListTile(
+                    leading: Icon(
+                      a.displayIcon,
+                      color: isDisabled
+                          ? Theme.of(context).colorScheme.onSurfaceVariant
+                                .withValues(alpha: 0.5)
+                          : Theme.of(context).colorScheme.primary,
+                    ),
+                    title: Text(
+                      a.name,
+                      style: isDisabled
+                          ? TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant
+                                  .withValues(alpha: 0.5),
+                            )
+                          : null,
+                    ),
+                    onTap: isDisabled
+                        ? null
+                        : () {
+                            onSelect(a);
+                            Navigator.of(ctx).pop();
+                          },
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -381,6 +460,52 @@ class _NewRecordPageState extends State<NewRecordPage>
   }
 }
 
+String _stripAmount(String value) => value.replaceAll(',', '').trim();
+
+class _ThousandsSeparatorInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final raw = newValue.text.replaceAll(',', '');
+    final buffer = StringBuffer();
+    var hasDot = false;
+    var decimalCount = 0;
+    for (var i = 0; i < raw.length; i++) {
+      final c = raw[i];
+      if (c == '.') {
+        if (hasDot) break;
+        hasDot = true;
+        buffer.write(c);
+      } else if (c.codeUnitAt(0) >= 0x30 && c.codeUnitAt(0) <= 0x39) {
+        if (hasDot) {
+          if (decimalCount >= 2) continue;
+          decimalCount++;
+        }
+        buffer.write(c);
+      }
+    }
+    final valid = buffer.toString();
+    final formatted = _addThousandsSeparators(valid);
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+
+  static final _integerFormat = NumberFormat('#,##0');
+
+  static String _addThousandsSeparators(String numStr) {
+    if (numStr.isEmpty) return numStr;
+    final parts = numStr.split('.');
+    final intPart = parts[0].isEmpty ? '0' : parts[0];
+    final decPart = parts.length > 1 ? parts[1] : '';
+    final formatted = _integerFormat.format(int.tryParse(intPart) ?? 0);
+    return decPart.isEmpty ? formatted : '$formatted.$decPart';
+  }
+}
+
 class _AmountDisplaySection extends StatelessWidget {
   const _AmountDisplaySection({
     required this.amountController,
@@ -435,16 +560,14 @@ class _AmountDisplaySection extends StatelessWidget {
                     signed: false,
                   ),
                   inputFormatters: [
-                    FilteringTextInputFormatter.allow(
-                      RegExp(r'^\d*\.?\d{0,2}'),
-                    ),
+                    _ThousandsSeparatorInputFormatter(),
                   ],
                   enabled: !isSubmitting,
                   validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
+                    if (value == null || _stripAmount(value).isEmpty) {
                       return '請輸入金額';
                     }
-                    final amount = double.tryParse(value.trim());
+                    final amount = double.tryParse(_stripAmount(value));
                     if (amount == null || amount <= 0) {
                       return '請輸入有效金額';
                     }
@@ -489,16 +612,6 @@ class _MetaDataBar extends StatelessWidget {
   final VoidCallback onAccountFromTap;
   final VoidCallback onAccountToTap;
 
-  static String _formatDateTime(DateTime d) {
-    final timeStr =
-        '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
-    final now = DateTime.now();
-    if (d.year != now.year) {
-      return '${d.year}/${d.month}/${d.day} $timeStr';
-    }
-    return '${d.month}/${d.day} $timeStr';
-  }
-
   @override
   Widget build(BuildContext context) {
     final isDual = recordType.isDualAccount;
@@ -512,10 +625,14 @@ class _MetaDataBar extends StatelessWidget {
             children: [
               _MetaChip(
                 icon: Icons.calendar_today_outlined,
-                label: _formatDateTime(selectedDate),
+                label: formatDateTimeShort(selectedDate),
                 onTap: onDateTap,
               ),
-              const SizedBox(width: 12),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
               if (isDual) ...[
                 _AccountChip(
                   account: fromAccount,
@@ -658,7 +775,7 @@ class _CategorySection extends StatelessWidget {
   final int selectedMainIndex;
   final int? selectedSubIndex;
   final ValueChanged<int> onMainSelected;
-  final ValueChanged<int> onSubSelected;
+  final ValueChanged<int?> onSubSelected;
 
   static const List<({String name, IconData icon})> _mainCategories = [
     (name: '飲食', icon: Icons.restaurant),
@@ -699,7 +816,7 @@ class _CategorySection extends StatelessWidget {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: _mainCategories.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              separatorBuilder: (_, index) => const SizedBox(width: 8),
               itemBuilder: (context, index) {
                 final cat = _mainCategories[index];
                 final selected = index == selectedMainIndex;
@@ -772,7 +889,7 @@ class _CategorySection extends StatelessWidget {
                             ).colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(12),
                       child: InkWell(
-                        onTap: () => onSubSelected(index),
+                        onTap: () => onSubSelected(selected ? null : index),
                         borderRadius: BorderRadius.circular(12),
                         child: Center(
                           child: Padding(
