@@ -775,7 +775,7 @@ class _CategorySection extends StatelessWidget {
   final int selectedMainIndex;
   final int? selectedSubIndex;
   final ValueChanged<int> onMainSelected;
-  final ValueChanged<int> onSubSelected;
+  final ValueChanged<int?> onSubSelected;
 
   static const List<({String name, IconData icon})> _mainCategories = [
     (name: '飲食', icon: Icons.restaurant),
@@ -889,7 +889,7 @@ class _CategorySection extends StatelessWidget {
                             ).colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(12),
                       child: InkWell(
-                        onTap: () => onSubSelected(index),
+                        onTap: () => onSubSelected(selected ? null : index),
                         borderRadius: BorderRadius.circular(12),
                         child: Center(
                           child: Padding(
