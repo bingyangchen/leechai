@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:mobile/core/constants/record_type_constants.dart';
 import 'package:mobile/features/accounting/domain/account_item.dart';
 import 'package:mobile/shared/widgets/date_time_picker_sheet.dart';
@@ -435,16 +436,14 @@ class _AmountDisplaySection extends StatelessWidget {
                     signed: false,
                   ),
                   inputFormatters: [
-                    FilteringTextInputFormatter.allow(
-                      RegExp(r'^\d*\.?\d{0,2}'),
-                    ),
+                    _ThousandsSeparatorInputFormatter(),
                   ],
                   enabled: !isSubmitting,
                   validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
+                    if (value == null || _stripAmount(value).isEmpty) {
                       return '請輸入金額';
                     }
-                    final amount = double.tryParse(value.trim());
+                    final amount = double.tryParse(_stripAmount(value));
                     if (amount == null || amount <= 0) {
                       return '請輸入有效金額';
                     }
@@ -490,8 +489,11 @@ class _MetaDataBar extends StatelessWidget {
   final VoidCallback onAccountToTap;
 
   static String _formatDateTime(DateTime d) {
+    final h24 = d.hour;
+    final hour12 = h24 == 0 ? 12 : (h24 > 12 ? h24 - 12 : h24);
+    final ampm = h24 < 12 ? 'AM' : 'PM';
     final timeStr =
-        '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+        '${hour12.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')} $ampm';
     final now = DateTime.now();
     if (d.year != now.year) {
       return '${d.year}/${d.month}/${d.day} $timeStr';
