@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// 統計（依賴 accounting 層的數據進行視覺化：圓餅圖、趨勢圖）
 class AnalysisPage extends StatelessWidget {
   const AnalysisPage({super.key});
 
