@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/features/entry/domain/account_item.dart';
-import 'package:mobile/features/entry/domain/record_type.dart';
-import 'package:mobile/features/entry/presentation/constants/record_type_colors.dart';
+import 'package:mobile/features/account/data/account_repository.dart';
+import 'package:mobile/features/account/domain/account.dart';
+import 'package:mobile/features/entry/domain/entry_account_filter.dart';
+import 'package:mobile/features/entry/domain/entry_type.dart';
+import 'package:mobile/features/entry/presentation/constants/account_chip_labels.dart';
+import 'package:mobile/features/entry/presentation/constants/entry_type_colors.dart';
 import 'package:mobile/features/entry/presentation/widgets/account_chips_row.dart';
 import 'package:mobile/features/entry/presentation/widgets/account_picker_sheet.dart';
 import 'package:mobile/features/entry/presentation/widgets/amount_display_section.dart';
@@ -11,14 +14,14 @@ import 'package:mobile/features/entry/presentation/widgets/notes_section.dart';
 import 'package:mobile/features/entry/presentation/widgets/tags_section.dart';
 import 'package:mobile/shared/widgets/date_time_picker_sheet.dart';
 
-class NewRecordPage extends StatefulWidget {
-  const NewRecordPage({super.key});
+class NewEntryPage extends StatefulWidget {
+  const NewEntryPage({super.key});
 
   @override
-  State<NewRecordPage> createState() => _NewRecordPageState();
+  State<NewEntryPage> createState() => _NewEntryPageState();
 }
 
-class _NewRecordPageState extends State<NewRecordPage>
+class _NewEntryPageState extends State<NewEntryPage>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
@@ -28,7 +31,7 @@ class _NewRecordPageState extends State<NewRecordPage>
   late TabController _tabController;
   late PageController _pageController;
   bool _isSubmitting = false;
-  RecordType _recordType = RecordType.expense;
+  EntryType _entryType = EntryType.expense;
   DateTime _selectedDate = DateTime.now();
   int _selectedMainCategoryIndex = 0;
   int? _selectedSubCategoryIndex;
@@ -36,6 +39,7 @@ class _NewRecordPageState extends State<NewRecordPage>
   String? _selectedAccountFromId;
   String? _selectedAccountToId;
   final List<String> _tags = [];
+  List<Account> _accountsList = [];
 
   bool get _hasUnsavedChanges =>
       _amountController.text.trim().isNotEmpty ||
@@ -51,17 +55,17 @@ class _NewRecordPageState extends State<NewRecordPage>
     _amountController.addListener(() => setState(() {}));
     _tagInputController.addListener(() => setState(() {}));
     _notesController.addListener(() => setState(() {}));
-    _tabController.addListener(_syncRecordTypeFromTab);
+    _tabController.addListener(_syncEntryTypeFromTab);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _applyDefaultAccounts();
+      _loadAccounts();
       _amountFocusNode.requestFocus();
     });
   }
 
-  void _syncRecordTypeFromTab() {
+  void _syncEntryTypeFromTab() {
     if (!_tabController.indexIsChanging && mounted) {
       final index = _tabController.index;
-      setState(() => _recordType = RecordType.values[index]);
+      setState(() => _entryType = EntryType.values[index]);
       _applyDefaultAccounts();
       _pageController.jumpToPage(index);
     }
@@ -71,13 +75,13 @@ class _NewRecordPageState extends State<NewRecordPage>
     if (_tabController.index != index) {
       _tabController.animateTo(index);
     }
-    setState(() => _recordType = RecordType.values[index]);
+    setState(() => _entryType = EntryType.values[index]);
     _applyDefaultAccounts();
   }
 
   @override
   void dispose() {
-    _tabController.removeListener(_syncRecordTypeFromTab);
+    _tabController.removeListener(_syncEntryTypeFromTab);
     _tabController.dispose();
     _pageController.dispose();
     _amountController.dispose();
@@ -115,18 +119,26 @@ class _NewRecordPageState extends State<NewRecordPage>
     }
   }
 
-  List<AccountItem> get _accounts => placeholderAccounts;
+  List<Account> get _accounts => _accountsList;
+
+  Future<void> _loadAccounts() async {
+    final list = await AccountRepository.getAll();
+    if (mounted) {
+      setState(() => _accountsList = list);
+      _applyDefaultAccounts();
+    }
+  }
 
   void _applyDefaultAccounts() {
-    if (_recordType.isDualAccount) {
-      final fromList = filterAccountsForRecordType(
+    if (_entryType.isDualAccount) {
+      final fromList = filterAccountsForEntryType(
         _accounts,
-        recordType: _recordType,
+        entryType: _entryType,
         isFrom: true,
       );
-      final toList = filterAccountsForRecordType(
+      final toList = filterAccountsForEntryType(
         _accounts,
-        recordType: _recordType,
+        entryType: _entryType,
         isFrom: false,
       );
       setState(() {
@@ -141,10 +153,10 @@ class _NewRecordPageState extends State<NewRecordPage>
         }
       });
     } else {
-      final list = filterAccountsForRecordType(
+      final list = filterAccountsForEntryType(
         _accounts,
-        recordType: _recordType,
-        isFrom: _recordType == RecordType.expense,
+        entryType: _entryType,
+        isFrom: _entryType == EntryType.expense,
       );
       setState(() {
         _selectedAccountId = list.isNotEmpty ? list.first.id : null;
@@ -161,7 +173,7 @@ class _NewRecordPageState extends State<NewRecordPage>
     }
   }
 
-  AccountItem? _accountById(String? id) {
+  Account? _accountById(String? id) {
     if (id == null) return null;
     try {
       return _accounts.firstWhere((a) => a.id == id);
@@ -171,10 +183,10 @@ class _NewRecordPageState extends State<NewRecordPage>
   }
 
   void _openAccountPickerSingle() {
-    final list = filterAccountsForRecordType(
+    final list = filterAccountsForEntryType(
       _accounts,
-      recordType: _recordType,
-      isFrom: _recordType == RecordType.expense,
+      entryType: _entryType,
+      isFrom: _entryType == EntryType.expense,
     );
     showAccountPickerSheet(
       context,
@@ -184,9 +196,9 @@ class _NewRecordPageState extends State<NewRecordPage>
   }
 
   void _openAccountPickerFrom() {
-    final list = filterAccountsForRecordType(
+    final list = filterAccountsForEntryType(
       _accounts,
-      recordType: _recordType,
+      entryType: _entryType,
       isFrom: true,
     );
     showAccountPickerSheet(
@@ -198,9 +210,9 @@ class _NewRecordPageState extends State<NewRecordPage>
   }
 
   void _openAccountPickerTo() {
-    final list = filterAccountsForRecordType(
+    final list = filterAccountsForEntryType(
       _accounts,
-      recordType: _recordType,
+      entryType: _entryType,
       isFrom: false,
     );
     showAccountPickerSheet(
@@ -226,7 +238,7 @@ class _NewRecordPageState extends State<NewRecordPage>
 
   @override
   Widget build(BuildContext context) {
-    final typeColor = RecordTypeColors.forType(_recordType);
+    final typeColor = EntryTypeColors.forType(_entryType);
 
     return PopScope(
       canPop: !_hasUnsavedChanges,
@@ -275,9 +287,9 @@ class _NewRecordPageState extends State<NewRecordPage>
                 context,
               ).colorScheme.onSurfaceVariant,
               indicatorSize: TabBarIndicatorSize.label,
-              tabs: RecordType.values.map((t) => Tab(text: t.label)).toList(),
+              tabs: EntryType.values.map((t) => Tab(text: t.label)).toList(),
               onTap: (index) {
-                setState(() => _recordType = RecordType.values[index]);
+                setState(() => _entryType = EntryType.values[index]);
                 _pageController.jumpToPage(index);
               },
             ),
@@ -290,8 +302,8 @@ class _NewRecordPageState extends State<NewRecordPage>
             onPageChanged: _onPageChanged,
             itemCount: 5,
             itemBuilder: (context, index) {
-              final pageType = RecordType.values[index];
-              final pageColor = RecordTypeColors.forType(pageType);
+              final pageType = EntryType.values[index];
+              final pageColor = EntryTypeColors.forType(pageType);
               return CustomScrollView(
                 key: PageStorageKey<int>(index),
                 keyboardDismissBehavior:
@@ -328,13 +340,13 @@ class _NewRecordPageState extends State<NewRecordPage>
                   const SliverToBoxAdapter(child: SizedBox(height: 12)),
                   SliverToBoxAdapter(
                     child: AccountChipsRow(
-                      recordType: pageType,
+                      entryType: pageType,
                       singleAccount: _accountById(_selectedAccountId),
                       singleAccountLabel:
                           _accountName(_selectedAccountId) ??
                           accountChipLabel(
                             pageType,
-                            isFrom: pageType == RecordType.expense,
+                            isFrom: pageType == EntryType.expense,
                           ),
                       fromAccount: _accountById(_selectedAccountFromId),
                       toAccount: _accountById(_selectedAccountToId),

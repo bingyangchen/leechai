@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/features/entry/domain/record_type.dart';
+import 'package:mobile/features/entry/domain/entry_type.dart';
 
-class RecordTypeColors {
-  RecordTypeColors._();
+class EntryTypeColors {
+  EntryTypeColors._();
 
   static const Color expense = Color(0xFFE53935);
   static const Color income = Color(0xFF4CAF50);
@@ -10,17 +10,17 @@ class RecordTypeColors {
   static const Color borrow = Color(0xFFFF9800);
   static const Color repay = Color(0xFF9C27B0);
 
-  static Color forType(RecordType type) {
+  static Color forType(EntryType type) {
     switch (type) {
-      case RecordType.expense:
+      case EntryType.expense:
         return expense;
-      case RecordType.income:
+      case EntryType.income:
         return income;
-      case RecordType.transfer:
+      case EntryType.transfer:
         return transfer;
-      case RecordType.borrow:
+      case EntryType.borrow:
         return borrow;
-      case RecordType.repay:
+      case EntryType.repay:
         return repay;
     }
   }

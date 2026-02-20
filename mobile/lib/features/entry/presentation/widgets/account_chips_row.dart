@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/features/entry/domain/account_item.dart';
-import 'package:mobile/features/entry/domain/record_type.dart';
+import 'package:mobile/features/account/domain/account.dart';
+import 'package:mobile/features/entry/domain/entry_type.dart';
 import 'package:mobile/shared/widgets/meta_chip.dart';
 
 class AccountChipsRow extends StatelessWidget {
   const AccountChipsRow({
     super.key,
-    required this.recordType,
+    required this.entryType,
     this.singleAccount,
     required this.singleAccountLabel,
     this.fromAccount,
@@ -18,11 +18,11 @@ class AccountChipsRow extends StatelessWidget {
     required this.onAccountToTap,
   });
 
-  final RecordType recordType;
-  final AccountItem? singleAccount;
+  final EntryType entryType;
+  final Account? singleAccount;
   final String singleAccountLabel;
-  final AccountItem? fromAccount;
-  final AccountItem? toAccount;
+  final Account? fromAccount;
+  final Account? toAccount;
   final String fromAccountLabel;
   final String toAccountLabel;
   final VoidCallback onAccountTap;
@@ -31,7 +31,7 @@ class AccountChipsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDual = recordType.isDualAccount;
+    final isDual = entryType.isDualAccount;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -76,7 +76,7 @@ class AccountChip extends StatelessWidget {
     required this.onTap,
   });
 
-  final AccountItem? account;
+  final Account? account;
   final String label;
   final VoidCallback onTap;
 
