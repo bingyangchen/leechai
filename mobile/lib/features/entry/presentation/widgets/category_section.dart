@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/features/accounting/domain/constants/expense_category.dart';
+import 'package:mobile/features/entry/domain/constants/expense_category.dart';
 
 class CategorySection extends StatelessWidget {
   const CategorySection({

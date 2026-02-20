@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/features/accounting/domain/account_item.dart';
-import 'package:mobile/features/accounting/domain/record_type.dart';
+import 'package:mobile/features/entry/domain/account_item.dart';
+import 'package:mobile/features/entry/domain/record_type.dart';
 import 'package:mobile/shared/widgets/meta_chip.dart';
 
 class AccountChipsRow extends StatelessWidget {

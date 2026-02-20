@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/features/accounting/domain/account_item.dart';
-import 'package:mobile/features/accounting/domain/record_type.dart';
-import 'package:mobile/features/accounting/presentation/constants/record_type_colors.dart';
-import 'package:mobile/features/accounting/presentation/widgets/account_chips_row.dart';
-import 'package:mobile/features/accounting/presentation/widgets/account_picker_sheet.dart';
-import 'package:mobile/features/accounting/presentation/widgets/amount_display_section.dart';
-import 'package:mobile/features/accounting/presentation/widgets/category_section.dart';
-import 'package:mobile/features/accounting/presentation/widgets/date_chip_row.dart';
-import 'package:mobile/features/accounting/presentation/widgets/notes_section.dart';
-import 'package:mobile/features/accounting/presentation/widgets/tags_section.dart';
+import 'package:mobile/features/entry/domain/account_item.dart';
+import 'package:mobile/features/entry/domain/record_type.dart';
+import 'package:mobile/features/entry/presentation/constants/record_type_colors.dart';
+import 'package:mobile/features/entry/presentation/widgets/account_chips_row.dart';
+import 'package:mobile/features/entry/presentation/widgets/account_picker_sheet.dart';
+import 'package:mobile/features/entry/presentation/widgets/amount_display_section.dart';
+import 'package:mobile/features/entry/presentation/widgets/category_section.dart';
+import 'package:mobile/features/entry/presentation/widgets/date_chip_row.dart';
+import 'package:mobile/features/entry/presentation/widgets/notes_section.dart';
+import 'package:mobile/features/entry/presentation/widgets/tags_section.dart';
 import 'package:mobile/shared/widgets/date_time_picker_sheet.dart';
 
 class NewRecordPage extends StatefulWidget {

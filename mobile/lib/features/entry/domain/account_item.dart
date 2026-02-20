@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/features/accounting/domain/record_type.dart';
+import 'package:mobile/features/entry/domain/record_type.dart';
 
 enum AccountType {
   asset,

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/features/accounting/domain/account_item.dart';
+import 'package:mobile/features/entry/domain/account_item.dart';
 
 void showAccountPickerSheet(
   BuildContext context, {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/features/accounting/presentation/pages/journal_page.dart';
-import 'package:mobile/features/accounting/presentation/pages/new_record_page.dart';
-import 'package:mobile/features/assets/presentation/pages/assets_page.dart';
+import 'package:mobile/features/account/presentation/pages/assets_page.dart';
+import 'package:mobile/features/entry/presentation/pages/journal_page.dart';
+import 'package:mobile/features/entry/presentation/pages/new_record_page.dart';
 import 'package:mobile/features/settings/presentation/pages/settings_page.dart';
 import 'package:mobile/features/statistics/presentation/pages/analysis_page.dart';
 
