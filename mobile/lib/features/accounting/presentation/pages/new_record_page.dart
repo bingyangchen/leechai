@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/core/constants/record_type_constants.dart';
 import 'package:mobile/features/accounting/domain/account_item.dart';
+import 'package:mobile/features/accounting/domain/record_type.dart';
+import 'package:mobile/features/accounting/presentation/constants/record_type_colors.dart';
 import 'package:mobile/features/accounting/presentation/widgets/account_chips_row.dart';
 import 'package:mobile/features/accounting/presentation/widgets/account_picker_sheet.dart';
 import 'package:mobile/features/accounting/presentation/widgets/amount_display_section.dart';
