@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/features/account/data/account_repository.dart';
+import 'package:mobile/features/account/data/repositories/account.dart';
 import 'package:mobile/features/account/domain/account.dart';
+import 'package:mobile/features/entry/data/repositories/category.dart';
+import 'package:mobile/features/entry/domain/category.dart';
+import 'package:mobile/features/entry/domain/category_icon.dart';
 import 'package:mobile/features/entry/domain/entry_account_filter.dart';
 import 'package:mobile/features/entry/domain/entry_type.dart';
 import 'package:mobile/features/entry/presentation/constants/account_chip_labels.dart';
@@ -13,6 +16,7 @@ import 'package:mobile/features/entry/presentation/widgets/date_chip_row.dart';
 import 'package:mobile/features/entry/presentation/widgets/notes_section.dart';
 import 'package:mobile/features/entry/presentation/widgets/tags_section.dart';
 import 'package:mobile/shared/widgets/date_time_picker_sheet.dart';
+import 'package:mobile/shared/widgets/discard_changes_dialog.dart';
 
 class NewEntryPage extends StatefulWidget {
   const NewEntryPage({super.key});
@@ -33,13 +37,15 @@ class _NewEntryPageState extends State<NewEntryPage>
   bool _isSubmitting = false;
   EntryType _entryType = EntryType.expense;
   DateTime _selectedDate = DateTime.now();
-  int _selectedMainCategoryIndex = 0;
-  int? _selectedSubCategoryIndex;
   String? _selectedAccountId;
   String? _selectedAccountFromId;
   String? _selectedAccountToId;
   final List<String> _tags = [];
   List<Account> _accounts = [];
+  final Map<String, List<Category>> _mainCategoriesByEntryType = {};
+  final Map<String, List<List<String>>> _subCategoriesByEntryType = {};
+  final Map<String, int> _selectedMainCategoryIndexByEntryType = {};
+  final Map<String, int?> _selectedSubCategoryIndexByEntryType = {};
 
   bool get _hasUnsavedChanges =>
       _amountController.text.trim().isNotEmpty ||
@@ -58,6 +64,7 @@ class _NewEntryPageState extends State<NewEntryPage>
     _tabController.addListener(_syncEntryTypeFromTab);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadAccounts();
+      _loadCategories();
       _amountFocusNode.requestFocus();
     });
   }
@@ -97,26 +104,8 @@ class _NewEntryPageState extends State<NewEntryPage>
       if (mounted) Navigator.of(context).pop(false);
       return;
     }
-    final leave = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('捨棄變更？'),
-        content: const Text('有未儲存的變更，確定要離開嗎？'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('離開'),
-          ),
-        ],
-      ),
-    );
-    if (mounted && leave == true) {
-      Navigator.of(context).pop(false);
-    }
+    final leave = await DiscardChangesDialog.show(context);
+    if (mounted && leave == true) Navigator.of(context).pop(false);
   }
 
   Future<void> _loadAccounts() async {
@@ -124,6 +113,32 @@ class _NewEntryPageState extends State<NewEntryPage>
     if (mounted) {
       setState(() => _accounts = accounts);
       _applyDefaultAccounts();
+    }
+  }
+
+  Future<void> _loadCategories() async {
+    const entryTypeIds = ['expense', 'income'];
+    final mainByType = <String, List<Category>>{};
+    final subsByType = <String, List<List<String>>>{};
+    for (final entryTypeId in entryTypeIds) {
+      final mains = await CategoryRepository.getMainCategories(entryTypeId);
+      final subsByMain = <List<String>>[];
+      for (final main in mains) {
+        final subs = await CategoryRepository.getSubCategories(main.id);
+        subsByMain.add(subs.map((c) => c.name).toList());
+      }
+      mainByType[entryTypeId] = mains;
+      subsByType[entryTypeId] = subsByMain;
+    }
+    if (mounted) {
+      setState(() {
+        _mainCategoriesByEntryType
+          ..clear()
+          ..addAll(mainByType);
+        _subCategoriesByEntryType
+          ..clear()
+          ..addAll(subsByType);
+      });
     }
   }
 
@@ -361,16 +376,62 @@ class _NewEntryPageState extends State<NewEntryPage>
                   ),
                   const SliverToBoxAdapter(child: SizedBox(height: 16)),
                   SliverToBoxAdapter(
-                    child: CategorySection(
-                      selectedMainIndex: _selectedMainCategoryIndex,
-                      selectedSubIndex: _selectedSubCategoryIndex,
-                      onMainSelected: (index) => setState(() {
-                        _selectedMainCategoryIndex = index;
-                        _selectedSubCategoryIndex = null;
-                      }),
-                      onSubSelected: (index) =>
-                          setState(() => _selectedSubCategoryIndex = index),
-                    ),
+                    child:
+                        pageType == EntryType.expense ||
+                            pageType == EntryType.income
+                        ? CategorySection(
+                            mainCategories:
+                                _mainCategoriesByEntryType.containsKey(
+                                  pageType.name,
+                                )
+                                ? _mainCategoriesByEntryType[pageType.name]!
+                                      .map(
+                                        (c) => (
+                                          name: c.name,
+                                          icon: categoryIcon(c.icon),
+                                        ),
+                                      )
+                                      .toList()
+                                : [],
+                            subCategoryNames:
+                                _subCategoriesByEntryType.containsKey(
+                                  pageType.name,
+                                )
+                                ? () {
+                                    final subs =
+                                        _subCategoriesByEntryType[pageType
+                                            .name]!;
+                                    final mainIdx =
+                                        _selectedMainCategoryIndexByEntryType[pageType
+                                            .name] ??
+                                        0;
+                                    return mainIdx < subs.length
+                                        ? subs[mainIdx]
+                                        : <String>[];
+                                  }()
+                                : [],
+                            selectedMainIndex:
+                                _selectedMainCategoryIndexByEntryType[pageType
+                                    .name] ??
+                                0,
+                            selectedSubIndex:
+                                _selectedSubCategoryIndexByEntryType[pageType
+                                    .name],
+                            onMainSelected: (index) => setState(() {
+                              _selectedMainCategoryIndexByEntryType[pageType
+                                      .name] =
+                                  index;
+                              _selectedSubCategoryIndexByEntryType[pageType
+                                      .name] =
+                                  null;
+                            }),
+                            onSubSelected: (index) => setState(() {
+                              _selectedSubCategoryIndexByEntryType[pageType
+                                      .name] =
+                                  index;
+                            }),
+                          )
+                        : const SizedBox.shrink(),
                   ),
                   SliverToBoxAdapter(
                     child: TagsSection(

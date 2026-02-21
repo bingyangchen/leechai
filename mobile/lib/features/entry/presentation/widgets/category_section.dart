@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/features/entry/domain/constants/expense_category.dart';
 
 class CategorySection extends StatelessWidget {
   const CategorySection({
     super.key,
+    required this.mainCategories,
+    required this.subCategoryNames,
     required this.selectedMainIndex,
     this.selectedSubIndex,
     required this.onMainSelected,
     required this.onSubSelected,
   });
 
+  final List<({String name, IconData? icon})> mainCategories;
+  final List<String> subCategoryNames;
   final int selectedMainIndex;
   final int? selectedSubIndex;
   final ValueChanged<int> onMainSelected;
@@ -17,8 +20,10 @@ class CategorySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final subs =
-        expenseSubCategories[selectedMainIndex] ?? expenseSubCategories[5]!;
+    if (mainCategories.isEmpty) return const SizedBox.shrink();
+
+    final subs = subCategoryNames;
+    final theme = Theme.of(context);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -27,8 +32,8 @@ class CategorySection extends StatelessWidget {
         children: [
           Text(
             '類別',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 8),
@@ -36,15 +41,16 @@ class CategorySection extends StatelessWidget {
             height: 56,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              itemCount: expenseMainCategories.length,
+              itemCount: mainCategories.length,
               separatorBuilder: (_, index) => const SizedBox(width: 8),
               itemBuilder: (context, index) {
-                final cat = expenseMainCategories[index];
+                final cat = mainCategories[index];
                 final selected = index == selectedMainIndex;
+                final icon = cat.icon ?? Icons.more_horiz;
                 return Material(
                   color: selected
-                      ? Theme.of(context).colorScheme.primaryContainer
-                      : Theme.of(context).colorScheme.surfaceContainerHighest,
+                      ? theme.colorScheme.primaryContainer
+                      : theme.colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(12),
                   child: InkWell(
                     onTap: () => onMainSelected(index),
@@ -55,15 +61,11 @@ class CategorySection extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
-                            cat.icon,
+                            icon,
                             size: 24,
                             color: selected
-                                ? Theme.of(
-                                    context,
-                                  ).colorScheme.onPrimaryContainer
-                                : Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
+                                ? theme.colorScheme.onPrimaryContainer
+                                : theme.colorScheme.onSurfaceVariant,
                           ),
                           const SizedBox(height: 2),
                           Text(
@@ -71,12 +73,8 @@ class CategorySection extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 12,
                               color: selected
-                                  ? Theme.of(
-                                      context,
-                                    ).colorScheme.onPrimaryContainer
-                                  : Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
+                                  ? theme.colorScheme.onPrimaryContainer
+                                  : theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -104,10 +102,8 @@ class CategorySection extends StatelessWidget {
                     width: width,
                     child: Material(
                       color: selected
-                          ? Theme.of(context).colorScheme.primaryContainer
-                          : Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerHighest,
+                          ? theme.colorScheme.primaryContainer
+                          : theme.colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(12),
                       child: InkWell(
                         onTap: () => onSubSelected(selected ? null : index),
@@ -120,10 +116,8 @@ class CategorySection extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 14,
                                 color: selected
-                                    ? Theme.of(
-                                        context,
-                                      ).colorScheme.onPrimaryContainer
-                                    : Theme.of(context).colorScheme.onSurface,
+                                    ? theme.colorScheme.onPrimaryContainer
+                                    : theme.colorScheme.onSurface,
                               ),
                             ),
                           ),
