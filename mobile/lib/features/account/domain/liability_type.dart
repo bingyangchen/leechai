@@ -26,6 +26,15 @@ extension LiabilityTypeX on LiabilityType {
     }
   }
 
+  bool get isPaymentMethod {
+    switch (this) {
+      case LiabilityType.creditCard:
+        return true;
+      case LiabilityType.loan:
+        return false;
+    }
+  }
+
   static LiabilityType? fromName(String value) {
     for (final e in LiabilityType.values) {
       if (e.name == value) return e;

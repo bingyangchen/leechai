@@ -46,6 +46,19 @@ extension AssetTypeX on AssetType {
     }
   }
 
+  bool get isPaymentMethod {
+    switch (this) {
+      case AssetType.cash:
+      case AssetType.epayment:
+      case AssetType.storedValueCard:
+        return true;
+      case AssetType.bank:
+      case AssetType.securities:
+      case AssetType.other:
+        return false;
+    }
+  }
+
   static AssetType? fromName(String value) {
     for (final e in AssetType.values) {
       if (e.name == value) return e;
