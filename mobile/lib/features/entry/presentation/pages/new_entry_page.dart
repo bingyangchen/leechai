@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/features/account/data/repositories/account.dart';
 import 'package:mobile/features/account/domain/account.dart';
+import 'package:mobile/features/entry/data/repositories/entry.dart' as entry_repo;
+import 'package:mobile/features/entry/data/repositories/tag.dart' as tag_repo;
 import 'package:mobile/features/entry/domain/entry_account_filter.dart';
 import 'package:mobile/features/entry/domain/entry_type.dart';
 import 'package:mobile/features/entry/presentation/constants/account_chip_labels.dart';
@@ -12,6 +14,7 @@ import 'package:mobile/features/entry/presentation/widgets/category_section.dart
 import 'package:mobile/features/entry/presentation/widgets/date_chip_row.dart';
 import 'package:mobile/features/entry/presentation/widgets/notes_section.dart';
 import 'package:mobile/features/entry/presentation/widgets/tags_section.dart';
+import 'package:mobile/shared/utils/amount_input_formatter.dart';
 import 'package:mobile/shared/widgets/date_time_picker_sheet.dart';
 import 'package:mobile/shared/widgets/discard_changes_dialog.dart';
 
@@ -39,8 +42,10 @@ class _NewEntryPageState extends State<NewEntryPage>
   String? _selectedAccountToId;
   final List<String> _tags = [];
   List<Account> _balanceAccounts = [];
-  final Map<String, List<Account>> _categoryAccountsByEntryType = {};
-  final Map<String, int> _selectedCategoryIndexByEntryType = {};
+  List<Account> _categoryExpenseAccounts = [];
+  List<Account> _categoryIncomeAccounts = [];
+  int _selectedExpenseCategoryIndex = 0;
+  int _selectedIncomeCategoryIndex = 0;
 
   bool get _hasUnsavedChanges =>
       _amountController.text.trim().isNotEmpty ||
@@ -116,10 +121,8 @@ class _NewEntryPageState extends State<NewEntryPage>
     final incomeAccounts = await AccountRepository.getByType('income');
     if (mounted) {
       setState(() {
-        _categoryAccountsByEntryType
-          ..clear()
-          ..['expense'] = expenseAccounts
-          ..['income'] = incomeAccounts;
+        _categoryExpenseAccounts = expenseAccounts;
+        _categoryIncomeAccounts = incomeAccounts;
       });
     }
   }
@@ -216,14 +219,83 @@ class _NewEntryPageState extends State<NewEntryPage>
     );
   }
 
+  ({String debit, String credit})? _getDebitCreditAccountIds() {
+    switch (_entryType) {
+      case EntryType.expense:
+        if (_selectedExpenseCategoryIndex >= _categoryExpenseAccounts.length ||
+            _selectedAccountId == null) {
+          return null;
+        }
+        return (
+          debit: _categoryExpenseAccounts[_selectedExpenseCategoryIndex].id,
+          credit: _selectedAccountId!,
+        );
+      case EntryType.income:
+        if (_selectedIncomeCategoryIndex >= _categoryIncomeAccounts.length ||
+            _selectedAccountId == null) {
+          return null;
+        }
+        return (
+          debit: _selectedAccountId!,
+          credit: _categoryIncomeAccounts[_selectedIncomeCategoryIndex].id,
+        );
+      case EntryType.transfer:
+        if (_selectedAccountFromId == null || _selectedAccountToId == null) return null;
+        return (debit: _selectedAccountToId!, credit: _selectedAccountFromId!);
+      case EntryType.borrow:
+        if (_selectedAccountFromId == null || _selectedAccountToId == null) return null;
+        return (debit: _selectedAccountToId!, credit: _selectedAccountFromId!);
+      case EntryType.repay:
+        if (_selectedAccountFromId == null || _selectedAccountToId == null) return null;
+        return (debit: _selectedAccountFromId!, credit: _selectedAccountToId!);
+    }
+  }
+
   Future<void> _submit() async {
     if (_isSubmitting) return;
     if (!_formKey.currentState!.validate()) return;
 
+    final accounts = _getDebitCreditAccountIds();
+    if (accounts == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('請選擇帳戶與分類'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
+
+    final amountStr = stripAmount(_amountController.text);
+    final amount = double.tryParse(amountStr);
+    if (amount == null || amount <= 0) return;
+
     setState(() => _isSubmitting = true);
     _amountFocusNode.unfocus();
 
-    await Future<void>.delayed(const Duration(milliseconds: 400));
+    try {
+      final tagIds = <String>[];
+      for (final title in _tags) {
+        final id = await tag_repo.TagRepository.getOrCreateByTitle(title);
+        tagIds.add(id);
+      }
+      if (!mounted) return;
+      await entry_repo.EntryRepository.insert(
+        type: _entryType.name,
+        debitAccountId: accounts.debit,
+        creditAccountId: accounts.credit,
+        amount: amount,
+        tagIds: tagIds,
+        memo: _notesController.text.trim().isEmpty
+            ? null
+            : _notesController.text.trim(),
+        occurredAt: _selectedDate,
+      );
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
 
     if (!mounted) return;
     Navigator.of(context).pop(true);
@@ -358,19 +430,22 @@ class _NewEntryPageState extends State<NewEntryPage>
                     child: pageType == EntryType.expense || pageType == EntryType.income
                         ? CategorySection(
                             categories:
-                                _categoryAccountsByEntryType.containsKey(
-                                  pageType.name,
-                                )
-                                ? _categoryAccountsByEntryType[pageType.name]!
-                                      .map(
-                                        (a) => (name: a.subType, icon: a.displayIcon),
-                                      )
-                                      .toList()
-                                : [],
-                            selectedIndex:
-                                _selectedCategoryIndexByEntryType[pageType.name] ?? 0,
+                                (pageType == EntryType.expense
+                                        ? _categoryExpenseAccounts
+                                        : _categoryIncomeAccounts)
+                                    .map(
+                                      (a) => (name: a.subType, icon: a.displayIcon),
+                                    )
+                                    .toList(),
+                            selectedIndex: pageType == EntryType.expense
+                                ? _selectedExpenseCategoryIndex
+                                : _selectedIncomeCategoryIndex,
                             onSelected: (index) => setState(() {
-                              _selectedCategoryIndexByEntryType[pageType.name] = index;
+                              if (pageType == EntryType.expense) {
+                                _selectedExpenseCategoryIndex = index;
+                              } else {
+                                _selectedIncomeCategoryIndex = index;
+                              }
                             }),
                           )
                         : const SizedBox.shrink(),
@@ -383,9 +458,12 @@ class _NewEntryPageState extends State<NewEntryPage>
                       onAddTag: (tag) {
                         final t = tag.trim();
                         if (t.isEmpty || _tags.contains(t)) return;
-                        setState(() {
-                          _tags.add(t);
-                          _tagInputController.clear();
+                        tag_repo.TagRepository.getOrCreateByTitle(t).then((_) {
+                          if (!mounted) return;
+                          setState(() {
+                            _tags.add(t);
+                            _tagInputController.clear();
+                          });
                         });
                       },
                       onRemoveTag: (tag) {
