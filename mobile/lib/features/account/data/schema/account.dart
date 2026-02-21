@@ -8,8 +8,8 @@ Future<void> run(Database db) async {
     sub_type TEXT NOT NULL,
     name TEXT NOT NULL,
     initial_balance REAL NOT NULL DEFAULT 0,
+    last_used_at TEXT NOT NULL DEFAULT (DATETIME('now')),
     created_at TEXT NOT NULL DEFAULT (DATETIME('now')),
-    updated_at TEXT NOT NULL DEFAULT (DATETIME('now')),
     deleted_at TEXT
   );
   ''');

@@ -14,7 +14,7 @@ class AccountRepository {
     final rows = await db.query(
       _table,
       where: 'deleted_at IS NULL',
-      orderBy: 'created_at ASC',
+      orderBy: 'last_used_at DESC',
     );
     return rows.map(_rowToAccount).toList();
   }
