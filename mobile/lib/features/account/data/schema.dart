@@ -13,4 +13,18 @@ Future<void> run(Database db) async {
     deleted_at TEXT
   );
   ''');
+  await seedDefaults(db);
+}
+
+Future<void> seedDefaults(Database db) async {
+  await db.insert(
+    'account',
+    {'id': 'default_cash', 'type': 'asset', 'sub_type': 'cash', 'name': '現金'},
+    conflictAlgorithm: ConflictAlgorithm.ignore,
+  );
+  await db.insert(
+    'account',
+    {'id': 'default_bank', 'type': 'asset', 'sub_type': 'bank', 'name': '銀行'},
+    conflictAlgorithm: ConflictAlgorithm.ignore,
+  );
 }

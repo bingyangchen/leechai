@@ -48,11 +48,11 @@ extension AssetTypeX on AssetType {
 
   bool get isPaymentMethod {
     switch (this) {
+      case AssetType.bank:
       case AssetType.cash:
       case AssetType.epayment:
       case AssetType.storedValueCard:
         return true;
-      case AssetType.bank:
       case AssetType.securities:
       case AssetType.other:
         return false;

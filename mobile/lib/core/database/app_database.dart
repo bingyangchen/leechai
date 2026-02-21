@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:mobile/core/database/schema.dart' as core_schema;
 import 'package:mobile/features/account/data/schema.dart' as account_schema;
 import 'package:path/path.dart' as p;
@@ -22,6 +25,11 @@ class AppDatabase {
   static Future<Database> _open() async {
     final documentsDir = await getApplicationDocumentsDirectory();
     final dbPath = p.join(documentsDir.path, _dbName);
+
+    // NOTE: This is only for development purposes.
+    final file = File(dbPath);
+    if (kDebugMode && file.existsSync()) file.deleteSync();
+
     return openDatabase(
       dbPath,
       version: _dbVersion,

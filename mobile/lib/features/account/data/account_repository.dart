@@ -27,27 +27,14 @@ class AccountRepository {
 
     final type = _parseAccountType(typeStr);
     final icon = _iconFor(typeStr, subTypeStr);
-    final isPaymentMethod = _isPaymentMethod(typeStr, subTypeStr);
 
     return Account(
       id: id,
       name: name,
       type: type,
-      isPaymentMethod: isPaymentMethod,
+      subType: subTypeStr,
       icon: icon,
     );
-  }
-
-  static bool _isPaymentMethod(String typeStr, String subTypeStr) {
-    if (typeStr == 'asset') {
-      final t = AssetTypeX.fromName(subTypeStr);
-      return t?.isPaymentMethod ?? false;
-    }
-    if (typeStr == 'liability') {
-      final t = LiabilityTypeX.fromName(subTypeStr);
-      return t?.isPaymentMethod ?? false;
-    }
-    return false;
   }
 
   static AccountType _parseAccountType(String typeStr) {

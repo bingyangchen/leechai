@@ -185,14 +185,14 @@ class _NewEntryPageState extends State<NewEntryPage>
     required void Function(Account) onSelect,
     String? excludeAccountId,
   }) {
-    final list = filterAccountsForEntryType(
+    final accounts = filterAccountsForEntryType(
       _accounts,
       entryType: _entryType,
       isFrom: isFrom,
     );
     showAccountPickerSheet(
       context,
-      accounts: list,
+      accounts: accounts,
       onSelect: onSelect,
       excludeAccountId: excludeAccountId,
     );
