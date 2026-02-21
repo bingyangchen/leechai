@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/features/accounting/domain/account_item.dart';
+import 'package:mobile/features/account/domain/account.dart';
 
 void showAccountPickerSheet(
   BuildContext context, {
-  required List<AccountItem> accounts,
-  required ValueChanged<AccountItem> onSelect,
+  required List<Account> accounts,
+  required ValueChanged<Account> onSelect,
   String? excludeAccountId,
 }) {
   showModalBottomSheet<void>(

@@ -1,23 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/core/constants/record_type_constants.dart';
-import 'package:mobile/features/accounting/domain/account_item.dart';
-import 'package:mobile/features/accounting/presentation/widgets/account_chips_row.dart';
-import 'package:mobile/features/accounting/presentation/widgets/account_picker_sheet.dart';
-import 'package:mobile/features/accounting/presentation/widgets/amount_display_section.dart';
-import 'package:mobile/features/accounting/presentation/widgets/category_section.dart';
-import 'package:mobile/features/accounting/presentation/widgets/date_chip_row.dart';
-import 'package:mobile/features/accounting/presentation/widgets/notes_section.dart';
-import 'package:mobile/features/accounting/presentation/widgets/tags_section.dart';
+import 'package:mobile/features/account/data/repositories/account.dart';
+import 'package:mobile/features/account/domain/account.dart';
+import 'package:mobile/features/entry/data/repositories/category.dart';
+import 'package:mobile/features/entry/domain/category.dart';
+import 'package:mobile/features/entry/domain/category_icon.dart';
+import 'package:mobile/features/entry/domain/entry_account_filter.dart';
+import 'package:mobile/features/entry/domain/entry_type.dart';
+import 'package:mobile/features/entry/presentation/constants/account_chip_labels.dart';
+import 'package:mobile/features/entry/presentation/constants/entry_type_colors.dart';
+import 'package:mobile/features/entry/presentation/widgets/account_chips_row.dart';
+import 'package:mobile/features/entry/presentation/widgets/account_picker_sheet.dart';
+import 'package:mobile/features/entry/presentation/widgets/amount_display_section.dart';
+import 'package:mobile/features/entry/presentation/widgets/category_section.dart';
+import 'package:mobile/features/entry/presentation/widgets/date_chip_row.dart';
+import 'package:mobile/features/entry/presentation/widgets/notes_section.dart';
+import 'package:mobile/features/entry/presentation/widgets/tags_section.dart';
 import 'package:mobile/shared/widgets/date_time_picker_sheet.dart';
+import 'package:mobile/shared/widgets/discard_changes_dialog.dart';
 
-class NewRecordPage extends StatefulWidget {
-  const NewRecordPage({super.key});
+class NewEntryPage extends StatefulWidget {
+  const NewEntryPage({super.key});
 
   @override
-  State<NewRecordPage> createState() => _NewRecordPageState();
+  State<NewEntryPage> createState() => _NewEntryPageState();
 }
 
-class _NewRecordPageState extends State<NewRecordPage>
+class _NewEntryPageState extends State<NewEntryPage>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
@@ -27,14 +35,17 @@ class _NewRecordPageState extends State<NewRecordPage>
   late TabController _tabController;
   late PageController _pageController;
   bool _isSubmitting = false;
-  RecordType _recordType = RecordType.expense;
+  EntryType _entryType = EntryType.expense;
   DateTime _selectedDate = DateTime.now();
-  int _selectedMainCategoryIndex = 0;
-  int? _selectedSubCategoryIndex;
   String? _selectedAccountId;
   String? _selectedAccountFromId;
   String? _selectedAccountToId;
   final List<String> _tags = [];
+  List<Account> _accounts = [];
+  final Map<String, List<Category>> _mainCategoriesByEntryType = {};
+  final Map<String, List<List<String>>> _subCategoriesByEntryType = {};
+  final Map<String, int> _selectedMainCategoryIndexByEntryType = {};
+  final Map<String, int?> _selectedSubCategoryIndexByEntryType = {};
 
   bool get _hasUnsavedChanges =>
       _amountController.text.trim().isNotEmpty ||
@@ -50,17 +61,18 @@ class _NewRecordPageState extends State<NewRecordPage>
     _amountController.addListener(() => setState(() {}));
     _tagInputController.addListener(() => setState(() {}));
     _notesController.addListener(() => setState(() {}));
-    _tabController.addListener(_syncRecordTypeFromTab);
+    _tabController.addListener(_syncEntryTypeFromTab);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _applyDefaultAccounts();
+      _loadAccounts();
+      _loadCategories();
       _amountFocusNode.requestFocus();
     });
   }
 
-  void _syncRecordTypeFromTab() {
+  void _syncEntryTypeFromTab() {
     if (!_tabController.indexIsChanging && mounted) {
       final index = _tabController.index;
-      setState(() => _recordType = RecordType.values[index]);
+      setState(() => _entryType = EntryType.values[index]);
       _applyDefaultAccounts();
       _pageController.jumpToPage(index);
     }
@@ -70,13 +82,13 @@ class _NewRecordPageState extends State<NewRecordPage>
     if (_tabController.index != index) {
       _tabController.animateTo(index);
     }
-    setState(() => _recordType = RecordType.values[index]);
+    setState(() => _entryType = EntryType.values[index]);
     _applyDefaultAccounts();
   }
 
   @override
   void dispose() {
-    _tabController.removeListener(_syncRecordTypeFromTab);
+    _tabController.removeListener(_syncEntryTypeFromTab);
     _tabController.dispose();
     _pageController.dispose();
     _amountController.dispose();
@@ -92,40 +104,54 @@ class _NewRecordPageState extends State<NewRecordPage>
       if (mounted) Navigator.of(context).pop(false);
       return;
     }
-    final leave = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('捨棄變更？'),
-        content: const Text('有未儲存的變更，確定要離開嗎？'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('離開'),
-          ),
-        ],
-      ),
-    );
-    if (mounted && leave == true) {
-      Navigator.of(context).pop(false);
+    final leave = await DiscardChangesDialog.show(context);
+    if (mounted && leave == true) Navigator.of(context).pop(false);
+  }
+
+  Future<void> _loadAccounts() async {
+    final accounts = await AccountRepository.getAll();
+    if (mounted) {
+      setState(() => _accounts = accounts);
+      _applyDefaultAccounts();
     }
   }
 
-  List<AccountItem> get _accounts => placeholderAccounts;
+  Future<void> _loadCategories() async {
+    const entryTypeIds = ['expense', 'income'];
+    final mainByType = <String, List<Category>>{};
+    final subsByType = <String, List<List<String>>>{};
+    for (final entryTypeId in entryTypeIds) {
+      final mains = await CategoryRepository.getMainCategories(entryTypeId);
+      final subsByMain = <List<String>>[];
+      for (final main in mains) {
+        final subs = await CategoryRepository.getSubCategories(main.id);
+        subsByMain.add(subs.map((c) => c.name).toList());
+      }
+      mainByType[entryTypeId] = mains;
+      subsByType[entryTypeId] = subsByMain;
+    }
+    if (mounted) {
+      setState(() {
+        _mainCategoriesByEntryType
+          ..clear()
+          ..addAll(mainByType);
+        _subCategoriesByEntryType
+          ..clear()
+          ..addAll(subsByType);
+      });
+    }
+  }
 
   void _applyDefaultAccounts() {
-    if (_recordType.isDualAccount) {
-      final fromList = filterAccountsForRecordType(
+    if (_entryType.isDualAccount) {
+      final fromList = filterAccountsForEntryType(
         _accounts,
-        recordType: _recordType,
+        entryType: _entryType,
         isFrom: true,
       );
-      final toList = filterAccountsForRecordType(
+      final toList = filterAccountsForEntryType(
         _accounts,
-        recordType: _recordType,
+        entryType: _entryType,
         isFrom: false,
       );
       setState(() {
@@ -140,10 +166,10 @@ class _NewRecordPageState extends State<NewRecordPage>
         }
       });
     } else {
-      final list = filterAccountsForRecordType(
+      final list = filterAccountsForEntryType(
         _accounts,
-        recordType: _recordType,
-        isFrom: _recordType == RecordType.expense,
+        entryType: _entryType,
+        isFrom: _entryType == EntryType.expense,
       );
       setState(() {
         _selectedAccountId = list.isNotEmpty ? list.first.id : null;
@@ -160,7 +186,7 @@ class _NewRecordPageState extends State<NewRecordPage>
     }
   }
 
-  AccountItem? _accountById(String? id) {
+  Account? _accountById(String? id) {
     if (id == null) return null;
     try {
       return _accounts.firstWhere((a) => a.id == id);
@@ -169,42 +195,42 @@ class _NewRecordPageState extends State<NewRecordPage>
     }
   }
 
-  void _openAccountPickerSingle() {
-    final list = filterAccountsForRecordType(
+  void _openAccountPicker({
+    required bool isFrom,
+    required void Function(Account) onSelect,
+    String? excludeAccountId,
+  }) {
+    final accounts = filterAccountsForEntryType(
       _accounts,
-      recordType: _recordType,
-      isFrom: _recordType == RecordType.expense,
+      entryType: _entryType,
+      isFrom: isFrom,
     );
     showAccountPickerSheet(
       context,
-      accounts: list,
+      accounts: accounts,
+      onSelect: onSelect,
+      excludeAccountId: excludeAccountId,
+    );
+  }
+
+  void _openAccountPickerSingle() {
+    _openAccountPicker(
+      isFrom: _entryType == EntryType.expense,
       onSelect: (a) => setState(() => _selectedAccountId = a.id),
     );
   }
 
   void _openAccountPickerFrom() {
-    final list = filterAccountsForRecordType(
-      _accounts,
-      recordType: _recordType,
+    _openAccountPicker(
       isFrom: true,
-    );
-    showAccountPickerSheet(
-      context,
-      accounts: list,
       onSelect: (a) => setState(() => _selectedAccountFromId = a.id),
       excludeAccountId: _selectedAccountToId,
     );
   }
 
   void _openAccountPickerTo() {
-    final list = filterAccountsForRecordType(
-      _accounts,
-      recordType: _recordType,
+    _openAccountPicker(
       isFrom: false,
-    );
-    showAccountPickerSheet(
-      context,
-      accounts: list,
       onSelect: (a) => setState(() => _selectedAccountToId = a.id),
       excludeAccountId: _selectedAccountFromId,
     );
@@ -225,7 +251,7 @@ class _NewRecordPageState extends State<NewRecordPage>
 
   @override
   Widget build(BuildContext context) {
-    final typeColor = RecordTypeColors.forType(_recordType);
+    final typeColor = EntryTypeColors.forType(_entryType);
 
     return PopScope(
       canPop: !_hasUnsavedChanges,
@@ -274,9 +300,9 @@ class _NewRecordPageState extends State<NewRecordPage>
                 context,
               ).colorScheme.onSurfaceVariant,
               indicatorSize: TabBarIndicatorSize.label,
-              tabs: RecordType.values.map((t) => Tab(text: t.label)).toList(),
+              tabs: EntryType.values.map((t) => Tab(text: t.label)).toList(),
               onTap: (index) {
-                setState(() => _recordType = RecordType.values[index]);
+                setState(() => _entryType = EntryType.values[index]);
                 _pageController.jumpToPage(index);
               },
             ),
@@ -289,8 +315,8 @@ class _NewRecordPageState extends State<NewRecordPage>
             onPageChanged: _onPageChanged,
             itemCount: 5,
             itemBuilder: (context, index) {
-              final pageType = RecordType.values[index];
-              final pageColor = RecordTypeColors.forType(pageType);
+              final pageType = EntryType.values[index];
+              final pageColor = EntryTypeColors.forType(pageType);
               return CustomScrollView(
                 key: PageStorageKey<int>(index),
                 keyboardDismissBehavior:
@@ -327,13 +353,13 @@ class _NewRecordPageState extends State<NewRecordPage>
                   const SliverToBoxAdapter(child: SizedBox(height: 12)),
                   SliverToBoxAdapter(
                     child: AccountChipsRow(
-                      recordType: pageType,
+                      entryType: pageType,
                       singleAccount: _accountById(_selectedAccountId),
                       singleAccountLabel:
                           _accountName(_selectedAccountId) ??
                           accountChipLabel(
                             pageType,
-                            isFrom: pageType == RecordType.expense,
+                            isFrom: pageType == EntryType.expense,
                           ),
                       fromAccount: _accountById(_selectedAccountFromId),
                       toAccount: _accountById(_selectedAccountToId),
@@ -350,16 +376,62 @@ class _NewRecordPageState extends State<NewRecordPage>
                   ),
                   const SliverToBoxAdapter(child: SizedBox(height: 16)),
                   SliverToBoxAdapter(
-                    child: CategorySection(
-                      selectedMainIndex: _selectedMainCategoryIndex,
-                      selectedSubIndex: _selectedSubCategoryIndex,
-                      onMainSelected: (index) => setState(() {
-                        _selectedMainCategoryIndex = index;
-                        _selectedSubCategoryIndex = null;
-                      }),
-                      onSubSelected: (index) =>
-                          setState(() => _selectedSubCategoryIndex = index),
-                    ),
+                    child:
+                        pageType == EntryType.expense ||
+                            pageType == EntryType.income
+                        ? CategorySection(
+                            mainCategories:
+                                _mainCategoriesByEntryType.containsKey(
+                                  pageType.name,
+                                )
+                                ? _mainCategoriesByEntryType[pageType.name]!
+                                      .map(
+                                        (c) => (
+                                          name: c.name,
+                                          icon: categoryIcon(c.icon),
+                                        ),
+                                      )
+                                      .toList()
+                                : [],
+                            subCategoryNames:
+                                _subCategoriesByEntryType.containsKey(
+                                  pageType.name,
+                                )
+                                ? () {
+                                    final subs =
+                                        _subCategoriesByEntryType[pageType
+                                            .name]!;
+                                    final mainIdx =
+                                        _selectedMainCategoryIndexByEntryType[pageType
+                                            .name] ??
+                                        0;
+                                    return mainIdx < subs.length
+                                        ? subs[mainIdx]
+                                        : <String>[];
+                                  }()
+                                : [],
+                            selectedMainIndex:
+                                _selectedMainCategoryIndexByEntryType[pageType
+                                    .name] ??
+                                0,
+                            selectedSubIndex:
+                                _selectedSubCategoryIndexByEntryType[pageType
+                                    .name],
+                            onMainSelected: (index) => setState(() {
+                              _selectedMainCategoryIndexByEntryType[pageType
+                                      .name] =
+                                  index;
+                              _selectedSubCategoryIndexByEntryType[pageType
+                                      .name] =
+                                  null;
+                            }),
+                            onSubSelected: (index) => setState(() {
+                              _selectedSubCategoryIndexByEntryType[pageType
+                                      .name] =
+                                  index;
+                            }),
+                          )
+                        : const SizedBox.shrink(),
                   ),
                   SliverToBoxAdapter(
                     child: TagsSection(
