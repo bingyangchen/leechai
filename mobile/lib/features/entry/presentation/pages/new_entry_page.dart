@@ -182,42 +182,42 @@ class _NewEntryPageState extends State<NewEntryPage>
     }
   }
 
-  void _openAccountPickerSingle() {
+  void _openAccountPicker({
+    required bool isFrom,
+    required void Function(Account) onSelect,
+    String? excludeAccountId,
+  }) {
     final list = filterAccountsForEntryType(
       _accounts,
       entryType: _entryType,
-      isFrom: _entryType == EntryType.expense,
+      isFrom: isFrom,
     );
     showAccountPickerSheet(
       context,
       accounts: list,
+      onSelect: onSelect,
+      excludeAccountId: excludeAccountId,
+    );
+  }
+
+  void _openAccountPickerSingle() {
+    _openAccountPicker(
+      isFrom: _entryType == EntryType.expense,
       onSelect: (a) => setState(() => _selectedAccountId = a.id),
     );
   }
 
   void _openAccountPickerFrom() {
-    final list = filterAccountsForEntryType(
-      _accounts,
-      entryType: _entryType,
+    _openAccountPicker(
       isFrom: true,
-    );
-    showAccountPickerSheet(
-      context,
-      accounts: list,
       onSelect: (a) => setState(() => _selectedAccountFromId = a.id),
       excludeAccountId: _selectedAccountToId,
     );
   }
 
   void _openAccountPickerTo() {
-    final list = filterAccountsForEntryType(
-      _accounts,
-      entryType: _entryType,
+    _openAccountPicker(
       isFrom: false,
-    );
-    showAccountPickerSheet(
-      context,
-      accounts: list,
       onSelect: (a) => setState(() => _selectedAccountToId = a.id),
       excludeAccountId: _selectedAccountFromId,
     );
