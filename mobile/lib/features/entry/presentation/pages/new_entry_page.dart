@@ -39,7 +39,7 @@ class _NewEntryPageState extends State<NewEntryPage>
   String? _selectedAccountFromId;
   String? _selectedAccountToId;
   final List<String> _tags = [];
-  List<Account> _accountsList = [];
+  List<Account> _accounts = [];
 
   bool get _hasUnsavedChanges =>
       _amountController.text.trim().isNotEmpty ||
@@ -119,12 +119,10 @@ class _NewEntryPageState extends State<NewEntryPage>
     }
   }
 
-  List<Account> get _accounts => _accountsList;
-
   Future<void> _loadAccounts() async {
-    final list = await AccountRepository.getAll();
+    final accounts = await AccountRepository.getAll();
     if (mounted) {
-      setState(() => _accountsList = list);
+      setState(() => _accounts = accounts);
       _applyDefaultAccounts();
     }
   }
