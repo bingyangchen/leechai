@@ -6,22 +6,28 @@ List<Account> filterAccountsForEntryType(
   required EntryType entryType,
   required bool isFrom,
 }) {
+  final balanceAccounts = all
+      .where(
+        (a) => a.type == AccountType.asset || a.type == AccountType.liability,
+      )
+      .toList();
+
   switch (entryType) {
     case EntryType.expense:
-      return all.where((a) => a.isPaymentMethod).toList();
+      return balanceAccounts.where((a) => a.isPaymentMethod).toList();
     case EntryType.income:
-      return all.where((a) => a.type == AccountType.asset).toList();
+      return balanceAccounts.where((a) => a.type == AccountType.asset).toList();
     case EntryType.transfer:
-      return all.where((a) => a.type == AccountType.asset).toList();
+      return balanceAccounts.where((a) => a.type == AccountType.asset).toList();
     case EntryType.borrow:
       if (isFrom) {
-        return all.where((a) => a.type == AccountType.liability).toList();
+        return balanceAccounts.where((a) => a.type == AccountType.liability).toList();
       }
-      return all.where((a) => a.type == AccountType.asset).toList();
+      return balanceAccounts.where((a) => a.type == AccountType.asset).toList();
     case EntryType.repay:
       if (isFrom) {
-        return all.where((a) => a.type == AccountType.asset).toList();
+        return balanceAccounts.where((a) => a.type == AccountType.asset).toList();
       }
-      return all.where((a) => a.type == AccountType.liability).toList();
+      return balanceAccounts.where((a) => a.type == AccountType.liability).toList();
   }
 }

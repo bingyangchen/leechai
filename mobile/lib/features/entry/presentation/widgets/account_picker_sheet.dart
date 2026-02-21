@@ -38,8 +38,7 @@ void showAccountPickerSheet(
               itemCount: accounts.length,
               itemBuilder: (context, index) {
                 final a = accounts[index];
-                final isDisabled =
-                    excludeAccountId != null && a.id == excludeAccountId;
+                final isDisabled = excludeAccountId != null && a.id == excludeAccountId;
                 return ListTile(
                   leading: Icon(
                     a.displayIcon,
@@ -50,13 +49,12 @@ void showAccountPickerSheet(
                         : Theme.of(context).colorScheme.primary,
                   ),
                   title: Text(
-                    a.name,
+                    a.name ?? '',
                     style: isDisabled
                         ? TextStyle(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurfaceVariant
-                                .withValues(alpha: 0.5),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                           )
                         : null,
                   ),
