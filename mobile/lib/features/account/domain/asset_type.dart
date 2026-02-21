@@ -1,15 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Asset type, corresponds to the `asset.type` field in the DB schema.
-/// Use [AssetType.name] when saving to database, and [AssetTypeX.fromName] for deserialization.
-enum AssetType {
-  bank,
-  cash,
-  epayment,
-  securities,
-  storedValueCard,
-  other,
-}
+enum AssetType { bank, cash, epayment, securities, storedValueCard, other }
 
 extension AssetTypeX on AssetType {
   String get label {

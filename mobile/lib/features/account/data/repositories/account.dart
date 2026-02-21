@@ -1,19 +1,28 @@
-import 'package:flutter/material.dart';
 import 'package:mobile/core/database/app_database.dart';
 import 'package:mobile/features/account/domain/account.dart';
-import 'package:mobile/features/account/domain/asset_type.dart';
-import 'package:mobile/features/account/domain/liability_type.dart';
+import 'package:mobile/features/account/domain/account_icon.dart';
 
 class AccountRepository {
   AccountRepository._();
 
   static const String _table = 'account';
 
-  static Future<List<Account>> getAll() async {
+  static Future<List<Account>> getByType(String type) async {
     final db = await AppDatabase.database;
     final rows = await db.query(
       _table,
-      where: 'deleted_at IS NULL',
+      where: 'type = ? AND deleted_at IS NULL',
+      whereArgs: [type],
+      orderBy: 'id',
+    );
+    return rows.map(_rowToAccount).toList();
+  }
+
+  static Future<List<Account>> getBalanceAccounts() async {
+    final db = await AppDatabase.database;
+    final rows = await db.query(
+      _table,
+      where: "type IN ('asset', 'liability') AND deleted_at IS NULL",
       orderBy: 'last_used_at DESC',
     );
     return rows.map(_rowToAccount).toList();
@@ -21,41 +30,25 @@ class AccountRepository {
 
   static Account _rowToAccount(Map<String, Object?> row) {
     final id = row['id'] as String;
-    final name = row['name'] as String;
+    final name = row['name'] as String?;
     final typeStr = row['type'] as String? ?? 'asset';
     final subTypeStr = row['sub_type'] as String? ?? '';
-
     final type = _parseAccountType(typeStr);
-    final icon = _iconFor(typeStr, subTypeStr);
-
-    return Account(
-      id: id,
-      name: name,
-      type: type,
-      subType: subTypeStr,
-      icon: icon,
-    );
+    final icon = iconFromCodePoint(row['icon'] as String?);
+    return Account(id: id, name: name, type: type, subType: subTypeStr, icon: icon);
   }
 
   static AccountType _parseAccountType(String typeStr) {
     switch (typeStr) {
       case 'liability':
         return AccountType.liability;
+      case 'expense':
+        return AccountType.expense;
+      case 'income':
+        return AccountType.income;
       case 'asset':
       default:
         return AccountType.asset;
     }
-  }
-
-  static IconData? _iconFor(String typeStr, String subTypeStr) {
-    if (typeStr == 'asset') {
-      final assetType = AssetTypeX.fromName(subTypeStr);
-      return assetType?.icon;
-    }
-    if (typeStr == 'liability') {
-      final liabilityType = LiabilityTypeX.fromName(subTypeStr);
-      return liabilityType?.icon;
-    }
-    return null;
   }
 }

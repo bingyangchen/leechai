@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/features/account/data/repositories/account.dart';
 import 'package:mobile/features/account/domain/account.dart';
-import 'package:mobile/features/entry/data/repositories/category.dart';
-import 'package:mobile/features/entry/domain/category.dart';
-import 'package:mobile/features/entry/domain/category_icon.dart';
 import 'package:mobile/features/entry/domain/entry_account_filter.dart';
 import 'package:mobile/features/entry/domain/entry_type.dart';
 import 'package:mobile/features/entry/presentation/constants/account_chip_labels.dart';
@@ -41,11 +38,9 @@ class _NewEntryPageState extends State<NewEntryPage>
   String? _selectedAccountFromId;
   String? _selectedAccountToId;
   final List<String> _tags = [];
-  List<Account> _accounts = [];
-  final Map<String, List<Category>> _mainCategoriesByEntryType = {};
-  final Map<String, List<List<String>>> _subCategoriesByEntryType = {};
-  final Map<String, int> _selectedMainCategoryIndexByEntryType = {};
-  final Map<String, int?> _selectedSubCategoryIndexByEntryType = {};
+  List<Account> _balanceAccounts = [];
+  final Map<String, List<Account>> _categoryAccountsByEntryType = {};
+  final Map<String, int> _selectedCategoryIndexByEntryType = {};
 
   bool get _hasUnsavedChanges =>
       _amountController.text.trim().isNotEmpty ||
@@ -63,8 +58,8 @@ class _NewEntryPageState extends State<NewEntryPage>
     _notesController.addListener(() => setState(() {}));
     _tabController.addListener(_syncEntryTypeFromTab);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadAccounts();
-      _loadCategories();
+      _loadBalanceAccounts();
+      _loadCategoryAccounts();
       _amountFocusNode.requestFocus();
     });
   }
@@ -108,36 +103,23 @@ class _NewEntryPageState extends State<NewEntryPage>
     if (mounted && leave == true) Navigator.of(context).pop(false);
   }
 
-  Future<void> _loadAccounts() async {
-    final accounts = await AccountRepository.getAll();
+  Future<void> _loadBalanceAccounts() async {
+    final accounts = await AccountRepository.getBalanceAccounts();
     if (mounted) {
-      setState(() => _accounts = accounts);
+      setState(() => _balanceAccounts = accounts);
       _applyDefaultAccounts();
     }
   }
 
-  Future<void> _loadCategories() async {
-    const entryTypeIds = ['expense', 'income'];
-    final mainByType = <String, List<Category>>{};
-    final subsByType = <String, List<List<String>>>{};
-    for (final entryTypeId in entryTypeIds) {
-      final mains = await CategoryRepository.getMainCategories(entryTypeId);
-      final subsByMain = <List<String>>[];
-      for (final main in mains) {
-        final subs = await CategoryRepository.getSubCategories(main.id);
-        subsByMain.add(subs.map((c) => c.name).toList());
-      }
-      mainByType[entryTypeId] = mains;
-      subsByType[entryTypeId] = subsByMain;
-    }
+  Future<void> _loadCategoryAccounts() async {
+    final expenseAccounts = await AccountRepository.getByType('expense');
+    final incomeAccounts = await AccountRepository.getByType('income');
     if (mounted) {
       setState(() {
-        _mainCategoriesByEntryType
+        _categoryAccountsByEntryType
           ..clear()
-          ..addAll(mainByType);
-        _subCategoriesByEntryType
-          ..clear()
-          ..addAll(subsByType);
+          ..['expense'] = expenseAccounts
+          ..['income'] = incomeAccounts;
       });
     }
   }
@@ -145,12 +127,12 @@ class _NewEntryPageState extends State<NewEntryPage>
   void _applyDefaultAccounts() {
     if (_entryType.isDualAccount) {
       final fromList = filterAccountsForEntryType(
-        _accounts,
+        _balanceAccounts,
         entryType: _entryType,
         isFrom: true,
       );
       final toList = filterAccountsForEntryType(
-        _accounts,
+        _balanceAccounts,
         entryType: _entryType,
         isFrom: false,
       );
@@ -159,15 +141,13 @@ class _NewEntryPageState extends State<NewEntryPage>
         if (toList.isEmpty) {
           _selectedAccountToId = null;
         } else {
-          final other = toList
-              .where((a) => a.id != _selectedAccountFromId)
-              .toList();
+          final other = toList.where((a) => a.id != _selectedAccountFromId).toList();
           _selectedAccountToId = other.isNotEmpty ? other.first.id : null;
         }
       });
     } else {
       final list = filterAccountsForEntryType(
-        _accounts,
+        _balanceAccounts,
         entryType: _entryType,
         isFrom: _entryType == EntryType.expense,
       );
@@ -180,7 +160,7 @@ class _NewEntryPageState extends State<NewEntryPage>
   String? _accountName(String? id) {
     if (id == null) return null;
     try {
-      return _accounts.firstWhere((a) => a.id == id).name;
+      return _balanceAccounts.firstWhere((a) => a.id == id).name;
     } catch (_) {
       return null;
     }
@@ -189,7 +169,7 @@ class _NewEntryPageState extends State<NewEntryPage>
   Account? _accountById(String? id) {
     if (id == null) return null;
     try {
-      return _accounts.firstWhere((a) => a.id == id);
+      return _balanceAccounts.firstWhere((a) => a.id == id);
     } catch (_) {
       return null;
     }
@@ -201,7 +181,7 @@ class _NewEntryPageState extends State<NewEntryPage>
     String? excludeAccountId,
   }) {
     final accounts = filterAccountsForEntryType(
-      _accounts,
+      _balanceAccounts,
       entryType: _entryType,
       isFrom: isFrom,
     );
@@ -319,8 +299,7 @@ class _NewEntryPageState extends State<NewEntryPage>
               final pageColor = EntryTypeColors.forType(pageType);
               return CustomScrollView(
                 key: PageStorageKey<int>(index),
-                keyboardDismissBehavior:
-                    ScrollViewKeyboardDismissBehavior.onDrag,
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                 slivers: [
                   SliverToBoxAdapter(
                     child: AmountDisplaySection(
@@ -376,59 +355,22 @@ class _NewEntryPageState extends State<NewEntryPage>
                   ),
                   const SliverToBoxAdapter(child: SizedBox(height: 16)),
                   SliverToBoxAdapter(
-                    child:
-                        pageType == EntryType.expense ||
-                            pageType == EntryType.income
+                    child: pageType == EntryType.expense || pageType == EntryType.income
                         ? CategorySection(
-                            mainCategories:
-                                _mainCategoriesByEntryType.containsKey(
+                            categories:
+                                _categoryAccountsByEntryType.containsKey(
                                   pageType.name,
                                 )
-                                ? _mainCategoriesByEntryType[pageType.name]!
+                                ? _categoryAccountsByEntryType[pageType.name]!
                                       .map(
-                                        (c) => (
-                                          name: c.name,
-                                          icon: categoryIcon(c.icon),
-                                        ),
+                                        (a) => (name: a.subType, icon: a.displayIcon),
                                       )
                                       .toList()
                                 : [],
-                            subCategoryNames:
-                                _subCategoriesByEntryType.containsKey(
-                                  pageType.name,
-                                )
-                                ? () {
-                                    final subs =
-                                        _subCategoriesByEntryType[pageType
-                                            .name]!;
-                                    final mainIdx =
-                                        _selectedMainCategoryIndexByEntryType[pageType
-                                            .name] ??
-                                        0;
-                                    return mainIdx < subs.length
-                                        ? subs[mainIdx]
-                                        : <String>[];
-                                  }()
-                                : [],
-                            selectedMainIndex:
-                                _selectedMainCategoryIndexByEntryType[pageType
-                                    .name] ??
-                                0,
-                            selectedSubIndex:
-                                _selectedSubCategoryIndexByEntryType[pageType
-                                    .name],
-                            onMainSelected: (index) => setState(() {
-                              _selectedMainCategoryIndexByEntryType[pageType
-                                      .name] =
-                                  index;
-                              _selectedSubCategoryIndexByEntryType[pageType
-                                      .name] =
-                                  null;
-                            }),
-                            onSubSelected: (index) => setState(() {
-                              _selectedSubCategoryIndexByEntryType[pageType
-                                      .name] =
-                                  index;
+                            selectedIndex:
+                                _selectedCategoryIndexByEntryType[pageType.name] ?? 0,
+                            onSelected: (index) => setState(() {
+                              _selectedCategoryIndexByEntryType[pageType.name] = index;
                             }),
                           )
                         : const SizedBox.shrink(),

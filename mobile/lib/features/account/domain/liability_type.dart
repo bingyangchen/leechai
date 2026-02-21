@@ -1,11 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Liability type, corresponds to the `liability.type` field in the DB schema.
-/// Use [LiabilityType.name] when saving to database, and [LiabilityTypeX.fromName] for deserialization.
-enum LiabilityType {
-  creditCard,
-  loan,
-}
+enum LiabilityType { creditCard, loan }
 
 extension LiabilityTypeX on LiabilityType {
   String get label {

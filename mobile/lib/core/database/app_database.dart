@@ -2,10 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:mobile/core/database/schema.dart' as core_schema;
-import 'package:mobile/features/account/data/schema/account.dart'
-    as account_schema;
-import 'package:mobile/features/entry/data/schema/category.dart'
-    as category_schema;
+import 'package:mobile/features/account/data/schema/account.dart' as account_schema;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
@@ -44,14 +41,9 @@ class AppDatabase {
   static Future<void> _onCreate(Database db, int version) async {
     await core_schema.run(db);
     await account_schema.run(db);
-    await category_schema.run(db);
   }
 
-  static Future<void> _onUpgrade(
-    Database db,
-    int oldVersion,
-    int newVersion,
-  ) async {
+  static Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     // handle schema migration
   }
 
