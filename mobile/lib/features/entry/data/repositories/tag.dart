@@ -22,4 +22,18 @@ class TagRepository {
     await db.insert(_table, {'id': id, 'title': trimmed});
     return id;
   }
+
+  static Future<List<String>> searchByTitlePrefix(String query) async {
+    final db = await AppDatabase.database;
+    final prefix = query.trim();
+    if (prefix.isEmpty) return [];
+    final rows = await db.query(
+      _table,
+      columns: ['title'],
+      where: 'deleted_at IS NULL AND title LIKE ?',
+      whereArgs: ['$prefix%'],
+      orderBy: 'title',
+    );
+    return rows.map((r) => r['title'] as String).toList();
+  }
 }
