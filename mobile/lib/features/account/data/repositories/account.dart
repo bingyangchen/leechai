@@ -7,6 +7,12 @@ class AccountRepository {
 
   static const String _table = 'account';
 
+  static Future<List<Account>> getAll() async {
+    final db = await AppDatabase.database;
+    final rows = await db.query(_table, where: 'deleted_at IS NULL', orderBy: 'id');
+    return rows.map(_rowToAccount).toList();
+  }
+
   static Future<List<Account>> getByType(String type) async {
     final db = await AppDatabase.database;
     final rows = await db.query(
@@ -26,6 +32,17 @@ class AccountRepository {
       orderBy: 'last_used_at DESC',
     );
     return rows.map(_rowToAccount).toList();
+  }
+
+  static Future<Account?> getById(String id) async {
+    final db = await AppDatabase.database;
+    final rows = await db.query(
+      _table,
+      where: 'id = ? AND deleted_at IS NULL',
+      whereArgs: [id],
+    );
+    if (rows.isEmpty) return null;
+    return _rowToAccount(rows.single);
   }
 
   static Account _rowToAccount(Map<String, Object?> row) {
