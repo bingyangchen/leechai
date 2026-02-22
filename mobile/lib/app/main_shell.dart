@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/features/account/presentation/pages/assets_page.dart';
+import 'package:mobile/features/entry/presentation/pages/entry_page.dart';
 import 'package:mobile/features/entry/presentation/pages/journal_page.dart';
-import 'package:mobile/features/entry/presentation/pages/new_entry_page.dart';
 import 'package:mobile/features/settings/presentation/pages/settings_page.dart';
 import 'package:mobile/features/statistics/presentation/pages/analysis_page.dart';
 
@@ -50,7 +50,7 @@ class _MainShellState extends State<MainShell> {
           ? FloatingActionButton(
               onPressed: () async {
                 final added = await Navigator.of(context).push<bool>(
-                  MaterialPageRoute<bool>(builder: (context) => const NewEntryPage()),
+                  MaterialPageRoute<bool>(builder: (context) => const EntryPage()),
                 );
                 if (!context.mounted) return;
                 if (added == true) {

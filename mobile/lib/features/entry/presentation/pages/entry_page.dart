@@ -18,18 +18,15 @@ import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/date_time_picker_sheet.dart';
 import 'package:mobile/shared/widgets/discard_changes_dialog.dart';
 
-class NewEntryPage extends StatefulWidget {
-  const NewEntryPage({super.key, this.entryId});
-
-  /// When set, the page loads this entry and acts as edit mode.
+class EntryPage extends StatefulWidget {
+  const EntryPage({super.key, this.entryId});
   final String? entryId;
 
   @override
-  State<NewEntryPage> createState() => _NewEntryPageState();
+  State<EntryPage> createState() => _EntryPageState();
 }
 
-class _NewEntryPageState extends State<NewEntryPage>
-    with SingleTickerProviderStateMixin {
+class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _amountFocusNode = FocusNode();

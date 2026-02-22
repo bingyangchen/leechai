@@ -5,7 +5,7 @@ import 'package:mobile/features/account/domain/account.dart';
 import 'package:mobile/features/entry/data/repositories/entry.dart' as entry_repo;
 import 'package:mobile/features/entry/data/repositories/tag.dart' as tag_repo;
 import 'package:mobile/features/entry/domain/entry_type.dart';
-import 'package:mobile/features/entry/presentation/pages/new_entry_page.dart';
+import 'package:mobile/features/entry/presentation/pages/entry_page.dart';
 import 'package:mobile/features/entry/presentation/widgets/collapsed_summary_bar.dart';
 import 'package:mobile/features/entry/presentation/widgets/journal_empty_state.dart';
 import 'package:mobile/features/entry/presentation/widgets/journal_top_bar.dart';
@@ -205,7 +205,7 @@ class _JournalPageState extends State<JournalPage> {
 
   void _onTapEntry(String entryId) {
     Navigator.of(context)
-        .push<bool?>(MaterialPageRoute(builder: (_) => NewEntryPage(entryId: entryId)))
+        .push<bool?>(MaterialPageRoute(builder: (_) => EntryPage(entryId: entryId)))
         .then((saved) {
           if (saved == true) _onRefreshTrigger();
         });
