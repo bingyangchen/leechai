@@ -12,7 +12,8 @@ Future<void> run(Database db) async {
     occurred_at TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT (DATETIME('now')),
     updated_at TEXT NOT NULL DEFAULT (DATETIME('now')),
-    deleted_at TEXT
+    deleted_at TEXT,
+    synced INTEGER NOT NULL DEFAULT 0
   );
   ''');
 }

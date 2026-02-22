@@ -180,8 +180,12 @@ class TransactionRow extends StatelessWidget {
         return debit?.displayIcon ?? Icons.payments;
       case EntryType.income:
         return credit?.displayIcon ?? Icons.trending_up;
-      default:
+      case EntryType.transfer:
         return Icons.swap_horiz;
+      case EntryType.borrow:
+        return Icons.handshake;
+      case EntryType.repay:
+        return Icons.reply;
     }
   }
 
