@@ -14,7 +14,7 @@ import 'package:mobile/features/entry/presentation/widgets/category_section.dart
 import 'package:mobile/features/entry/presentation/widgets/date_chip_row.dart';
 import 'package:mobile/features/entry/presentation/widgets/notes_section.dart';
 import 'package:mobile/features/entry/presentation/widgets/tags_section.dart';
-import 'package:mobile/shared/utils/amount_input_formatter.dart';
+import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/date_time_picker_sheet.dart';
 import 'package:mobile/shared/widgets/discard_changes_dialog.dart';
 
