@@ -63,9 +63,7 @@ class _DateTimePickerSheetState extends State<DateTimePickerSheet> {
       _isAm = false;
     }
     _clampDay();
-    _yearController = FixedExtentScrollController(
-      initialItem: _year - _minYear,
-    );
+    _yearController = FixedExtentScrollController(initialItem: _year - _minYear);
     _monthController = FixedExtentScrollController(initialItem: _month - 1);
     _dayController = FixedExtentScrollController(initialItem: _day - 1);
     _hourController = FixedExtentScrollController(initialItem: _hour12 - 1);
@@ -107,10 +105,7 @@ class _DateTimePickerSheetState extends State<DateTimePickerSheet> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                TextButton(
-                  onPressed: widget.onCancel,
-                  child: const Text('取消'),
-                ),
+                TextButton(onPressed: widget.onCancel, child: const Text('取消')),
                 TextButton(
                   onPressed: () => widget.onConfirm(_value),
                   child: const Text('確定'),
