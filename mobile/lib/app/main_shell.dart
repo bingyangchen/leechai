@@ -13,12 +13,10 @@ class MainShell extends StatefulWidget {
 }
 
 class _MainShellState extends State<MainShell> {
-  static const double _bottomNavBarTopRadius = 25;
-
+  static const double _bottomNavBarHeight = 88;
   int _currentIndex = 0;
   late final PageController _pageController;
   final ValueNotifier<int> _journalRefreshTrigger = ValueNotifier(0);
-
   late final List<Widget> _pages;
 
   @override
@@ -52,9 +50,7 @@ class _MainShellState extends State<MainShell> {
           ? FloatingActionButton(
               onPressed: () async {
                 final added = await Navigator.of(context).push<bool>(
-                  MaterialPageRoute<bool>(
-                    builder: (context) => const NewEntryPage(),
-                  ),
+                  MaterialPageRoute<bool>(builder: (context) => const NewEntryPage()),
                 );
                 if (!context.mounted) return;
                 if (added == true) {
@@ -70,19 +66,12 @@ class _MainShellState extends State<MainShell> {
               child: const Icon(Icons.add),
             )
           : null,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(_bottomNavBarTopRadius),
-          ),
-          border: Border(
-            top: BorderSide(color: Theme.of(context).dividerColor),
-          ),
-        ),
-        child: ClipRRect(
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(_bottomNavBarTopRadius),
+      bottomNavigationBar: SizedBox(
+        height: _bottomNavBarHeight,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
           ),
           child: BottomNavigationBar(
             backgroundColor: Colors.transparent,
@@ -99,22 +88,13 @@ class _MainShellState extends State<MainShell> {
             selectedLabelStyle: const TextStyle(fontSize: 12),
             unselectedLabelStyle: const TextStyle(fontSize: 12),
             items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.receipt_long),
-                label: '明細',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.pie_chart_outline),
-                label: '統計',
-              ),
+              BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: '明細'),
+              BottomNavigationBarItem(icon: Icon(Icons.pie_chart_outline), label: '統計'),
               BottomNavigationBarItem(
                 icon: Icon(Icons.account_balance_wallet_outlined),
                 label: '資產',
               ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.settings_outlined),
-                label: '設定',
-              ),
+              BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), label: '設定'),
             ],
           ),
         ),
