@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:mobile/core/database/schema.dart' as core_schema;
 import 'package:mobile/features/account/data/schema/account.dart' as account_schema;
 import 'package:mobile/features/entry/data/schema/entry.dart' as entry_schema;
+import 'package:mobile/features/entry/data/schema/entry_tag.dart' as entry_tag_schema;
 import 'package:mobile/features/entry/data/schema/tag.dart' as tag_schema;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -45,6 +46,7 @@ class AppDatabase {
     await account_schema.run(db);
     await tag_schema.run(db);
     await entry_schema.run(db);
+    await entry_tag_schema.run(db);
   }
 
   static Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {

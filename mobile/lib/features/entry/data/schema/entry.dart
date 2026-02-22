@@ -8,7 +8,6 @@ Future<void> run(Database db) async {
     debit_account_id TEXT NOT NULL,
     credit_account_id TEXT NOT NULL,
     amount REAL NOT NULL,
-    tag_ids TEXT NOT NULL,
     memo TEXT,
     occurred_at TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT (DATETIME('now')),

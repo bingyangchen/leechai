@@ -315,10 +315,7 @@ class _NewEntryPageState extends State<NewEntryPage>
           title: const Text('新增紀錄'),
           leading: TextButton(
             onPressed: _isSubmitting ? null : _requestClose,
-            child: const Text(
-              '捨棄',
-              style: TextStyle(fontWeight: FontWeight.w400),
-            ),
+            child: const Text('捨棄', style: TextStyle(fontWeight: FontWeight.w400)),
           ),
           actions: [
             if (_isSubmitting)
@@ -333,10 +330,7 @@ class _NewEntryPageState extends State<NewEntryPage>
             else
               TextButton(
                 onPressed: _submit,
-                child: const Text(
-                  '送出',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
+                child: const Text('送出', style: TextStyle(fontWeight: FontWeight.w600)),
               ),
           ],
           bottom: PreferredSize(
@@ -348,9 +342,7 @@ class _NewEntryPageState extends State<NewEntryPage>
               dividerHeight: 0,
               indicatorColor: typeColor,
               labelColor: typeColor,
-              unselectedLabelColor: Theme.of(
-                context,
-              ).colorScheme.onSurfaceVariant,
+              unselectedLabelColor: Theme.of(context).colorScheme.onSurfaceVariant,
               indicatorSize: TabBarIndicatorSize.label,
               tabs: EntryType.values.map((t) => Tab(text: t.label)).toList(),
               onTap: (index) {
@@ -433,9 +425,7 @@ class _NewEntryPageState extends State<NewEntryPage>
                                 (pageType == EntryType.expense
                                         ? _categoryExpenseAccounts
                                         : _categoryIncomeAccounts)
-                                    .map(
-                                      (a) => (name: a.subType, icon: a.displayIcon),
-                                    )
+                                    .map((a) => (name: a.subType, icon: a.displayIcon))
                                     .toList(),
                             selectedIndex: pageType == EntryType.expense
                                 ? _selectedExpenseCategoryIndex

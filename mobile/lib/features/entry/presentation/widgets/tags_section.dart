@@ -33,13 +33,8 @@ class TagsSection extends StatelessWidget {
           const SizedBox(height: 8),
           InputDecorator(
             decoration: InputDecoration(
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 10,
-              ),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,8 +54,7 @@ class TagsSection extends StatelessWidget {
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
                           onDeleted: enabled ? () => onRemoveTag(tag) : null,
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
+                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           visualDensity: VisualDensity.compact,
                         ),
                     ],
@@ -83,13 +77,9 @@ class TagsSection extends StatelessWidget {
                       ),
                     ),
                     IconButton(
-                      onPressed: enabled
-                          ? () => onAddTag(inputController.text)
-                          : null,
+                      onPressed: enabled ? () => onAddTag(inputController.text) : null,
                       icon: const Icon(Icons.add_circle_outline),
-                      style: IconButton.styleFrom(
-                        visualDensity: VisualDensity.compact,
-                      ),
+                      style: IconButton.styleFrom(visualDensity: VisualDensity.compact),
                     ),
                   ],
                 ),
