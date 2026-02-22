@@ -1,4 +1,5 @@
 import 'package:mobile/core/database/app_database.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
 class EntryRepository {
@@ -32,7 +33,7 @@ class EntryRepository {
     final now = DateTime.now().toUtc().toIso8601String();
     await db.update(
       _table,
-      {'deleted_at': now, 'updated_at': now},
+      {'deleted_at': now, 'updated_at': now, 'synced': 0},
       where: 'id = ?',
       whereArgs: [id],
     );
@@ -79,7 +80,7 @@ class EntryRepository {
     final rows = await db.query(
       _entryTagTable,
       columns: ['tag_id'],
-      where: 'entry_id = ?',
+      where: 'entry_id = ? AND deleted_at IS NULL',
       whereArgs: [entryId],
     );
     return rows.map((r) => r['tag_id'] as String).toList();
@@ -96,6 +97,7 @@ class EntryRepository {
     required DateTime occurredAt,
   }) async {
     final db = await AppDatabase.database;
+    final now = DateTime.now().toUtc().toIso8601String();
     await db.update(
       _table,
       {
@@ -105,13 +107,23 @@ class EntryRepository {
         'amount': amount,
         'memo': memo,
         'occurred_at': occurredAt.toUtc().toIso8601String(),
+        'updated_at': now,
+        'synced': 0,
       },
       where: 'id = ?',
       whereArgs: [id],
     );
-    await db.delete(_entryTagTable, where: 'entry_id = ?', whereArgs: [id]);
+    await db.update(
+      _entryTagTable,
+      {'deleted_at': now, 'synced': 0},
+      where: 'entry_id = ?',
+      whereArgs: [id],
+    );
     for (final tagId in tagIds) {
-      await db.insert(_entryTagTable, {'entry_id': id, 'tag_id': tagId});
+      await db.insert(_entryTagTable, {
+        'entry_id': id,
+        'tag_id': tagId,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
     }
   }
 
