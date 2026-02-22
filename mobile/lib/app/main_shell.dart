@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/features/account/presentation/pages/assets_page.dart';
+import 'package:mobile/features/account/presentation/pages/account_page.dart';
 import 'package:mobile/features/entry/presentation/pages/entry_page.dart';
 import 'package:mobile/features/entry/presentation/pages/journal_page.dart';
 import 'package:mobile/features/settings/presentation/pages/settings_page.dart';
