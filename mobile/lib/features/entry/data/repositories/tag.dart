@@ -36,4 +36,17 @@ class TagRepository {
     );
     return rows.map((r) => r['title'] as String).toList();
   }
+
+  static Future<Map<String, String>> getTitlesByIds(List<String> ids) async {
+    if (ids.isEmpty) return {};
+    final db = await AppDatabase.database;
+    final placeholders = List.filled(ids.length, '?').join(', ');
+    final rows = await db.query(
+      _table,
+      columns: ['id', 'title'],
+      where: 'deleted_at IS NULL AND id IN ($placeholders)',
+      whereArgs: ids,
+    );
+    return {for (final r in rows) r['id'] as String: r['title'] as String};
+  }
 }

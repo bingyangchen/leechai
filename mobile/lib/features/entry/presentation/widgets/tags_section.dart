@@ -199,7 +199,7 @@ class _TagsSectionState extends State<TagsSection> {
                           border: InputBorder.none,
                           isDense: true,
                           contentPadding: EdgeInsets.zero,
-                          hintText: '新增標籤或專案，按 Enter 或 ＋ 加入',
+                          hintText: '新增標籤',
                         ),
                         onSubmitted: (value) => widget.onAddTag(value),
                       ),

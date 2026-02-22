@@ -315,7 +315,7 @@ class _NewEntryPageState extends State<NewEntryPage>
           title: const Text('新增紀錄'),
           leading: TextButton(
             onPressed: _isSubmitting ? null : _requestClose,
-            child: const Text('捨棄', style: TextStyle(fontWeight: FontWeight.w400)),
+            child: const Text('捨棄'),
           ),
           actions: [
             if (_isSubmitting)
@@ -328,10 +328,7 @@ class _NewEntryPageState extends State<NewEntryPage>
                 ),
               )
             else
-              TextButton(
-                onPressed: _submit,
-                child: const Text('送出', style: TextStyle(fontWeight: FontWeight.w600)),
-              ),
+              TextButton(onPressed: _submit, child: const Text('送出')),
           ],
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(48),
