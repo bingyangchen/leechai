@@ -380,7 +380,10 @@ class _NewEntryPageState extends State<NewEntryPage>
                           useSafeArea: true,
                           builder: (ctx) => DateTimePickerSheet(
                             initial: _selectedDate,
-                            onConfirm: (v) => Navigator.of(ctx).pop(v),
+                            onConfirm: (v, {fromDrag = false}) {
+                              setState(() => _selectedDate = v);
+                              if (!fromDrag) Navigator.of(ctx).pop(v);
+                            },
                             onCancel: () => Navigator.of(ctx).pop(),
                           ),
                         );
