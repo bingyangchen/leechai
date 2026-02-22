@@ -3,6 +3,11 @@ import 'package:intl/intl.dart';
 
 String stripAmount(String value) => value.replaceAll(',', '').trim();
 
+String formatAmountForDisplay(double value, {int decimalPlaces = 0}) {
+  if (decimalPlaces == 0) return NumberFormat('#,##0').format(value.round());
+  return NumberFormat('#,##0.${'0' * decimalPlaces}').format(value);
+}
+
 class ThousandsSeparatorInputFormatter extends TextInputFormatter {
   ThousandsSeparatorInputFormatter();
 

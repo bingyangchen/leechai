@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/shared/utils/amount_input_formatter.dart';
+import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 
 class AmountDisplaySection extends StatelessWidget {
   const AmountDisplaySection({
@@ -55,9 +55,7 @@ class AmountDisplaySection extends StatelessWidget {
                     decimal: true,
                     signed: false,
                   ),
-                  inputFormatters: [
-                    ThousandsSeparatorInputFormatter(),
-                  ],
+                  inputFormatters: [ThousandsSeparatorInputFormatter()],
                   enabled: !isSubmitting,
                   validator: (value) {
                     if (value == null || stripAmount(value).isEmpty) {

@@ -13,7 +13,8 @@ Future<void> run(Database db) async {
     last_used_at TEXT NOT NULL DEFAULT (DATETIME('now')),
     created_at TEXT NOT NULL DEFAULT (DATETIME('now')),
     updated_at TEXT NOT NULL DEFAULT (DATETIME('now')),
-    deleted_at TEXT
+    deleted_at TEXT,
+    synced INTEGER NOT NULL DEFAULT 0
   );
   ''');
   await seedDefaults(db);
@@ -21,41 +22,36 @@ Future<void> run(Database db) async {
 
 Future<void> seedDefaults(Database db) async {
   // Assets
-  await db.insert(
-    'account',
-    {
-      'id': 'default_cash',
-      'type': 'asset',
-      'sub_type': 'cash',
-      'name': '現金',
-      'icon': Icons.wallet.codePoint.toString(),
-    },
-    conflictAlgorithm: ConflictAlgorithm.ignore,
-  );
-  await db.insert(
-    'account',
-    {
-      'id': 'default_bank',
-      'type': 'asset',
-      'sub_type': 'bank',
-      'name': '銀行',
-      'icon': Icons.account_balance.codePoint.toString(),
-    },
-    conflictAlgorithm: ConflictAlgorithm.ignore,
-  );
+  await db.insert('account', {
+    'id': 'default_cash',
+    'type': 'asset',
+    'sub_type': 'cash',
+    'name': '現金',
+    'icon': Icons.wallet.codePoint.toString(),
+  }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  await db.insert('account', {
+    'id': 'default_bank',
+    'type': 'asset',
+    'sub_type': 'bank',
+    'name': '銀行',
+    'icon': Icons.account_balance.codePoint.toString(),
+  }, conflictAlgorithm: ConflictAlgorithm.ignore);
 
   // Liabilities
-  await db.insert(
-    'account',
-    {
-      'id': 'default_loan',
-      'type': 'liability',
-      'sub_type': 'loan',
-      'name': '貸款',
-      'icon': Icons.credit_card.codePoint.toString(),
-    },
-    conflictAlgorithm: ConflictAlgorithm.ignore,
-  );
+  await db.insert('account', {
+    'id': 'default_loan',
+    'type': 'liability',
+    'sub_type': 'loan',
+    'name': '貸款',
+    'icon': Icons.credit_card.codePoint.toString(),
+  }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  await db.insert('account', {
+    'id': 'default_credit_card',
+    'type': 'liability',
+    'sub_type': 'creditCard',
+    'name': '信用卡',
+    'icon': Icons.credit_card.codePoint.toString(),
+  }, conflictAlgorithm: ConflictAlgorithm.ignore);
 
   // Expense
   final expenseAccounts = [
@@ -67,11 +63,12 @@ Future<void> seedDefaults(Database db) async {
     ('default_expense_5', '其他', Icons.more_horiz.codePoint.toString()),
   ];
   for (final (id, subType, icon) in expenseAccounts) {
-    await db.insert(
-      'account',
-      {'id': id, 'type': 'expense', 'sub_type': subType, 'icon': icon},
-      conflictAlgorithm: ConflictAlgorithm.ignore,
-    );
+    await db.insert('account', {
+      'id': id,
+      'type': 'expense',
+      'sub_type': subType,
+      'icon': icon,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
   // Income
@@ -83,10 +80,11 @@ Future<void> seedDefaults(Database db) async {
     ('default_income_4', '其他', Icons.more_horiz.codePoint.toString()),
   ];
   for (final (id, subType, icon) in incomeAccounts) {
-    await db.insert(
-      'account',
-      {'id': id, 'type': 'income', 'sub_type': subType, 'icon': icon},
-      conflictAlgorithm: ConflictAlgorithm.ignore,
-    );
+    await db.insert('account', {
+      'id': id,
+      'type': 'income',
+      'sub_type': subType,
+      'icon': icon,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 }

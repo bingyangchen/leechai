@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 
+typedef DateTimePickerOnConfirm = void Function(DateTime value, {bool fromDrag});
+
 class DateTimePickerSheet extends StatefulWidget {
   const DateTimePickerSheet({
     super.key,
     required this.initial,
     required this.onConfirm,
     required this.onCancel,
+    this.monthOnly = false,
   });
 
   final DateTime initial;
-  final ValueChanged<DateTime> onConfirm;
+  final DateTimePickerOnConfirm onConfirm;
   final VoidCallback onCancel;
+  final bool monthOnly;
 
   @override
   State<DateTimePickerSheet> createState() => _DateTimePickerSheetState();
@@ -24,6 +28,9 @@ class _DateTimePickerSheetState extends State<DateTimePickerSheet> {
   static const double _wheelWidthTwoDigit = 36;
   static const double _wheelWidthAmPm = 40;
   static const double _separatorPadding = 0;
+
+  bool _didConfirm = false;
+  bool _didCancel = false;
 
   late int _year;
   late int _month;
@@ -46,6 +53,19 @@ class _DateTimePickerSheetState extends State<DateTimePickerSheet> {
     super.initState();
     _year = widget.initial.year;
     _month = widget.initial.month;
+    _yearController = FixedExtentScrollController(initialItem: _year - _minYear);
+    _monthController = FixedExtentScrollController(initialItem: _month - 1);
+    if (widget.monthOnly) {
+      _day = 1;
+      _hour12 = 12;
+      _isAm = true;
+      _minute = 0;
+      _dayController = FixedExtentScrollController(initialItem: 0);
+      _hourController = FixedExtentScrollController(initialItem: 0);
+      _minuteController = FixedExtentScrollController(initialItem: 0);
+      _ampmController = FixedExtentScrollController(initialItem: 0);
+      return;
+    }
     _day = widget.initial.day;
     _minute = widget.initial.minute;
     final h24 = widget.initial.hour;
@@ -63,10 +83,6 @@ class _DateTimePickerSheetState extends State<DateTimePickerSheet> {
       _isAm = false;
     }
     _clampDay();
-    _yearController = FixedExtentScrollController(
-      initialItem: _year - _minYear,
-    );
-    _monthController = FixedExtentScrollController(initialItem: _month - 1);
     _dayController = FixedExtentScrollController(initialItem: _day - 1);
     _hourController = FixedExtentScrollController(initialItem: _hour12 - 1);
     _minuteController = FixedExtentScrollController(initialItem: _minute);
@@ -98,122 +114,166 @@ class _DateTimePickerSheetState extends State<DateTimePickerSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                TextButton(
-                  onPressed: widget.onCancel,
-                  child: const Text('取消'),
-                ),
-                TextButton(
-                  onPressed: () => widget.onConfirm(_value),
-                  child: const Text('確定'),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(
-            height: _wheelItemHeight * 5,
-            child: Center(
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (bool didPop, dynamic result) {
+        if (didPop && !_didConfirm && !_didCancel) {
+          widget.onConfirm(_value, fromDrag: true);
+        }
+      },
+      child: SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  SizedBox(
-                    width: _wheelWidthYear,
-                    child: _buildWheel<int>(
-                      items: List.generate(
-                        _maxYear - _minYear + 1,
-                        (i) => _minYear + i,
-                      ),
-                      value: _year,
-                      format: (v) => '$v',
-                      controller: _yearController,
-                      onChanged: (v) {
-                        setState(() {
-                          _year = v;
-                          _clampDay();
-                          _dayController.jumpToItem(_day - 1);
-                        });
-                      },
-                    ),
+                  TextButton(
+                    onPressed: () {
+                      _didCancel = true;
+                      widget.onCancel();
+                    },
+                    child: const Text('取消'),
                   ),
-                  _wheelSeparator('/'),
-                  SizedBox(
-                    width: _wheelWidthTwoDigit,
-                    child: _buildWheel<int>(
-                      items: List.generate(12, (i) => i + 1),
-                      value: _month,
-                      format: (v) => v.toString().padLeft(2, '0'),
-                      controller: _monthController,
-                      onChanged: (v) {
-                        setState(() {
-                          _month = v;
-                          _clampDay();
-                          _dayController.jumpToItem(_day - 1);
-                        });
-                      },
-                    ),
-                  ),
-                  _wheelSeparator('/'),
-                  SizedBox(
-                    width: _wheelWidthTwoDigit,
-                    child: _buildWheel<int>(
-                      items: List.generate(
-                        DateTime(_year, _month + 1, 0).day,
-                        (i) => i + 1,
-                      ),
-                      value: _day,
-                      format: (v) => v.toString().padLeft(2, '0'),
-                      controller: _dayController,
-                      onChanged: (v) => setState(() => _day = v),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  SizedBox(
-                    width: _wheelWidthTwoDigit,
-                    child: _buildWheel<int>(
-                      items: List.generate(12, (i) => i + 1),
-                      value: _hour12,
-                      format: (v) => v.toString().padLeft(2, '0'),
-                      controller: _hourController,
-                      onChanged: (v) => setState(() => _hour12 = v),
-                    ),
-                  ),
-                  _wheelSeparator(':'),
-                  SizedBox(
-                    width: _wheelWidthTwoDigit,
-                    child: _buildWheel<int>(
-                      items: List.generate(60, (i) => i),
-                      value: _minute,
-                      format: (v) => v.toString().padLeft(2, '0'),
-                      controller: _minuteController,
-                      onChanged: (v) => setState(() => _minute = v),
-                    ),
-                  ),
-                  SizedBox(
-                    width: _wheelWidthAmPm,
-                    child: _buildWheel<int>(
-                      items: const [0, 1],
-                      value: _isAm ? 0 : 1,
-                      format: (v) => _ampmLabels[v],
-                      controller: _ampmController,
-                      onChanged: (v) => setState(() => _isAm = v == 0),
-                    ),
+                  TextButton(
+                    onPressed: () {
+                      _didConfirm = true;
+                      widget.onConfirm(_value);
+                    },
+                    child: const Text('確定'),
                   ),
                 ],
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-        ],
+            SizedBox(
+              height: _wheelItemHeight * 5,
+              child: Center(
+                child: widget.monthOnly
+                    ? _buildMonthOnlyWheels()
+                    : _buildDateTimeWheels(),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildMonthOnlyWheels() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        SizedBox(
+          width: _wheelWidthYear,
+          child: _buildWheel<int>(
+            items: List.generate(_maxYear - _minYear + 1, (i) => _minYear + i),
+            value: _year,
+            format: (v) => '$v',
+            controller: _yearController,
+            onChanged: (v) => setState(() => _year = v),
+          ),
+        ),
+        _wheelSeparator('/'),
+        SizedBox(
+          width: _wheelWidthTwoDigit,
+          child: _buildWheel<int>(
+            items: List.generate(12, (i) => i + 1),
+            value: _month,
+            format: (v) => v.toString().padLeft(2, '0'),
+            controller: _monthController,
+            onChanged: (v) => setState(() => _month = v),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDateTimeWheels() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        SizedBox(
+          width: _wheelWidthYear,
+          child: _buildWheel<int>(
+            items: List.generate(_maxYear - _minYear + 1, (i) => _minYear + i),
+            value: _year,
+            format: (v) => '$v',
+            controller: _yearController,
+            onChanged: (v) {
+              setState(() {
+                _year = v;
+                _clampDay();
+                _dayController.jumpToItem(_day - 1);
+              });
+            },
+          ),
+        ),
+        _wheelSeparator('/'),
+        SizedBox(
+          width: _wheelWidthTwoDigit,
+          child: _buildWheel<int>(
+            items: List.generate(12, (i) => i + 1),
+            value: _month,
+            format: (v) => v.toString().padLeft(2, '0'),
+            controller: _monthController,
+            onChanged: (v) {
+              setState(() {
+                _month = v;
+                _clampDay();
+                _dayController.jumpToItem(_day - 1);
+              });
+            },
+          ),
+        ),
+        _wheelSeparator('/'),
+        SizedBox(
+          width: _wheelWidthTwoDigit,
+          child: _buildWheel<int>(
+            items: List.generate(DateTime(_year, _month + 1, 0).day, (i) => i + 1),
+            value: _day,
+            format: (v) => v.toString().padLeft(2, '0'),
+            controller: _dayController,
+            onChanged: (v) => setState(() => _day = v),
+          ),
+        ),
+        const SizedBox(width: 10),
+        SizedBox(
+          width: _wheelWidthTwoDigit,
+          child: _buildWheel<int>(
+            items: List.generate(12, (i) => i + 1),
+            value: _hour12,
+            format: (v) => v.toString().padLeft(2, '0'),
+            controller: _hourController,
+            onChanged: (v) => setState(() => _hour12 = v),
+          ),
+        ),
+        _wheelSeparator(':'),
+        SizedBox(
+          width: _wheelWidthTwoDigit,
+          child: _buildWheel<int>(
+            items: List.generate(60, (i) => i),
+            value: _minute,
+            format: (v) => v.toString().padLeft(2, '0'),
+            controller: _minuteController,
+            onChanged: (v) => setState(() => _minute = v),
+          ),
+        ),
+        SizedBox(
+          width: _wheelWidthAmPm,
+          child: _buildWheel<int>(
+            items: const [0, 1],
+            value: _isAm ? 0 : 1,
+            format: (v) => _ampmLabels[v],
+            controller: _ampmController,
+            onChanged: (v) => setState(() => _isAm = v == 0),
+          ),
+        ),
+      ],
     );
   }
 

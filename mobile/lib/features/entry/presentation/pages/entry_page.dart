@@ -14,19 +14,19 @@ import 'package:mobile/features/entry/presentation/widgets/category_section.dart
 import 'package:mobile/features/entry/presentation/widgets/date_chip_row.dart';
 import 'package:mobile/features/entry/presentation/widgets/notes_section.dart';
 import 'package:mobile/features/entry/presentation/widgets/tags_section.dart';
-import 'package:mobile/shared/utils/amount_input_formatter.dart';
+import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/date_time_picker_sheet.dart';
 import 'package:mobile/shared/widgets/discard_changes_dialog.dart';
 
-class NewEntryPage extends StatefulWidget {
-  const NewEntryPage({super.key});
+class EntryPage extends StatefulWidget {
+  const EntryPage({super.key, this.entryId});
+  final String? entryId;
 
   @override
-  State<NewEntryPage> createState() => _NewEntryPageState();
+  State<EntryPage> createState() => _EntryPageState();
 }
 
-class _NewEntryPageState extends State<NewEntryPage>
-    with SingleTickerProviderStateMixin {
+class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _amountFocusNode = FocusNode();
@@ -47,6 +47,8 @@ class _NewEntryPageState extends State<NewEntryPage>
   int _selectedExpenseCategoryIndex = 0;
   int _selectedIncomeCategoryIndex = 0;
 
+  bool get _isEditMode => widget.entryId != null;
+
   bool get _hasUnsavedChanges =>
       _amountController.text.trim().isNotEmpty ||
       _tags.isNotEmpty ||
@@ -63,9 +65,77 @@ class _NewEntryPageState extends State<NewEntryPage>
     _notesController.addListener(() => setState(() {}));
     _tabController.addListener(_syncEntryTypeFromTab);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadBalanceAccounts();
-      _loadCategoryAccounts();
-      _amountFocusNode.requestFocus();
+      _loadInitialData();
+      if (!_isEditMode) _amountFocusNode.requestFocus();
+    });
+  }
+
+  Future<void> _loadInitialData() async {
+    await _loadBalanceAccounts();
+    await _loadCategoryAccounts();
+    if (_isEditMode && widget.entryId != null && mounted) {
+      await _loadEntryForEdit(widget.entryId!);
+    }
+  }
+
+  Future<void> _loadEntryForEdit(String entryId) async {
+    final entry = await entry_repo.EntryRepository.getById(entryId);
+    if (entry == null || !mounted) return;
+    final tagIds = await entry_repo.EntryRepository.getTagIdsForEntry(entryId);
+    final tagTitlesMap = await tag_repo.TagRepository.getTitlesByIds(tagIds);
+    final tagTitles = tagIds
+        .map((id) => tagTitlesMap[id])
+        .where((t) => t != null && t.isNotEmpty)
+        .cast<String>()
+        .toList();
+
+    final typeStr = entry['type'] as String? ?? 'expense';
+    final type = EntryType.values.asNameMap()[typeStr] ?? EntryType.expense;
+    final typeIndex = type.index;
+    final amount = (entry['amount'] as num?)?.toDouble() ?? 0.0;
+    final occurredAtStr = entry['occurred_at'] as String?;
+    DateTime occurredAt = DateTime.now();
+    if (occurredAtStr != null) {
+      try {
+        occurredAt = DateTime.parse(occurredAtStr).toLocal();
+      } catch (_) {}
+    }
+    final memo = entry['memo'] as String? ?? '';
+    final debitId = entry['debit_account_id'] as String? ?? '';
+    final creditId = entry['credit_account_id'] as String? ?? '';
+
+    if (!mounted) return;
+    _tabController.animateTo(typeIndex);
+    _pageController.jumpToPage(typeIndex);
+    setState(() {
+      _entryType = type;
+      _amountController.text = formatAmountForDisplay(amount);
+      _selectedDate = occurredAt;
+      _notesController.text = memo;
+      _tags.clear();
+      _tags.addAll(tagTitles);
+      switch (type) {
+        case EntryType.expense:
+          _selectedAccountId = creditId;
+          final idx = _categoryExpenseAccounts.indexWhere((a) => a.id == debitId);
+          _selectedExpenseCategoryIndex = idx >= 0
+              ? idx
+              : 0.clamp(0, _categoryExpenseAccounts.length - 1);
+          break;
+        case EntryType.income:
+          _selectedAccountId = debitId;
+          final idx = _categoryIncomeAccounts.indexWhere((a) => a.id == creditId);
+          _selectedIncomeCategoryIndex = idx >= 0
+              ? idx
+              : 0.clamp(0, _categoryIncomeAccounts.length - 1);
+          break;
+        case EntryType.transfer:
+        case EntryType.borrow:
+        case EntryType.repay:
+          _selectedAccountFromId = creditId;
+          _selectedAccountToId = debitId;
+          break;
+      }
     });
   }
 
@@ -199,14 +269,20 @@ class _NewEntryPageState extends State<NewEntryPage>
   void _openAccountPickerSingle() {
     _openAccountPicker(
       isFrom: _entryType == EntryType.expense,
-      onSelect: (a) => setState(() => _selectedAccountId = a.id),
+      onSelect: (a) {
+        AccountRepository.updateLastUsedAt(a.id);
+        setState(() => _selectedAccountId = a.id);
+      },
     );
   }
 
   void _openAccountPickerFrom() {
     _openAccountPicker(
       isFrom: true,
-      onSelect: (a) => setState(() => _selectedAccountFromId = a.id),
+      onSelect: (a) {
+        AccountRepository.updateLastUsedAt(a.id);
+        setState(() => _selectedAccountFromId = a.id);
+      },
       excludeAccountId: _selectedAccountToId,
     );
   }
@@ -214,7 +290,10 @@ class _NewEntryPageState extends State<NewEntryPage>
   void _openAccountPickerTo() {
     _openAccountPicker(
       isFrom: false,
-      onSelect: (a) => setState(() => _selectedAccountToId = a.id),
+      onSelect: (a) {
+        AccountRepository.updateLastUsedAt(a.id);
+        setState(() => _selectedAccountToId = a.id);
+      },
       excludeAccountId: _selectedAccountFromId,
     );
   }
@@ -282,17 +361,31 @@ class _NewEntryPageState extends State<NewEntryPage>
         tagIds.add(id);
       }
       if (!mounted) return;
-      await entry_repo.EntryRepository.insert(
-        type: _entryType.name,
-        debitAccountId: accounts.debit,
-        creditAccountId: accounts.credit,
-        amount: amount,
-        tagIds: tagIds,
-        memo: _notesController.text.trim().isEmpty
-            ? null
-            : _notesController.text.trim(),
-        occurredAt: _selectedDate,
-      );
+      final memo = _notesController.text.trim().isEmpty
+          ? null
+          : _notesController.text.trim();
+      if (_isEditMode && widget.entryId != null) {
+        await entry_repo.EntryRepository.update(
+          id: widget.entryId!,
+          type: _entryType.name,
+          debitAccountId: accounts.debit,
+          creditAccountId: accounts.credit,
+          amount: amount,
+          tagIds: tagIds,
+          memo: memo,
+          occurredAt: _selectedDate,
+        );
+      } else {
+        await entry_repo.EntryRepository.insert(
+          type: _entryType.name,
+          debitAccountId: accounts.debit,
+          creditAccountId: accounts.credit,
+          amount: amount,
+          tagIds: tagIds,
+          memo: memo,
+          occurredAt: _selectedDate,
+        );
+      }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -312,13 +405,10 @@ class _NewEntryPageState extends State<NewEntryPage>
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('新增紀錄'),
+          title: Text(_isEditMode ? '編輯紀錄' : '新增紀錄'),
           leading: TextButton(
             onPressed: _isSubmitting ? null : _requestClose,
-            child: const Text(
-              '捨棄',
-              style: TextStyle(fontWeight: FontWeight.w400),
-            ),
+            child: const Text('捨棄'),
           ),
           actions: [
             if (_isSubmitting)
@@ -331,13 +421,7 @@ class _NewEntryPageState extends State<NewEntryPage>
                 ),
               )
             else
-              TextButton(
-                onPressed: _submit,
-                child: const Text(
-                  '送出',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-              ),
+              TextButton(onPressed: _submit, child: const Text('送出')),
           ],
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(48),
@@ -348,9 +432,7 @@ class _NewEntryPageState extends State<NewEntryPage>
               dividerHeight: 0,
               indicatorColor: typeColor,
               labelColor: typeColor,
-              unselectedLabelColor: Theme.of(
-                context,
-              ).colorScheme.onSurfaceVariant,
+              unselectedLabelColor: Theme.of(context).colorScheme.onSurfaceVariant,
               indicatorSize: TabBarIndicatorSize.label,
               tabs: EntryType.values.map((t) => Tab(text: t.label)).toList(),
               onTap: (index) {
@@ -391,7 +473,10 @@ class _NewEntryPageState extends State<NewEntryPage>
                           useSafeArea: true,
                           builder: (ctx) => DateTimePickerSheet(
                             initial: _selectedDate,
-                            onConfirm: (v) => Navigator.of(ctx).pop(v),
+                            onConfirm: (v, {fromDrag = false}) {
+                              setState(() => _selectedDate = v);
+                              if (!fromDrag) Navigator.of(ctx).pop(v);
+                            },
                             onCancel: () => Navigator.of(ctx).pop(),
                           ),
                         );
@@ -433,9 +518,7 @@ class _NewEntryPageState extends State<NewEntryPage>
                                 (pageType == EntryType.expense
                                         ? _categoryExpenseAccounts
                                         : _categoryIncomeAccounts)
-                                    .map(
-                                      (a) => (name: a.subType, icon: a.displayIcon),
-                                    )
+                                    .map((a) => (name: a.subType, icon: a.displayIcon))
                                     .toList(),
                             selectedIndex: pageType == EntryType.expense
                                 ? _selectedExpenseCategoryIndex
