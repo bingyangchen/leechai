@@ -53,7 +53,9 @@ class TransactionRow extends StatelessWidget {
         ? '****'
         : (type == EntryType.income
               ? '+${formatAmountForDisplay(amount)}'
-              : '-${formatAmountForDisplay(amount)}');
+              : type == EntryType.expense
+              ? '-${formatAmountForDisplay(amount)}'
+              : formatAmountForDisplay(amount));
 
     return Slidable(
       key: ValueKey(entry['id']),
@@ -148,11 +150,7 @@ class TransactionRow extends StatelessWidget {
           style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 16,
-            color: type == EntryType.income
-                ? EntryTypeColors.income
-                : type == EntryType.expense
-                ? EntryTypeColors.expense
-                : EntryTypeColors.forType(type),
+            color: EntryTypeColors.forType(type),
           ),
         ),
       ),
