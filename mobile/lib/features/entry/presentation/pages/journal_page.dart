@@ -1,9 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:mobile/features/account/data/repositories/account.dart';
+import 'package:mobile/features/account/data/repositories/account.dart'
+    show AccountRepository;
 import 'package:mobile/features/account/domain/account.dart';
-import 'package:mobile/features/entry/data/repositories/entry.dart' as entry_repo;
-import 'package:mobile/features/entry/data/repositories/tag.dart' as tag_repo;
+import 'package:mobile/features/entry/data/repositories/entry.dart'
+    show EntryRepository;
+import 'package:mobile/features/entry/data/repositories/tag.dart' show TagRepository;
 import 'package:mobile/features/entry/domain/entry_type.dart';
 import 'package:mobile/features/entry/presentation/pages/entry_page.dart';
 import 'package:mobile/features/entry/presentation/widgets/collapsed_summary_bar.dart';
@@ -112,7 +114,7 @@ class _JournalPageState extends State<JournalPage> {
   }
 
   Future<_JournalData> _loadData() async {
-    final entries = await entry_repo.EntryRepository.getByMonth(_selectedMonth);
+    final entries = await EntryRepository.getByMonth(_selectedMonth);
     final allAccounts = <String, Account>{};
     for (final a in await AccountRepository.getAll()) {
       allAccounts[a.id] = a;
@@ -122,11 +124,11 @@ class _JournalPageState extends State<JournalPage> {
     final entryTagIds = <String, List<String>>{};
     for (final e in entries) {
       final id = e['id'] as String;
-      final ids = await entry_repo.EntryRepository.getTagIdsForEntry(id);
+      final ids = await EntryRepository.getTagIdsForEntry(id);
       entryTagIds[id] = ids;
       tagIds.addAll(ids);
     }
-    final tagTitles = await tag_repo.TagRepository.getTitlesByIds(tagIds.toList());
+    final tagTitles = await TagRepository.getTitlesByIds(tagIds.toList());
     final entryTagTitles = <String, List<String>>{};
     for (final e in entryTagIds.entries) {
       entryTagTitles[e.key] = e.value
@@ -175,7 +177,7 @@ class _JournalPageState extends State<JournalPage> {
       ),
     );
     if (confirmed != true || !mounted) return;
-    await entry_repo.EntryRepository.softDelete(entryId);
+    await EntryRepository.softDelete(entryId);
     if (mounted) {
       setState(() {
         _future = _loadData();
@@ -185,7 +187,7 @@ class _JournalPageState extends State<JournalPage> {
 
   void _onCopy(String entryId) async {
     try {
-      await entry_repo.EntryRepository.duplicate(entryId, DateTime.now());
+      await EntryRepository.duplicate(entryId, DateTime.now());
       if (mounted) {
         setState(() {
           _future = _loadData();

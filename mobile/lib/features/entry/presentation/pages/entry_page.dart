@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/features/account/data/repositories/account.dart';
+import 'package:mobile/features/account/data/repositories/account.dart'
+    show AccountRepository;
 import 'package:mobile/features/account/domain/account.dart';
-import 'package:mobile/features/entry/data/repositories/entry.dart' as entry_repo;
-import 'package:mobile/features/entry/data/repositories/tag.dart' as tag_repo;
+import 'package:mobile/features/entry/data/repositories/entry.dart'
+    show EntryRepository;
+import 'package:mobile/features/entry/data/repositories/tag.dart' show TagRepository;
 import 'package:mobile/features/entry/domain/entry_account_filter.dart';
 import 'package:mobile/features/entry/domain/entry_type.dart';
 import 'package:mobile/features/entry/presentation/constants/account_chip_labels.dart';
@@ -79,10 +81,10 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
   }
 
   Future<void> _loadEntryForEdit(String entryId) async {
-    final entry = await entry_repo.EntryRepository.getById(entryId);
+    final entry = await EntryRepository.getById(entryId);
     if (entry == null || !mounted) return;
-    final tagIds = await entry_repo.EntryRepository.getTagIdsForEntry(entryId);
-    final tagTitlesMap = await tag_repo.TagRepository.getTitlesByIds(tagIds);
+    final tagIds = await EntryRepository.getTagIdsForEntry(entryId);
+    final tagTitlesMap = await TagRepository.getTitlesByIds(tagIds);
     final tagTitles = tagIds
         .map((id) => tagTitlesMap[id])
         .where((t) => t != null && t.isNotEmpty)
@@ -357,7 +359,7 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
     try {
       final tagIds = <String>[];
       for (final title in _tags) {
-        final id = await tag_repo.TagRepository.getOrCreateByTitle(title);
+        final id = await TagRepository.getOrCreateByTitle(title);
         tagIds.add(id);
       }
       if (!mounted) return;
@@ -365,7 +367,7 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
           ? null
           : _notesController.text.trim();
       if (_isEditMode && widget.entryId != null) {
-        await entry_repo.EntryRepository.update(
+        await EntryRepository.update(
           id: widget.entryId!,
           type: _entryType.name,
           debitAccountId: accounts.debit,
@@ -376,7 +378,7 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
           occurredAt: _selectedDate,
         );
       } else {
-        await entry_repo.EntryRepository.insert(
+        await EntryRepository.insert(
           type: _entryType.name,
           debitAccountId: accounts.debit,
           creditAccountId: accounts.credit,
@@ -541,7 +543,7 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
                       onAddTag: (tag) {
                         final t = tag.trim();
                         if (t.isEmpty || _tags.contains(t)) return;
-                        tag_repo.TagRepository.getOrCreateByTitle(t).then((_) {
+                        TagRepository.getOrCreateByTitle(t).then((_) {
                           if (!mounted) return;
                           setState(() {
                             _tags.add(t);

@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:mobile/features/entry/data/repositories/tag.dart' as tag_repo;
+import 'package:mobile/features/entry/data/repositories/tag.dart' show TagRepository;
 
 class TagsSection extends StatefulWidget {
   const TagsSection({
@@ -119,7 +119,7 @@ class _TagsSectionState extends State<TagsSection> {
   }
 
   Future<void> _runSearch(String query) async {
-    final list = await tag_repo.TagRepository.searchByTitlePrefix(query);
+    final list = await TagRepository.searchByTitlePrefix(query);
     if (!mounted) return;
     final existing = widget.tags.toSet();
     setState(() {
