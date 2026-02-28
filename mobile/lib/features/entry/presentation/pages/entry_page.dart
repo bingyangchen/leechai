@@ -17,6 +17,7 @@ import 'package:mobile/features/entry/presentation/widgets/date_chip_row.dart';
 import 'package:mobile/features/entry/presentation/widgets/notes_section.dart';
 import 'package:mobile/features/entry/presentation/widgets/tags_section.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
+import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
 import 'package:mobile/shared/widgets/confirm_delete_dialog.dart';
 import 'package:mobile/shared/widgets/date_time_picker_sheet.dart';
 import 'package:mobile/shared/widgets/discard_changes_dialog.dart';
@@ -498,10 +499,9 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
                     child: DateChipRow(
                       selectedDate: _selectedDate,
                       onDateTap: () async {
-                        final picked = await showModalBottomSheet<DateTime>(
-                          context: context,
-                          isScrollControlled: true,
-                          useSafeArea: true,
+                        final picked = await showAppBottomSheet<DateTime>(
+                          context,
+                          mode: AppBottomSheetMode.static,
                           builder: (ctx) => DateTimePickerSheet(
                             initial: _selectedDate,
                             onConfirm: (v, {fromDrag = false}) {

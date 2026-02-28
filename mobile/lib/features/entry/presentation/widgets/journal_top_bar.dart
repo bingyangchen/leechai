@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/features/entry/presentation/widgets/month_picker.dart';
 import 'package:mobile/features/entry/presentation/widgets/sync_indicator.dart';
+import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
 import 'package:mobile/shared/widgets/date_time_picker_sheet.dart';
 
 class JournalTopBar extends StatelessWidget {
@@ -29,10 +30,9 @@ class JournalTopBar extends StatelessWidget {
           MonthPicker(
             month: selectedMonth,
             onTap: () async {
-              final picked = await showModalBottomSheet<DateTime>(
-                context: context,
-                isScrollControlled: true,
-                useSafeArea: true,
+              final picked = await showAppBottomSheet<DateTime>(
+                context,
+                mode: AppBottomSheetMode.static,
                 builder: (ctx) => DateTimePickerSheet(
                   initial: selectedMonth,
                   monthOnly: true,
