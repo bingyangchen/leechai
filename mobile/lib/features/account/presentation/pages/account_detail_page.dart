@@ -152,17 +152,11 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
           ListTile(
             leading: Icon(
               Icons.delete_outline,
-              color: data.entries.isEmpty
-                  ? Theme.of(context).colorScheme.error
-                  : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.38),
+              color: Theme.of(context).colorScheme.error,
             ),
             title: Text(
               '刪除帳戶',
-              style: TextStyle(
-                color: data.entries.isEmpty
-                    ? Theme.of(context).colorScheme.error
-                    : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.38),
-              ),
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
             onTap: () {
               Navigator.pop(ctx);

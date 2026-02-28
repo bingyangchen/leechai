@@ -42,7 +42,7 @@ Future<bool?> showAccountFormSheet(
       (AssetTypeX.fromName(accountSubType)?.label ??
           LiabilityTypeX.fromName(accountSubType)?.label ??
           accountSubType);
-  final accountIcon = isEdit ? (icon ?? existingAccount!.displayIcon) : icon!;
+  final accountIcon = isEdit ? (icon ?? existingAccount.displayIcon) : icon!;
 
   return showAppBottomSheet<bool>(
     context,
