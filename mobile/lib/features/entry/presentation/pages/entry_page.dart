@@ -340,14 +340,10 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
           credit: _categoryIncomeAccounts[_selectedIncomeCategoryIndex].id,
         );
       case EntryType.transfer:
-        if (_selectedAccountFromId == null || _selectedAccountToId == null) return null;
-        return (debit: _selectedAccountToId!, credit: _selectedAccountFromId!);
       case EntryType.borrow:
-        if (_selectedAccountFromId == null || _selectedAccountToId == null) return null;
-        return (debit: _selectedAccountToId!, credit: _selectedAccountFromId!);
       case EntryType.repay:
         if (_selectedAccountFromId == null || _selectedAccountToId == null) return null;
-        return (debit: _selectedAccountFromId!, credit: _selectedAccountToId!);
+        return (debit: _selectedAccountToId!, credit: _selectedAccountFromId!);
     }
   }
 

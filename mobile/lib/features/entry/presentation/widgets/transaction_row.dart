@@ -194,12 +194,12 @@ class TransactionRow extends StatelessWidget {
       case EntryType.income:
         return debit?.name ?? debit?.subType;
       case EntryType.transfer:
+      case EntryType.borrow:
+      case EntryType.repay:
         if (debit != null && credit != null) {
           return '${credit.name ?? credit.subType} → ${debit.name ?? debit.subType}';
         }
         return null;
-      default:
-        return credit?.name ?? debit?.name;
     }
   }
 }
