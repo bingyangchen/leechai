@@ -48,7 +48,7 @@ class TransactionRow extends StatelessWidget {
     final entryId = entry['id'] as String? ?? '';
     final tagTitles = entryTagTitles[entryId] ?? [];
 
-    final color = EntryTypeColors.forType(type);
+    final color = EntryTypeColors.forType(context, type);
     final amountText = privacyMode
         ? '****'
         : (type == EntryType.income
@@ -150,7 +150,7 @@ class TransactionRow extends StatelessWidget {
           style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 16,
-            color: EntryTypeColors.forType(type),
+            color: EntryTypeColors.forType(context, type),
           ),
         ),
       ),
@@ -194,12 +194,12 @@ class TransactionRow extends StatelessWidget {
       case EntryType.income:
         return debit?.name ?? debit?.subType;
       case EntryType.transfer:
+      case EntryType.borrow:
+      case EntryType.repay:
         if (debit != null && credit != null) {
           return '${credit.name ?? credit.subType} → ${debit.name ?? debit.subType}';
         }
         return null;
-      default:
-        return credit?.name ?? debit?.name;
     }
   }
 }

@@ -1,11 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:mobile/features/account/data/repositories/account.dart';
+import 'package:mobile/features/account/data/repositories/account.dart'
+    show AccountRepository;
 import 'package:mobile/features/account/domain/account.dart';
-import 'package:mobile/features/entry/data/repositories/entry.dart' as entry_repo;
-import 'package:mobile/features/entry/data/repositories/tag.dart' as tag_repo;
+import 'package:mobile/features/entry/data/repositories/entry.dart'
+    show EntryRepository;
+import 'package:mobile/features/entry/data/repositories/tag.dart' show TagRepository;
+import 'package:mobile/features/entry/domain/entry_aggregation.dart';
 import 'package:mobile/features/entry/domain/entry_type.dart';
-import 'package:mobile/features/entry/presentation/pages/entry_page.dart';
+import 'package:mobile/features/entry/presentation/entry_list_handlers.dart';
 import 'package:mobile/features/entry/presentation/widgets/collapsed_summary_bar.dart';
 import 'package:mobile/features/entry/presentation/widgets/journal_empty_state.dart';
 import 'package:mobile/features/entry/presentation/widgets/journal_top_bar.dart';
@@ -98,21 +101,15 @@ class _JournalPageState extends State<JournalPage> {
       setState(() {
         _currentStickyDate = found;
         if (found != null) {
-          _currentStickyExpense = _dayExpense(grouped[found]!);
-          _currentStickyIncome = _dayIncome(grouped[found]!);
+          _currentStickyExpense = dayExpense(grouped[found]!);
+          _currentStickyIncome = dayIncome(grouped[found]!);
         }
       });
     }
   }
 
-  void _onRefreshTrigger() {
-    setState(() {
-      _future = _loadData();
-    });
-  }
-
   Future<_JournalData> _loadData() async {
-    final entries = await entry_repo.EntryRepository.getByMonth(_selectedMonth);
+    final entries = await EntryRepository.getByMonth(_selectedMonth);
     final allAccounts = <String, Account>{};
     for (final a in await AccountRepository.getAll()) {
       allAccounts[a.id] = a;
@@ -122,11 +119,11 @@ class _JournalPageState extends State<JournalPage> {
     final entryTagIds = <String, List<String>>{};
     for (final e in entries) {
       final id = e['id'] as String;
-      final ids = await entry_repo.EntryRepository.getTagIdsForEntry(id);
+      final ids = await EntryRepository.getTagIdsForEntry(id);
       entryTagIds[id] = ids;
       tagIds.addAll(ids);
     }
-    final tagTitles = await tag_repo.TagRepository.getTitlesByIds(tagIds.toList());
+    final tagTitles = await TagRepository.getTitlesByIds(tagIds.toList());
     final entryTagTitles = <String, List<String>>{};
     for (final e in entryTagIds.entries) {
       entryTagTitles[e.key] = e.value
@@ -153,62 +150,10 @@ class _JournalPageState extends State<JournalPage> {
     if (mounted) setState(() => _syncStatus = SyncStatus.idle);
   }
 
-  void _onDelete(String entryId) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('確認刪除'),
-        content: const Text('確定要刪除這筆紀錄嗎？'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(ctx).colorScheme.error,
-            ),
-            child: const Text('刪除'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
-    await entry_repo.EntryRepository.softDelete(entryId);
-    if (mounted) {
-      setState(() {
-        _future = _loadData();
-      });
-    }
-  }
-
-  void _onCopy(String entryId) async {
-    try {
-      await entry_repo.EntryRepository.duplicate(entryId, DateTime.now());
-      if (mounted) {
-        setState(() {
-          _future = _loadData();
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('已複製一筆紀錄'), behavior: SnackBarBehavior.floating),
-        );
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('複製失敗'), behavior: SnackBarBehavior.floating),
-        );
-      }
-    }
-  }
-
-  void _onTapEntry(String entryId) {
-    Navigator.of(context)
-        .push<bool?>(MaterialPageRoute(builder: (_) => EntryPage(entryId: entryId)))
-        .then((saved) {
-          if (saved == true) _onRefreshTrigger();
-        });
+  void _onRefreshTrigger() {
+    setState(() {
+      _future = _loadData();
+    });
   }
 
   @override
@@ -265,7 +210,7 @@ class _JournalPageState extends State<JournalPage> {
                         }
                         final data = snapshot.data;
                         if (data == null) return const SizedBox.shrink();
-                        final grouped = _groupEntriesByDate(data.entries);
+                        final grouped = groupEntriesByDate(data.entries);
                         _lastGrouped = grouped;
                         for (final date in grouped.keys) {
                           _headerKeys.putIfAbsent(date, () => GlobalKey());
@@ -316,8 +261,8 @@ class _JournalPageState extends State<JournalPage> {
                                       key: _headerKeys[e.key],
                                       context: context,
                                       date: e.key,
-                                      dayExpense: _dayExpense(e.value),
-                                      dayIncome: _dayIncome(e.value),
+                                      dayExpense: dayExpense(e.value),
+                                      dayIncome: dayIncome(e.value),
                                       privacyMode: _privacyMode,
                                     ),
                                   ),
@@ -332,9 +277,21 @@ class _JournalPageState extends State<JournalPage> {
                                         accounts: data.accounts,
                                         entryTagTitles: data.entryTagTitles,
                                         privacyMode: _privacyMode,
-                                        onTap: () => _onTapEntry(row['id'] as String),
-                                        onDelete: () => _onDelete(row['id'] as String),
-                                        onCopy: () => _onCopy(row['id'] as String),
+                                        onTap: () => EntryListHandlers.openEntry(
+                                          context,
+                                          row['id'] as String,
+                                          _onRefreshTrigger,
+                                        ),
+                                        onDelete: () => EntryListHandlers.deleteEntry(
+                                          context,
+                                          row['id'] as String,
+                                          _onRefreshTrigger,
+                                        ),
+                                        onCopy: () => EntryListHandlers.copyEntry(
+                                          context,
+                                          row['id'] as String,
+                                          _onRefreshTrigger,
+                                        ),
                                       );
                                     }, childCount: e.value.length),
                                   ),
@@ -357,10 +314,10 @@ class _JournalPageState extends State<JournalPage> {
                                   date: dateToShow,
                                   dayExpense: dateToShow == _currentStickyDate
                                       ? _currentStickyExpense
-                                      : _dayExpense(grouped[dateToShow]!),
+                                      : dayExpense(grouped[dateToShow]!),
                                   dayIncome: dateToShow == _currentStickyDate
                                       ? _currentStickyIncome
-                                      : _dayIncome(grouped[dateToShow]!),
+                                      : dayIncome(grouped[dateToShow]!),
                                   privacyMode: _privacyMode,
                                 ),
                               ),
@@ -389,25 +346,6 @@ class _JournalPageState extends State<JournalPage> {
     );
   }
 
-  Map<DateTime, List<Map<String, Object?>>> _groupEntriesByDate(
-    List<Map<String, Object?>> entries,
-  ) {
-    final map = <DateTime, List<Map<String, Object?>>>{};
-    for (final e in entries) {
-      final occurredAt = e['occurred_at'] as String? ?? '';
-      DateTime date;
-      try {
-        date = DateTime.parse(occurredAt).toLocal();
-      } catch (_) {
-        continue;
-      }
-      final day = DateTime(date.year, date.month, date.day);
-      map.putIfAbsent(day, () => []).add(e);
-    }
-    final sortedKeys = map.keys.toList()..sort((a, b) => b.compareTo(a));
-    return Map.fromEntries(sortedKeys.map((k) => MapEntry(k, map[k]!)));
-  }
-
   _MonthSummary _computeSummary(List<Map<String, Object?>> entries) {
     double income = 0, expense = 0;
     for (final e in entries) {
@@ -422,26 +360,6 @@ class _JournalPageState extends State<JournalPage> {
       // transfer/borrow/repay: could add to expense/income by design; here we only count expense & income
     }
     return _MonthSummary(income: income, expense: expense, balance: income - expense);
-  }
-
-  double _dayExpense(List<Map<String, Object?>> dayEntries) {
-    double sum = 0;
-    for (final e in dayEntries) {
-      final typeStr = e['type'] as String? ?? 'expense';
-      final type = EntryType.values.asNameMap()[typeStr] ?? EntryType.expense;
-      if (type == EntryType.expense) sum += (e['amount'] as num?)?.toDouble() ?? 0.0;
-    }
-    return sum;
-  }
-
-  double _dayIncome(List<Map<String, Object?>> dayEntries) {
-    double sum = 0;
-    for (final e in dayEntries) {
-      final typeStr = e['type'] as String? ?? 'expense';
-      final type = EntryType.values.asNameMap()[typeStr] ?? EntryType.expense;
-      if (type == EntryType.income) sum += (e['amount'] as num?)?.toDouble() ?? 0.0;
-    }
-    return sum;
   }
 
   static String _formatBalance(double v) {

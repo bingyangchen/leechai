@@ -57,13 +57,14 @@ class AccountRepository {
   }
 
   static Account _rowToAccount(Map<String, Object?> row) {
-    final id = row['id'] as String;
-    final name = row['name'] as String?;
-    final typeStr = row['type'] as String? ?? 'asset';
-    final subTypeStr = row['sub_type'] as String? ?? '';
-    final type = _parseAccountType(typeStr);
-    final icon = iconFromCodePoint(row['icon'] as String?);
-    return Account(id: id, name: name, type: type, subType: subTypeStr, icon: icon);
+    return Account(
+      id: row['id'] as String,
+      name: row['name'] as String?,
+      type: _parseAccountType(row['type'] as String? ?? 'asset'),
+      subType: row['sub_type'] as String? ?? '',
+      icon: iconFromCodePoint(row['icon'] as String?),
+      initialBalance: (row['initial_balance'] as num?)?.toDouble() ?? 0.0,
+    );
   }
 
   static AccountType _parseAccountType(String typeStr) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/features/entry/domain/entry_type.dart';
 import 'package:mobile/features/entry/presentation/constants/entry_type_colors.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 
@@ -30,12 +31,16 @@ Widget dateHeaderContent({
         const SizedBox(width: 12),
         Text(
           '支出 \$$expenseStr',
-          style: theme.textTheme.bodySmall?.copyWith(color: EntryTypeColors.expense),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: EntryTypeColors.forType(context, EntryType.expense),
+          ),
         ),
         const SizedBox(width: 12),
         Text(
           '收入 \$$incomeStr',
-          style: theme.textTheme.bodySmall?.copyWith(color: EntryTypeColors.income),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: EntryTypeColors.forType(context, EntryType.income),
+          ),
         ),
       ],
     ),

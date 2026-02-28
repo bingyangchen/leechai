@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/features/account/data/repositories/account.dart';
+import 'package:mobile/features/account/data/repositories/account.dart'
+    show AccountRepository;
 import 'package:mobile/features/account/domain/account.dart';
-import 'package:mobile/features/entry/data/repositories/entry.dart' as entry_repo;
-import 'package:mobile/features/entry/data/repositories/tag.dart' as tag_repo;
+import 'package:mobile/features/entry/data/repositories/entry.dart'
+    show EntryRepository;
+import 'package:mobile/features/entry/data/repositories/tag.dart' show TagRepository;
 import 'package:mobile/features/entry/domain/entry_account_filter.dart';
 import 'package:mobile/features/entry/domain/entry_type.dart';
 import 'package:mobile/features/entry/presentation/constants/account_chip_labels.dart';
@@ -15,6 +17,8 @@ import 'package:mobile/features/entry/presentation/widgets/date_chip_row.dart';
 import 'package:mobile/features/entry/presentation/widgets/notes_section.dart';
 import 'package:mobile/features/entry/presentation/widgets/tags_section.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
+import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
+import 'package:mobile/shared/widgets/confirm_delete_dialog.dart';
 import 'package:mobile/shared/widgets/date_time_picker_sheet.dart';
 import 'package:mobile/shared/widgets/discard_changes_dialog.dart';
 
@@ -79,10 +83,10 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
   }
 
   Future<void> _loadEntryForEdit(String entryId) async {
-    final entry = await entry_repo.EntryRepository.getById(entryId);
+    final entry = await EntryRepository.getById(entryId);
     if (entry == null || !mounted) return;
-    final tagIds = await entry_repo.EntryRepository.getTagIdsForEntry(entryId);
-    final tagTitlesMap = await tag_repo.TagRepository.getTitlesByIds(tagIds);
+    final tagIds = await EntryRepository.getTagIdsForEntry(entryId);
+    final tagTitlesMap = await TagRepository.getTitlesByIds(tagIds);
     final tagTitles = tagIds
         .map((id) => tagTitlesMap[id])
         .where((t) => t != null && t.isNotEmpty)
@@ -105,8 +109,6 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
     final creditId = entry['credit_account_id'] as String? ?? '';
 
     if (!mounted) return;
-    _tabController.animateTo(typeIndex);
-    _pageController.jumpToPage(typeIndex);
     setState(() {
       _entryType = type;
       _amountController.text = formatAmountForDisplay(amount);
@@ -137,13 +139,17 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
           break;
       }
     });
+    _tabController.animateTo(typeIndex);
+    _pageController.jumpToPage(typeIndex);
   }
 
   void _syncEntryTypeFromTab() {
     if (!_tabController.indexIsChanging && mounted) {
       final index = _tabController.index;
-      setState(() => _entryType = EntryType.values[index]);
-      _applyDefaultAccounts();
+      final newType = EntryType.values[index];
+      final didChangeType = newType != _entryType;
+      setState(() => _entryType = newType);
+      if (didChangeType) _applyDefaultAccounts();
       _pageController.jumpToPage(index);
     }
   }
@@ -152,8 +158,10 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
     if (_tabController.index != index) {
       _tabController.animateTo(index);
     }
-    setState(() => _entryType = EntryType.values[index]);
-    _applyDefaultAccounts();
+    final newType = EntryType.values[index];
+    final didChangeType = newType != _entryType;
+    setState(() => _entryType = newType);
+    if (didChangeType) _applyDefaultAccounts();
   }
 
   @override
@@ -166,6 +174,20 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
     _tagInputController.dispose();
     _notesController.dispose();
     super.dispose();
+  }
+
+  Future<void> _requestDelete() async {
+    if (_isSubmitting || !_isEditMode || widget.entryId == null) return;
+    final confirmed = await ConfirmDeleteDialog.show(context);
+    if (confirmed != true || !mounted) return;
+    setState(() => _isSubmitting = true);
+    try {
+      await EntryRepository.softDelete(widget.entryId!);
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 
   Future<void> _requestClose() async {
@@ -182,7 +204,7 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
     final accounts = await AccountRepository.getBalanceAccounts();
     if (mounted) {
       setState(() => _balanceAccounts = accounts);
-      _applyDefaultAccounts();
+      if (!_isEditMode) _applyDefaultAccounts();
     }
   }
 
@@ -319,14 +341,10 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
           credit: _categoryIncomeAccounts[_selectedIncomeCategoryIndex].id,
         );
       case EntryType.transfer:
-        if (_selectedAccountFromId == null || _selectedAccountToId == null) return null;
-        return (debit: _selectedAccountToId!, credit: _selectedAccountFromId!);
       case EntryType.borrow:
-        if (_selectedAccountFromId == null || _selectedAccountToId == null) return null;
-        return (debit: _selectedAccountToId!, credit: _selectedAccountFromId!);
       case EntryType.repay:
         if (_selectedAccountFromId == null || _selectedAccountToId == null) return null;
-        return (debit: _selectedAccountFromId!, credit: _selectedAccountToId!);
+        return (debit: _selectedAccountToId!, credit: _selectedAccountFromId!);
     }
   }
 
@@ -357,7 +375,7 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
     try {
       final tagIds = <String>[];
       for (final title in _tags) {
-        final id = await tag_repo.TagRepository.getOrCreateByTitle(title);
+        final id = await TagRepository.getOrCreateByTitle(title);
         tagIds.add(id);
       }
       if (!mounted) return;
@@ -365,7 +383,7 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
           ? null
           : _notesController.text.trim();
       if (_isEditMode && widget.entryId != null) {
-        await entry_repo.EntryRepository.update(
+        await EntryRepository.update(
           id: widget.entryId!,
           type: _entryType.name,
           debitAccountId: accounts.debit,
@@ -376,7 +394,7 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
           occurredAt: _selectedDate,
         );
       } else {
-        await entry_repo.EntryRepository.insert(
+        await EntryRepository.insert(
           type: _entryType.name,
           debitAccountId: accounts.debit,
           creditAccountId: accounts.credit,
@@ -396,7 +414,7 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
-    final typeColor = EntryTypeColors.forType(_entryType);
+    final typeColor = EntryTypeColors.forType(context, _entryType);
 
     return PopScope(
       canPop: !_hasUnsavedChanges,
@@ -405,12 +423,19 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
       },
       child: Scaffold(
         appBar: AppBar(
+          toolbarHeight: kToolbarHeight,
           title: Text(_isEditMode ? '編輯紀錄' : '新增紀錄'),
           leading: TextButton(
             onPressed: _isSubmitting ? null : _requestClose,
             child: const Text('捨棄'),
           ),
           actions: [
+            if (_isEditMode)
+              IconButton(
+                onPressed: _isSubmitting ? null : _requestDelete,
+                icon: const Icon(Icons.delete_outline),
+                tooltip: '刪除',
+              ),
             if (_isSubmitting)
               const Padding(
                 padding: EdgeInsets.only(right: 16),
@@ -425,20 +450,26 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
           ],
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(48),
-            child: TabBar(
-              controller: _tabController,
-              isScrollable: true,
-              tabAlignment: TabAlignment.start,
-              dividerHeight: 0,
-              indicatorColor: typeColor,
-              labelColor: typeColor,
-              unselectedLabelColor: Theme.of(context).colorScheme.onSurfaceVariant,
-              indicatorSize: TabBarIndicatorSize.label,
-              tabs: EntryType.values.map((t) => Tab(text: t.label)).toList(),
-              onTap: (index) {
-                setState(() => _entryType = EntryType.values[index]);
-                _pageController.jumpToPage(index);
-              },
+            child: IgnorePointer(
+              ignoring: _isEditMode,
+              child: TabBar(
+                controller: _tabController,
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
+                dividerHeight: 0,
+                indicatorColor: typeColor,
+                labelColor: typeColor,
+                unselectedLabelColor: _isEditMode
+                    ? Theme.of(
+                        context,
+                      ).colorScheme.onSurfaceVariant.withValues(alpha: 0.38)
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
+                indicatorSize: TabBarIndicatorSize.label,
+                tabs: EntryType.values.map((t) => Tab(text: t.label)).toList(),
+                onTap: (index) {
+                  _pageController.jumpToPage(index);
+                },
+              ),
             ),
           ),
         ),
@@ -446,11 +477,12 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
           key: _formKey,
           child: PageView.builder(
             controller: _pageController,
+            physics: _isEditMode ? const NeverScrollableScrollPhysics() : null,
             onPageChanged: _onPageChanged,
             itemCount: 5,
             itemBuilder: (context, index) {
               final pageType = EntryType.values[index];
-              final pageColor = EntryTypeColors.forType(pageType);
+              final pageColor = EntryTypeColors.forType(context, pageType);
               return CustomScrollView(
                 key: PageStorageKey<int>(index),
                 keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -467,10 +499,9 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
                     child: DateChipRow(
                       selectedDate: _selectedDate,
                       onDateTap: () async {
-                        final picked = await showModalBottomSheet<DateTime>(
-                          context: context,
-                          isScrollControlled: true,
-                          useSafeArea: true,
+                        final picked = await showAppBottomSheet<DateTime>(
+                          context,
+                          mode: AppBottomSheetMode.static,
                           builder: (ctx) => DateTimePickerSheet(
                             initial: _selectedDate,
                             onConfirm: (v, {fromDrag = false}) {
@@ -541,7 +572,7 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
                       onAddTag: (tag) {
                         final t = tag.trim();
                         if (t.isEmpty || _tags.contains(t)) return;
-                        tag_repo.TagRepository.getOrCreateByTitle(t).then((_) {
+                        TagRepository.getOrCreateByTitle(t).then((_) {
                           if (!mounted) return;
                           setState(() {
                             _tags.add(t);

@@ -11,6 +11,7 @@ class Account {
     required this.subType,
     this.name,
     this.icon,
+    required this.initialBalance,
   });
 
   final String id;
@@ -18,6 +19,7 @@ class Account {
   final String subType;
   final String? name;
   final IconData? icon;
+  final double initialBalance;
 
   bool get isPaymentMethod {
     switch (type) {
