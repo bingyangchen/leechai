@@ -16,7 +16,7 @@ class _MainShellState extends State<MainShell> {
   static const double _bottomNavBarHeight = 88;
   int _currentIndex = 0;
   late final PageController _pageController;
-  final ValueNotifier<int> _journalRefreshTrigger = ValueNotifier(0);
+  final ValueNotifier<int> _dataRefreshTrigger = ValueNotifier(0);
   late final List<Widget> _pages;
 
   @override
@@ -24,16 +24,16 @@ class _MainShellState extends State<MainShell> {
     super.initState();
     _pageController = PageController(initialPage: 0);
     _pages = [
-      JournalPage(refreshTrigger: _journalRefreshTrigger),
+      JournalPage(refreshTrigger: _dataRefreshTrigger),
       AnalysisPage(),
-      AssetsPage(),
+      AssetsPage(refreshTrigger: _dataRefreshTrigger),
       SettingsPage(),
     ];
   }
 
   @override
   void dispose() {
-    _journalRefreshTrigger.dispose();
+    _dataRefreshTrigger.dispose();
     _pageController.dispose();
     super.dispose();
   }
@@ -54,7 +54,7 @@ class _MainShellState extends State<MainShell> {
                 );
                 if (!context.mounted) return;
                 if (added == true) {
-                  _journalRefreshTrigger.value++;
+                  _dataRefreshTrigger.value++;
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('紀錄已新增'),
