@@ -9,6 +9,7 @@ import 'package:mobile/features/account/domain/asset_type.dart';
 import 'package:mobile/features/account/domain/liability_type.dart';
 import 'package:mobile/features/account/presentation/pages/account_detail_page.dart';
 import 'package:mobile/features/account/presentation/widgets/account_group_section.dart';
+import 'package:mobile/features/account/presentation/widgets/add_account_sheet.dart';
 import 'package:mobile/features/account/presentation/widgets/net_worth_header.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
 
@@ -98,7 +99,12 @@ class _AssetsPageState extends State<AssetsPage> {
               icon: AssetType.cash.icon,
               onTap: () {
                 Navigator.pop(ctx);
-                _showPlaceholderForm('現金');
+                _openAddAccountForm(
+                  type: AccountType.asset,
+                  subType: AssetType.cash.name,
+                  subTypeLabel: AssetType.cash.label,
+                  icon: AssetType.cash.icon,
+                );
               },
             ),
             _TypeChip(
@@ -106,7 +112,12 @@ class _AssetsPageState extends State<AssetsPage> {
               icon: AssetType.bank.icon,
               onTap: () {
                 Navigator.pop(ctx);
-                _showPlaceholderForm('銀行');
+                _openAddAccountForm(
+                  type: AccountType.asset,
+                  subType: AssetType.bank.name,
+                  subTypeLabel: AssetType.bank.label,
+                  icon: AssetType.bank.icon,
+                );
               },
             ),
             _TypeChip(
@@ -114,7 +125,12 @@ class _AssetsPageState extends State<AssetsPage> {
               icon: AssetType.epayment.icon,
               onTap: () {
                 Navigator.pop(ctx);
-                _showPlaceholderForm('電子支付');
+                _openAddAccountForm(
+                  type: AccountType.asset,
+                  subType: AssetType.epayment.name,
+                  subTypeLabel: AssetType.epayment.label,
+                  icon: AssetType.epayment.icon,
+                );
               },
             ),
             _TypeChip(
@@ -122,7 +138,12 @@ class _AssetsPageState extends State<AssetsPage> {
               icon: AssetType.storedValueCard.icon,
               onTap: () {
                 Navigator.pop(ctx);
-                _showPlaceholderForm('儲值卡');
+                _openAddAccountForm(
+                  type: AccountType.asset,
+                  subType: AssetType.storedValueCard.name,
+                  subTypeLabel: AssetType.storedValueCard.label,
+                  icon: AssetType.storedValueCard.icon,
+                );
               },
             ),
           ],
@@ -131,37 +152,47 @@ class _AssetsPageState extends State<AssetsPage> {
     );
   }
 
-  void _showPlaceholderForm(String type) {
-    showAppBottomSheet<void>(
+  Future<void> _openAddAccountForm({
+    required AccountType type,
+    required String subType,
+    required String subTypeLabel,
+    required IconData icon,
+  }) async {
+    final created = await showAddAccountSheet(
       context,
-      mode: AppBottomSheetMode.static,
-      title: '新增 $type 帳戶',
-      showCloseButton: true,
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Text('表單開發中，敬請期待。'),
-            const SizedBox(height: 24),
-            FilledButton(onPressed: () => Navigator.pop(ctx), child: const Text('關閉')),
-          ],
-        ),
-      ),
+      type: type,
+      subType: subType,
+      subTypeLabel: subTypeLabel,
+      icon: icon,
     );
+    if (created == true && mounted) _onRefresh();
   }
 
   void _onAddCreditCard() {
-    _showPlaceholderForm('信用卡');
+    _openAddAccountForm(
+      type: AccountType.liability,
+      subType: LiabilityType.creditCard.name,
+      subTypeLabel: LiabilityType.creditCard.label,
+      icon: LiabilityType.creditCard.icon,
+    );
   }
 
   void _onAddInvestments() {
-    _showPlaceholderForm('證券／投資');
+    _openAddAccountForm(
+      type: AccountType.asset,
+      subType: AssetType.securities.name,
+      subTypeLabel: AssetType.securities.label,
+      icon: AssetType.securities.icon,
+    );
   }
 
   void _onAddLoans() {
-    _showPlaceholderForm('貸款');
+    _openAddAccountForm(
+      type: AccountType.liability,
+      subType: LiabilityType.loan.name,
+      subTypeLabel: LiabilityType.loan.label,
+      icon: LiabilityType.loan.icon,
+    );
   }
 
   void _onTapAccount(Account account) {

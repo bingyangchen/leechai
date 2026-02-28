@@ -31,4 +31,17 @@ extension AccountGroupKindX on AccountGroupKind {
 
   bool get isLiability =>
       this == AccountGroupKind.creditCard || this == AccountGroupKind.loans;
+
+  String get addButtonLabel {
+    switch (this) {
+      case AccountGroupKind.currentAssets:
+        return '新增帳戶...';
+      case AccountGroupKind.creditCard:
+        return '新增信用卡...';
+      case AccountGroupKind.investments:
+        return '新增投資帳戶...';
+      case AccountGroupKind.loans:
+        return '新增貸款帳戶...';
+    }
+  }
 }

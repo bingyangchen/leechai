@@ -1,6 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:mobile/core/database/app_database.dart';
 import 'package:mobile/features/account/domain/account.dart';
 import 'package:mobile/features/account/domain/account_icon.dart';
+import 'package:uuid/uuid.dart';
 
 class AccountRepository {
   AccountRepository._();
@@ -43,6 +45,28 @@ class AccountRepository {
     );
     if (rows.isEmpty) return null;
     return _rowToAccount(rows.single);
+  }
+
+  static final _uuid = Uuid();
+
+  static Future<Account> insert({
+    required AccountType type,
+    required String subType,
+    required String name,
+    required double initialBalance,
+    IconData? icon,
+  }) async {
+    final db = await AppDatabase.database;
+    final id = _uuid.v4();
+    await db.insert(_table, {
+      'id': id,
+      'type': type.name,
+      'sub_type': subType,
+      'name': name,
+      'icon': icon != null ? iconToCodePoint(icon) : null,
+      'initial_balance': initialBalance,
+    });
+    return (await getById(id))!;
   }
 
   static Future<void> updateLastUsedAt(String accountId) async {

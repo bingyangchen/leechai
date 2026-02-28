@@ -99,7 +99,7 @@ class AccountGroupSection extends StatelessWidget {
             onTap: () => onTapAccount(a),
           ),
         ),
-        _AddAccountListTile(onTap: onAdd),
+        _AddAccountListTile(label: kind.addButtonLabel, onTap: onAdd),
       ],
     );
   }
@@ -124,8 +124,9 @@ class AccountGroupSection extends StatelessWidget {
 }
 
 class _AddAccountListTile extends StatelessWidget {
-  const _AddAccountListTile({required this.onTap});
+  const _AddAccountListTile({required this.label, required this.onTap});
 
+  final String label;
   final VoidCallback onTap;
 
   @override
@@ -144,10 +145,7 @@ class _AddAccountListTile extends StatelessWidget {
         ),
         child: Icon(Icons.add, color: theme.colorScheme.onSurfaceVariant, size: 24),
       ),
-      title: Text(
-        '新增帳戶...',
-        style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-      ),
+      title: Text(label, style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
     );
   }
 }
