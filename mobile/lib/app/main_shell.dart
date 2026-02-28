@@ -88,13 +88,26 @@ class _MainShellState extends State<MainShell> {
             selectedLabelStyle: const TextStyle(fontSize: 12),
             unselectedLabelStyle: const TextStyle(fontSize: 12),
             items: const [
-              BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: '明細'),
-              BottomNavigationBarItem(icon: Icon(Icons.pie_chart_outline), label: '統計'),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.list_alt_outlined),
+                activeIcon: Icon(Icons.list_alt),
+                label: '明細',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.pie_chart_outline),
+                activeIcon: Icon(Icons.pie_chart),
+                label: '統計',
+              ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.account_balance_wallet_outlined),
+                activeIcon: Icon(Icons.account_balance_wallet),
                 label: '資產',
               ),
-              BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), label: '設定'),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.settings_outlined),
+                activeIcon: Icon(Icons.settings),
+                label: '設定',
+              ),
             ],
           ),
         ),
