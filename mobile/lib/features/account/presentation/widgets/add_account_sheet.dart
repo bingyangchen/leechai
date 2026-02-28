@@ -186,7 +186,7 @@ class _AddAccountFormState extends State<_AddAccountForm> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                   child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Container(
                         width: 64,
@@ -199,45 +199,31 @@ class _AddAccountFormState extends State<_AddAccountForm> {
                       ),
                       const SizedBox(width: 20),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _amountLabel,
-                              style: theme.textTheme.labelLarge?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
+                        child: TextFormField(
+                          controller: _nameController,
+                          decoration: InputDecoration(
+                            hintText: _namePlaceholder,
+                            border: InputBorder.none,
+                            enabledBorder: const UnderlineInputBorder(),
+                            focusedBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: amountColor, width: 2),
                             ),
-                            const SizedBox(height: 4),
-                            TextFormField(
-                              controller: _amountController,
-                              focusNode: _amountFocusNode,
-                              decoration: InputDecoration(
-                                hintText: '\$ 0',
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.zero,
-                                isDense: true,
-                              ),
-                              style: TextStyle(
-                                fontSize: 36,
+                            contentPadding: EdgeInsets.zero,
+                            isDense: true,
+                          ),
+                          style:
+                              theme.textTheme.headlineSmall?.copyWith(
                                 fontWeight: FontWeight.w600,
-                                color: amountColor,
-                              ),
-                              keyboardType: const TextInputType.numberWithOptions(
-                                decimal: true,
-                                signed: false,
-                              ),
-                              inputFormatters: [ThousandsSeparatorInputFormatter()],
-                              enabled: !_isSubmitting,
-                              validator: (value) {
-                                final raw = value == null ? '' : stripAmount(value);
-                                if (raw.isEmpty) return null;
-                                final a = double.tryParse(raw);
-                                if (a == null || a < 0) return '請輸入有效金額';
-                                return null;
-                              },
-                            ),
-                          ],
+                              ) ??
+                              TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+                          textAlign: TextAlign.left,
+                          enabled: !_isSubmitting,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return '請輸入帳戶名稱';
+                            }
+                            return null;
+                          },
                         ),
                       ),
                     ],
@@ -246,21 +232,50 @@ class _AddAccountFormState extends State<_AddAccountForm> {
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-                  child: TextFormField(
-                    controller: _nameController,
-                    decoration: InputDecoration(
-                      labelText: '帳戶名稱',
-                      hintText: _namePlaceholder,
-                      border: const OutlineInputBorder(),
-                    ),
-                    enabled: !_isSubmitting,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return '請輸入帳戶名稱';
-                      }
-                      return null;
-                    },
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        _amountLabel,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _amountController,
+                          focusNode: _amountFocusNode,
+                          decoration: InputDecoration(
+                            hintText: '\$ 0',
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.zero,
+                            isDense: true,
+                          ),
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w500,
+                            color: amountColor,
+                          ),
+                          textAlign: TextAlign.right,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                            signed: false,
+                          ),
+                          inputFormatters: [ThousandsSeparatorInputFormatter()],
+                          enabled: !_isSubmitting,
+                          validator: (value) {
+                            final raw = value == null ? '' : stripAmount(value);
+                            if (raw.isEmpty) return null;
+                            final a = double.tryParse(raw);
+                            if (a == null || a < 0) return '請輸入有效金額';
+                            return null;
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
