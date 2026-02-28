@@ -60,6 +60,7 @@ class _AddAccountFormState extends State<_AddAccountForm> {
   final _amountController = TextEditingController();
   final _amountFocusNode = FocusNode();
   final _nameController = TextEditingController();
+  final _nameFocusNode = FocusNode();
   bool _isSubmitting = false;
 
   bool get _hasUnsavedChanges =>
@@ -94,6 +95,9 @@ class _AddAccountFormState extends State<_AddAccountForm> {
     super.initState();
     _amountController.addListener(() => setState(() {}));
     _nameController.addListener(() => setState(() {}));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _nameFocusNode.requestFocus();
+    });
   }
 
   @override
@@ -101,6 +105,7 @@ class _AddAccountFormState extends State<_AddAccountForm> {
     _amountController.dispose();
     _amountFocusNode.dispose();
     _nameController.dispose();
+    _nameFocusNode.dispose();
     super.dispose();
   }
 
@@ -201,6 +206,7 @@ class _AddAccountFormState extends State<_AddAccountForm> {
                       Expanded(
                         child: TextFormField(
                           controller: _nameController,
+                          focusNode: _nameFocusNode,
                           decoration: InputDecoration(
                             hintText: _namePlaceholder,
                             border: InputBorder.none,
