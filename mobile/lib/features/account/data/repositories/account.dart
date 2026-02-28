@@ -1,6 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:mobile/core/database/app_database.dart';
 import 'package:mobile/features/account/domain/account.dart';
 import 'package:mobile/features/account/domain/account_icon.dart';
+import 'package:uuid/uuid.dart';
 
 class AccountRepository {
   AccountRepository._();
@@ -45,6 +47,28 @@ class AccountRepository {
     return _rowToAccount(rows.single);
   }
 
+  static final _uuid = Uuid();
+
+  static Future<Account> insert({
+    required AccountType type,
+    required String subType,
+    required String name,
+    required double initialBalance,
+    IconData? icon,
+  }) async {
+    final db = await AppDatabase.database;
+    final id = _uuid.v4();
+    await db.insert(_table, {
+      'id': id,
+      'type': type.name,
+      'sub_type': subType,
+      'name': name,
+      'icon': icon != null ? iconToCodePoint(icon) : null,
+      'initial_balance': initialBalance,
+    });
+    return (await getById(id))!;
+  }
+
   static Future<void> updateLastUsedAt(String accountId) async {
     final db = await AppDatabase.database;
     final now = DateTime.now().toUtc().toIso8601String();
@@ -54,6 +78,48 @@ class AccountRepository {
       where: 'id = ?',
       whereArgs: [accountId],
     );
+  }
+
+  static Future<void> update({
+    required String id,
+    required String name,
+    required double initialBalance,
+    IconData? icon,
+  }) async {
+    final db = await AppDatabase.database;
+    final now = DateTime.now().toUtc().toIso8601String();
+    await db.update(
+      _table,
+      {
+        'name': name,
+        'initial_balance': initialBalance,
+        'icon': icon != null ? iconToCodePoint(icon) : null,
+        'updated_at': now,
+        'synced': 0,
+      },
+      where: 'id = ? AND deleted_at IS NULL',
+      whereArgs: [id],
+    );
+  }
+
+  static Future<bool> delete(String accountId) async {
+    final db = await AppDatabase.database;
+    final entries = await db.query(
+      'entry',
+      columns: ['id'],
+      where: 'deleted_at IS NULL AND (debit_account_id = ? OR credit_account_id = ?)',
+      whereArgs: [accountId, accountId],
+    );
+    if (entries.isNotEmpty) return false;
+
+    final now = DateTime.now().toUtc().toIso8601String();
+    await db.update(
+      _table,
+      {'deleted_at': now, 'updated_at': now, 'synced': 0},
+      where: 'id = ?',
+      whereArgs: [accountId],
+    );
+    return true;
   }
 
   static Account _rowToAccount(Map<String, Object?> row) {

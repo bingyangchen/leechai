@@ -5,6 +5,8 @@ import 'package:mobile/features/account/data/repositories/account.dart'
 import 'package:mobile/features/account/data/services/account_balance.dart';
 import 'package:mobile/features/account/domain/account.dart';
 import 'package:mobile/features/account/domain/asset_type.dart';
+import 'package:mobile/features/account/domain/liability_type.dart';
+import 'package:mobile/features/account/presentation/widgets/add_account_sheet.dart';
 import 'package:mobile/features/entry/data/repositories/entry.dart'
     show EntryRepository;
 import 'package:mobile/features/entry/data/repositories/tag.dart' show TagRepository;
@@ -15,6 +17,7 @@ import 'package:mobile/features/entry/presentation/widgets/sticky_date_header.da
     show buildDateHeaderSection;
 import 'package:mobile/features/entry/presentation/widgets/transaction_row.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
+import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
 
 class AccountDetailPage extends StatefulWidget {
   const AccountDetailPage({super.key, required this.accountId});
@@ -129,6 +132,114 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
     }
   }
 
+  Future<void> _onOpenSettings() async {
+    final data = await _future;
+    if (!mounted) return;
+    await showAppBottomSheet<void>(
+      context,
+      mode: AppBottomSheetMode.static,
+      builder: (ctx) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.edit_outlined),
+            title: const Text('編輯帳戶'),
+            onTap: () {
+              Navigator.pop(ctx);
+              _onEditAccount(data);
+            },
+          ),
+          ListTile(
+            leading: Icon(
+              Icons.delete_outline,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            title: Text(
+              '刪除帳戶',
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+            onTap: () {
+              Navigator.pop(ctx);
+              if (data.entries.isEmpty) {
+                _onDeleteAccount(data);
+              } else {
+                showDialog<void>(
+                  context: context,
+                  builder: (c) => AlertDialog(
+                    title: const Text('無法刪除'),
+                    content: const Text('此帳戶已有交易紀錄，為確保帳務正確，請先刪除紀錄。'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(c),
+                        child: const Text('確定'),
+                      ),
+                    ],
+                  ),
+                );
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _onEditAccount(_DetailData data) async {
+    final updated = await showAccountFormSheet(
+      context,
+      existingAccount: data.account,
+      hasEntries: data.entries.isNotEmpty,
+    );
+    if (updated == true && mounted) _onRefresh();
+  }
+
+  Future<void> _onDeleteAccount(_DetailData data) async {
+    final accountName =
+        data.account.name ??
+        (AssetTypeX.fromName(data.account.subType)?.label ??
+            LiabilityTypeX.fromName(data.account.subType)?.label ??
+            data.account.subType);
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('確認刪除'),
+        content: Text('確定要刪除 $accountName 嗎？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+              foregroundColor: Theme.of(ctx).colorScheme.onError,
+            ),
+            child: const Text('刪除'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+
+    final deleted = await AccountRepository.delete(data.account.id);
+    if (!mounted) return;
+    if (deleted) {
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('帳戶已刪除'), behavior: SnackBarBehavior.floating),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('此帳戶已有交易紀錄，無法刪除'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -140,6 +251,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
               final name =
                   snapshot.data!.account.name ??
                   (AssetTypeX.fromName(snapshot.data!.account.subType)?.label ??
+                      LiabilityTypeX.fromName(snapshot.data!.account.subType)?.label ??
                       snapshot.data!.account.subType);
               return Text(name);
             }
@@ -166,6 +278,11 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
                 label: const Text('更新市值'),
               );
             },
+          ),
+          IconButton(
+            onPressed: _onOpenSettings,
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: '設定',
           ),
         ],
       ),

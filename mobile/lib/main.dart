@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/app/main_shell.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
+import 'package:mobile/shell.dart';
 
 void main() {
   runApp(const MainApp());
@@ -16,7 +16,7 @@ class MainApp extends StatelessWidget {
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.system,
-      home: const MainShell(),
+      home: const Shell(),
     );
   }
 }
