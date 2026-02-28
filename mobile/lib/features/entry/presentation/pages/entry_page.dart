@@ -17,6 +17,7 @@ import 'package:mobile/features/entry/presentation/widgets/date_chip_row.dart';
 import 'package:mobile/features/entry/presentation/widgets/notes_section.dart';
 import 'package:mobile/features/entry/presentation/widgets/tags_section.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
+import 'package:mobile/shared/widgets/confirm_delete_dialog.dart';
 import 'package:mobile/shared/widgets/date_time_picker_sheet.dart';
 import 'package:mobile/shared/widgets/discard_changes_dialog.dart';
 
@@ -107,8 +108,6 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
     final creditId = entry['credit_account_id'] as String? ?? '';
 
     if (!mounted) return;
-    _tabController.animateTo(typeIndex);
-    _pageController.jumpToPage(typeIndex);
     setState(() {
       _entryType = type;
       _amountController.text = formatAmountForDisplay(amount);
@@ -139,13 +138,17 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
           break;
       }
     });
+    _tabController.animateTo(typeIndex);
+    _pageController.jumpToPage(typeIndex);
   }
 
   void _syncEntryTypeFromTab() {
     if (!_tabController.indexIsChanging && mounted) {
       final index = _tabController.index;
-      setState(() => _entryType = EntryType.values[index]);
-      _applyDefaultAccounts();
+      final newType = EntryType.values[index];
+      final didChangeType = newType != _entryType;
+      setState(() => _entryType = newType);
+      if (didChangeType) _applyDefaultAccounts();
       _pageController.jumpToPage(index);
     }
   }
@@ -154,8 +157,10 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
     if (_tabController.index != index) {
       _tabController.animateTo(index);
     }
-    setState(() => _entryType = EntryType.values[index]);
-    _applyDefaultAccounts();
+    final newType = EntryType.values[index];
+    final didChangeType = newType != _entryType;
+    setState(() => _entryType = newType);
+    if (didChangeType) _applyDefaultAccounts();
   }
 
   @override
@@ -168,6 +173,20 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
     _tagInputController.dispose();
     _notesController.dispose();
     super.dispose();
+  }
+
+  Future<void> _requestDelete() async {
+    if (_isSubmitting || !_isEditMode || widget.entryId == null) return;
+    final confirmed = await ConfirmDeleteDialog.show(context);
+    if (confirmed != true || !mounted) return;
+    setState(() => _isSubmitting = true);
+    try {
+      await EntryRepository.softDelete(widget.entryId!);
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 
   Future<void> _requestClose() async {
@@ -184,7 +203,7 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
     final accounts = await AccountRepository.getBalanceAccounts();
     if (mounted) {
       setState(() => _balanceAccounts = accounts);
-      _applyDefaultAccounts();
+      if (!_isEditMode) _applyDefaultAccounts();
     }
   }
 
@@ -413,6 +432,12 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
             child: const Text('捨棄'),
           ),
           actions: [
+            if (_isEditMode)
+              IconButton(
+                onPressed: _isSubmitting ? null : _requestDelete,
+                icon: const Icon(Icons.delete_outline),
+                tooltip: '刪除',
+              ),
             if (_isSubmitting)
               const Padding(
                 padding: EdgeInsets.only(right: 16),
@@ -427,20 +452,27 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
           ],
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(48),
-            child: TabBar(
-              controller: _tabController,
-              isScrollable: true,
-              tabAlignment: TabAlignment.start,
-              dividerHeight: 0,
-              indicatorColor: typeColor,
-              labelColor: typeColor,
-              unselectedLabelColor: Theme.of(context).colorScheme.onSurfaceVariant,
-              indicatorSize: TabBarIndicatorSize.label,
-              tabs: EntryType.values.map((t) => Tab(text: t.label)).toList(),
-              onTap: (index) {
-                setState(() => _entryType = EntryType.values[index]);
-                _pageController.jumpToPage(index);
-              },
+            child: IgnorePointer(
+              ignoring: _isEditMode,
+              child: TabBar(
+                controller: _tabController,
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
+                dividerHeight: 0,
+                indicatorColor: typeColor,
+                labelColor: typeColor,
+                unselectedLabelColor: _isEditMode
+                    ? Theme.of(
+                        context,
+                      ).colorScheme.onSurfaceVariant.withValues(alpha: 0.38)
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
+                indicatorSize: TabBarIndicatorSize.label,
+                tabs: EntryType.values.map((t) => Tab(text: t.label)).toList(),
+                onTap: (index) {
+                  setState(() => _entryType = EntryType.values[index]);
+                  _pageController.jumpToPage(index);
+                },
+              ),
             ),
           ),
         ),
@@ -448,6 +480,7 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
           key: _formKey,
           child: PageView.builder(
             controller: _pageController,
+            physics: _isEditMode ? const NeverScrollableScrollPhysics() : null,
             onPageChanged: _onPageChanged,
             itemCount: 5,
             itemBuilder: (context, index) {

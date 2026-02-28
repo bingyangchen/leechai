@@ -14,6 +14,16 @@ class EntryRepository {
     return db.query(_table, where: 'deleted_at IS NULL', orderBy: 'occurred_at DESC');
   }
 
+  static Future<List<Map<String, Object?>>> getByAccountId(String accountId) async {
+    final db = await AppDatabase.database;
+    return db.query(
+      _table,
+      where: 'deleted_at IS NULL AND (debit_account_id = ? OR credit_account_id = ?)',
+      whereArgs: [accountId, accountId],
+      orderBy: 'occurred_at DESC',
+    );
+  }
+
   static Future<List<Map<String, Object?>>> getByMonth(DateTime yearMonth) async {
     final db = await AppDatabase.database;
     final start = DateTime.utc(yearMonth.year, yearMonth.month, 1);

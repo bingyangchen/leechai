@@ -17,6 +17,7 @@ import 'package:mobile/features/entry/presentation/widgets/sticky_date_header.da
 import 'package:mobile/features/entry/presentation/widgets/sync_indicator.dart';
 import 'package:mobile/features/entry/presentation/widgets/transaction_row.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
+import 'package:mobile/shared/widgets/confirm_delete_dialog.dart';
 
 class JournalPage extends StatefulWidget {
   const JournalPage({super.key, this.refreshTrigger});
@@ -156,26 +157,7 @@ class _JournalPageState extends State<JournalPage> {
   }
 
   void _onDelete(String entryId) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('確認刪除'),
-        content: const Text('確定要刪除這筆紀錄嗎？'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(ctx).colorScheme.error,
-            ),
-            child: const Text('刪除'),
-          ),
-        ],
-      ),
-    );
+    final confirmed = await ConfirmDeleteDialog.show(context);
     if (confirmed != true || !mounted) return;
     await EntryRepository.softDelete(entryId);
     if (mounted) {
