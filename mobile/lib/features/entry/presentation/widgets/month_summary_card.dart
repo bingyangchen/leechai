@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/features/entry/domain/entry_type.dart';
 import 'package:mobile/features/entry/presentation/constants/entry_type_colors.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 
@@ -67,7 +68,7 @@ class MonthSummaryCard extends StatelessWidget {
                       Text(
                         expenseStr,
                         style: theme.textTheme.titleMedium?.copyWith(
-                          color: EntryTypeColors.expense,
+                          color: EntryTypeColors.forType(context, EntryType.expense),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -85,7 +86,7 @@ class MonthSummaryCard extends StatelessWidget {
                       Text(
                         incomeStr,
                         style: theme.textTheme.titleMedium?.copyWith(
-                          color: EntryTypeColors.income,
+                          color: EntryTypeColors.forType(context, EntryType.income),
                           fontWeight: FontWeight.w600,
                         ),
                       ),

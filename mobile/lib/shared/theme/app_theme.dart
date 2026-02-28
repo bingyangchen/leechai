@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/shared/constants/category.dart';
 
 class _ShibaColors {
   _ShibaColors._();
@@ -13,6 +12,18 @@ class _ShibaColors {
   static const Color surfaceDark = Color(0xFF2D2420);
   static const Color surfaceContainerDark = Color(0xFF3D322C);
   static const Color onSurfaceDark = Color(0xFFE8E0D8);
+}
+
+class _AccountingColorValues {
+  _AccountingColorValues._();
+
+  static const Color income = Color(0xFF4CAF50);
+  static const Color expense = Color(0xFFE53935);
+  static const Color transfer = Color(0xFF2196F3);
+  static const Color borrow = Color(0xFFFF9800);
+  static const Color repay = Color(0xFF9C27B0);
+  static const Color liability = Color(0xFFE65100);
+  static const Color neutral = Color(0xFF616161);
 }
 
 class AppTheme {
@@ -49,9 +60,14 @@ class AppTheme {
         titleTextStyle: TextStyle(fontSize: 16, color: colorScheme.onSurface),
       ),
       extensions: [
-        _AccountingColors(
-          income: CategoryConstants.incomeColor,
-          expense: CategoryConstants.expenseColor,
+        AccountingColors(
+          income: _AccountingColorValues.income,
+          expense: _AccountingColorValues.expense,
+          transfer: _AccountingColorValues.transfer,
+          borrow: _AccountingColorValues.borrow,
+          repay: _AccountingColorValues.repay,
+          liability: _AccountingColorValues.liability,
+          neutral: _AccountingColorValues.neutral,
         ),
       ],
     );
@@ -88,33 +104,75 @@ class AppTheme {
         titleTextStyle: TextStyle(fontSize: 16, color: colorScheme.onSurface),
       ),
       extensions: [
-        _AccountingColors(
-          income: CategoryConstants.incomeColor,
-          expense: CategoryConstants.expenseColor,
+        AccountingColors(
+          income: _AccountingColorValues.income,
+          expense: _AccountingColorValues.expense,
+          transfer: _AccountingColorValues.transfer,
+          borrow: _AccountingColorValues.borrow,
+          repay: _AccountingColorValues.repay,
+          liability: _AccountingColorValues.liability,
+          neutral: _AccountingColorValues.neutral,
         ),
       ],
     );
   }
 }
 
-class _AccountingColors extends ThemeExtension<_AccountingColors> {
-  const _AccountingColors({required this.income, required this.expense});
+class AccountingColors extends ThemeExtension<AccountingColors> {
+  const AccountingColors({
+    required this.income,
+    required this.expense,
+    required this.transfer,
+    required this.borrow,
+    required this.repay,
+    required this.liability,
+    required this.neutral,
+  });
 
   final Color income;
   final Color expense;
+  final Color transfer;
+  final Color borrow;
+  final Color repay;
+  final Color liability;
+  final Color neutral;
+
+  static AccountingColors of(BuildContext context) {
+    final ext = Theme.of(context).extension<AccountingColors>();
+    assert(ext != null);
+    return ext!;
+  }
 
   @override
-  _AccountingColors copyWith({Color? income, Color? expense}) => _AccountingColors(
+  AccountingColors copyWith({
+    Color? income,
+    Color? expense,
+    Color? transfer,
+    Color? borrow,
+    Color? repay,
+    Color? liability,
+    Color? neutral,
+  }) => AccountingColors(
     income: income ?? this.income,
     expense: expense ?? this.expense,
+    transfer: transfer ?? this.transfer,
+    borrow: borrow ?? this.borrow,
+    repay: repay ?? this.repay,
+    liability: liability ?? this.liability,
+    neutral: neutral ?? this.neutral,
   );
 
   @override
-  _AccountingColors lerp(ThemeExtension<_AccountingColors>? other, double t) {
-    if (other is! _AccountingColors) return this;
-    return _AccountingColors(
+  AccountingColors lerp(ThemeExtension<AccountingColors>? other, double t) {
+    if (other is! AccountingColors) return this;
+    return AccountingColors(
       income: Color.lerp(income, other.income, t)!,
       expense: Color.lerp(expense, other.expense, t)!,
+      transfer: Color.lerp(transfer, other.transfer, t)!,
+      borrow: Color.lerp(borrow, other.borrow, t)!,
+      repay: Color.lerp(repay, other.repay, t)!,
+      liability: Color.lerp(liability, other.liability, t)!,
+      neutral: Color.lerp(neutral, other.neutral, t)!,
     );
   }
 }

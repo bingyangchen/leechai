@@ -40,10 +40,14 @@ class CategorySection extends StatelessWidget {
                 final cat = categories[index];
                 final selected = index == selectedIndex;
                 final icon = cat.icon ?? Icons.more_horiz;
+                final backgroundColor = selected
+                    ? theme.colorScheme.primary.withValues(alpha: 0.22)
+                    : theme.colorScheme.surfaceContainerHighest;
+                final contentColor = selected
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurfaceVariant;
                 return Material(
-                  color: selected
-                      ? theme.colorScheme.primaryContainer
-                      : theme.colorScheme.surfaceContainerHighest,
+                  color: backgroundColor,
                   borderRadius: BorderRadius.circular(12),
                   child: InkWell(
                     onTap: () => onSelected(index),
@@ -53,22 +57,11 @@ class CategorySection extends StatelessWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            icon,
-                            size: 24,
-                            color: selected
-                                ? theme.colorScheme.onPrimaryContainer
-                                : theme.colorScheme.onSurfaceVariant,
-                          ),
+                          Icon(icon, size: 24, color: contentColor),
                           const SizedBox(height: 2),
                           Text(
                             cat.name,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: selected
-                                  ? theme.colorScheme.onPrimaryContainer
-                                  : theme.colorScheme.onSurfaceVariant,
-                            ),
+                            style: TextStyle(fontSize: 12, color: contentColor),
                           ),
                         ],
                       ),

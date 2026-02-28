@@ -48,7 +48,7 @@ class TransactionRow extends StatelessWidget {
     final entryId = entry['id'] as String? ?? '';
     final tagTitles = entryTagTitles[entryId] ?? [];
 
-    final color = EntryTypeColors.forType(type);
+    final color = EntryTypeColors.forType(context, type);
     final amountText = privacyMode
         ? '****'
         : (type == EntryType.income
@@ -150,7 +150,7 @@ class TransactionRow extends StatelessWidget {
           style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 16,
-            color: EntryTypeColors.forType(type),
+            color: EntryTypeColors.forType(context, type),
           ),
         ),
       ),

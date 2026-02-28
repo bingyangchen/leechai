@@ -398,7 +398,7 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
-    final typeColor = EntryTypeColors.forType(_entryType);
+    final typeColor = EntryTypeColors.forType(context, _entryType);
 
     return PopScope(
       canPop: !_hasUnsavedChanges,
@@ -452,7 +452,7 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
             itemCount: 5,
             itemBuilder: (context, index) {
               final pageType = EntryType.values[index];
-              final pageColor = EntryTypeColors.forType(pageType);
+              final pageColor = EntryTypeColors.forType(context, pageType);
               return CustomScrollView(
                 key: PageStorageKey<int>(index),
                 keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
