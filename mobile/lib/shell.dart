@@ -5,14 +5,14 @@ import 'package:mobile/features/entry/presentation/pages/journal_page.dart';
 import 'package:mobile/features/settings/presentation/pages/settings_page.dart';
 import 'package:mobile/features/statistics/presentation/pages/analysis_page.dart';
 
-class MainShell extends StatefulWidget {
-  const MainShell({super.key});
+class Shell extends StatefulWidget {
+  const Shell({super.key});
 
   @override
-  State<MainShell> createState() => _MainShellState();
+  State<Shell> createState() => _ShellState();
 }
 
-class _MainShellState extends State<MainShell> {
+class _ShellState extends State<Shell> {
   static const double _bottomNavBarHeight = 88;
   int _currentIndex = 0;
   late final PageController _pageController;
