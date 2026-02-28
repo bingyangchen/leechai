@@ -16,40 +16,74 @@ Future<bool?> showAddAccountSheet(
   required String subTypeLabel,
   required IconData icon,
 }) {
+  return showAccountFormSheet(
+    context,
+    type: type,
+    subType: subType,
+    subTypeLabel: subTypeLabel,
+    icon: icon,
+  );
+}
+
+Future<bool?> showAccountFormSheet(
+  BuildContext context, {
+  Account? existingAccount,
+  AccountType? type,
+  String? subType,
+  String? subTypeLabel,
+  IconData? icon,
+  bool hasEntries = false,
+}) {
+  final isEdit = existingAccount != null;
+  final accountType = type ?? existingAccount!.type;
+  final accountSubType = subType ?? existingAccount!.subType;
+  final accountSubTypeLabel =
+      subTypeLabel ??
+      (AssetTypeX.fromName(accountSubType)?.label ??
+          LiabilityTypeX.fromName(accountSubType)?.label ??
+          accountSubType);
+  final accountIcon = isEdit ? (icon ?? existingAccount!.displayIcon) : icon!;
+
   return showAppBottomSheet<bool>(
     context,
     mode: AppBottomSheetMode.scrollable,
-    title: '新增$subTypeLabel帳戶',
+    title: isEdit ? '編輯帳戶' : '新增$accountSubTypeLabel帳戶',
     showCloseButton: false,
-    initialChildSize: 0.6,
-    maxChildSize: 0.9,
+    initialChildSize: 0.85,
+    maxChildSize: 0.95,
     scrollableBuilder: (ctx, scrollController) => _AddAccountForm(
-      type: type,
-      subType: subType,
-      subTypeLabel: subTypeLabel,
-      icon: icon,
+      existingAccount: existingAccount,
+      type: accountType,
+      subType: accountSubType,
+      subTypeLabel: accountSubTypeLabel,
+      icon: accountIcon,
       scrollController: scrollController,
       onSuccess: () => Navigator.of(ctx).pop(true),
+      hasEntries: hasEntries,
     ),
   );
 }
 
 class _AddAccountForm extends StatefulWidget {
   const _AddAccountForm({
+    this.existingAccount,
     required this.type,
     required this.subType,
     required this.subTypeLabel,
     required this.icon,
     required this.scrollController,
     required this.onSuccess,
+    this.hasEntries = false,
   });
 
+  final Account? existingAccount;
   final AccountType type;
   final String subType;
   final String subTypeLabel;
   final IconData icon;
   final ScrollController scrollController;
   final VoidCallback onSuccess;
+  final bool hasEntries;
 
   @override
   State<_AddAccountForm> createState() => _AddAccountFormState();
@@ -57,15 +91,25 @@ class _AddAccountForm extends StatefulWidget {
 
 class _AddAccountFormState extends State<_AddAccountForm> {
   final _formKey = GlobalKey<FormState>();
-  final _amountController = TextEditingController();
+  late final TextEditingController _amountController;
   final _amountFocusNode = FocusNode();
-  final _nameController = TextEditingController();
+  late final TextEditingController _nameController;
   final _nameFocusNode = FocusNode();
+
   bool _isSubmitting = false;
 
-  bool get _hasUnsavedChanges =>
-      _amountController.text.trim().isNotEmpty ||
-      _nameController.text.trim().isNotEmpty;
+  bool get _isEdit => widget.existingAccount != null;
+  String get _initialName => widget.existingAccount?.name?.trim() ?? '';
+  double get _initialAmount => widget.existingAccount?.initialBalance ?? 0;
+  bool get _hasUnsavedChanges {
+    final name = _nameController.text.trim();
+    final amountStr = stripAmount(_amountController.text);
+    final amount = double.tryParse(amountStr) ?? 0;
+    if (_isEdit) {
+      return name != _initialName || amount != _initialAmount;
+    }
+    return name.isNotEmpty || amount > 0;
+  }
 
   String get _amountLabel => widget.type == AccountType.liability ? '初始未繳金額' : '初始餘額';
 
@@ -93,10 +137,20 @@ class _AddAccountFormState extends State<_AddAccountForm> {
   @override
   void initState() {
     super.initState();
+    final existing = widget.existingAccount;
+    final initialName = existing?.name?.trim() ?? '';
+    final initialAmount = existing?.initialBalance ?? 0;
+    _nameController = TextEditingController(text: initialName);
+    _amountController = TextEditingController(
+      text: initialAmount != 0 ? formatAmountForDisplay(initialAmount) : '',
+    );
     _amountController.addListener(() => setState(() {}));
     _nameController.addListener(() => setState(() {}));
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _nameFocusNode.requestFocus();
+      if (_isEdit && initialName.isNotEmpty) {
+        _nameController.selection = TextSelection.collapsed(offset: initialName.length);
+      }
     });
   }
 
@@ -117,7 +171,7 @@ class _AddAccountFormState extends State<_AddAccountForm> {
     }
     final leave = await DiscardChangesDialog.show(
       context,
-      title: '放棄新增？',
+      title: _isEdit ? '放棄編輯？' : '放棄新增？',
       content: '您輸入的資料將遺失。',
       confirmLabel: '放棄',
     );
@@ -138,13 +192,22 @@ class _AddAccountFormState extends State<_AddAccountForm> {
     FocusScope.of(context).unfocus();
 
     try {
-      await AccountRepository.insert(
-        type: widget.type,
-        subType: widget.subType,
-        name: name,
-        initialBalance: amount,
-        icon: _iconForSubType(),
-      );
+      if (_isEdit) {
+        await AccountRepository.update(
+          id: widget.existingAccount!.id,
+          name: name,
+          initialBalance: amount,
+          icon: widget.icon,
+        );
+      } else {
+        await AccountRepository.insert(
+          type: widget.type,
+          subType: widget.subType,
+          name: name,
+          initialBalance: amount,
+          icon: _iconForSubType(),
+        );
+      }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -153,7 +216,10 @@ class _AddAccountFormState extends State<_AddAccountForm> {
     widget.onSuccess();
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('帳戶建立成功'), behavior: SnackBarBehavior.floating),
+      SnackBar(
+        content: Text(_isEdit ? '帳戶已更新' : '帳戶建立成功'),
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 
@@ -239,48 +305,62 @@ class _AddAccountFormState extends State<_AddAccountForm> {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        _amountLabel,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Text(
+                            _amountLabel,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: TextFormField(
+                              controller: _amountController,
+                              focusNode: _amountFocusNode,
+                              decoration: InputDecoration(
+                                hintText: '\$ 0',
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.zero,
+                                isDense: true,
+                              ),
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.w500,
+                                color: amountColor,
+                              ),
+                              textAlign: TextAlign.right,
+                              keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true,
+                                signed: false,
+                              ),
+                              inputFormatters: [ThousandsSeparatorInputFormatter()],
+                              enabled: !_isSubmitting,
+                              validator: (value) {
+                                final raw = value == null ? '' : stripAmount(value);
+                                if (raw.isEmpty) return null;
+                                final a = double.tryParse(raw);
+                                if (a == null || a < 0) return '請輸入有效金額';
+                                return null;
+                              },
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: TextFormField(
-                          controller: _amountController,
-                          focusNode: _amountFocusNode,
-                          decoration: InputDecoration(
-                            hintText: '\$ 0',
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.zero,
-                            isDense: true,
+                      if (widget.hasEntries && _isEdit) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          '修改初始餘額會影響帳戶最終餘額',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w500,
-                            color: amountColor,
-                          ),
-                          textAlign: TextAlign.right,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                            signed: false,
-                          ),
-                          inputFormatters: [ThousandsSeparatorInputFormatter()],
-                          enabled: !_isSubmitting,
-                          validator: (value) {
-                            final raw = value == null ? '' : stripAmount(value);
-                            if (raw.isEmpty) return null;
-                            final a = double.tryParse(raw);
-                            if (a == null || a < 0) return '請輸入有效金額';
-                            return null;
-                          },
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),
@@ -310,7 +390,7 @@ class _AddAccountFormState extends State<_AddAccountForm> {
                                     color: Theme.of(context).colorScheme.onPrimary,
                                   ),
                                 )
-                              : const Text('儲存'),
+                              : Text(_isEdit ? '儲存修改' : '儲存'),
                         ),
                       ),
                     ],
