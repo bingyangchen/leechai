@@ -426,6 +426,7 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
       },
       child: Scaffold(
         appBar: AppBar(
+          toolbarHeight: kToolbarHeight,
           title: Text(_isEditMode ? '編輯紀錄' : '新增紀錄'),
           leading: TextButton(
             onPressed: _isSubmitting ? null : _requestClose,
@@ -469,7 +470,6 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
                 indicatorSize: TabBarIndicatorSize.label,
                 tabs: EntryType.values.map((t) => Tab(text: t.label)).toList(),
                 onTap: (index) {
-                  setState(() => _entryType = EntryType.values[index]);
                   _pageController.jumpToPage(index);
                 },
               ),
