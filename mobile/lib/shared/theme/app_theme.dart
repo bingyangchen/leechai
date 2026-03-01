@@ -26,6 +26,40 @@ class _AccountingColorValues {
   static const Color neutral = Color(0xFF616161);
 }
 
+class _ChartPaletteValues {
+  _ChartPaletteValues._();
+
+  static const List<Color> light = [
+    _ShibaColors.primaryLight,
+    _AccountingColorValues.income,
+    _AccountingColorValues.transfer,
+    _AccountingColorValues.repay,
+    _AccountingColorValues.borrow,
+    Color(0xFFE91E63),
+    Color(0xFF00BCD4),
+    Color(0xFF8BC34A),
+    Color(0xFF673AB7),
+    Color(0xFF009688),
+    Color(0xFFCDDC39),
+    Color(0xFF3F51B5),
+  ];
+
+  static const List<Color> dark = [
+    _ShibaColors.primaryDark,
+    _AccountingColorValues.income,
+    _AccountingColorValues.transfer,
+    _AccountingColorValues.repay,
+    _AccountingColorValues.borrow,
+    Color(0xFFE91E63),
+    Color(0xFF00BCD4),
+    Color(0xFF8BC34A),
+    Color(0xFF673AB7),
+    Color(0xFF009688),
+    Color(0xFFCDDC39),
+    Color(0xFF3F51B5),
+  ];
+}
+
 class AppTheme {
   AppTheme._();
 
@@ -69,6 +103,7 @@ class AppTheme {
           liability: _AccountingColorValues.liability,
           neutral: _AccountingColorValues.neutral,
         ),
+        ChartPalette(palette: _ChartPaletteValues.light),
       ],
     );
   }
@@ -113,6 +148,36 @@ class AppTheme {
           liability: _AccountingColorValues.liability,
           neutral: _AccountingColorValues.neutral,
         ),
+        ChartPalette(palette: _ChartPaletteValues.dark),
+      ],
+    );
+  }
+}
+
+class ChartPalette extends ThemeExtension<ChartPalette> {
+  const ChartPalette({required this.palette});
+
+  final List<Color> palette;
+
+  static ChartPalette of(BuildContext context) {
+    final ext = Theme.of(context).extension<ChartPalette>();
+    assert(ext != null);
+    return ext!;
+  }
+
+  @override
+  ChartPalette copyWith({List<Color>? palette}) =>
+      ChartPalette(palette: palette ?? this.palette);
+
+  @override
+  ChartPalette lerp(ThemeExtension<ChartPalette>? other, double t) {
+    if (other is! ChartPalette || palette.length != other.palette.length) {
+      return this;
+    }
+    return ChartPalette(
+      palette: [
+        for (var i = 0; i < palette.length; i++)
+          Color.lerp(palette[i], other.palette[i], t)!,
       ],
     );
   }

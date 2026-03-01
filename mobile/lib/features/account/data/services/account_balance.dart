@@ -54,7 +54,7 @@ class AccountBalanceService {
       if (monthEnd.isAfter(now)) continue;
       double net = 0;
       for (final a in accounts) {
-        final b = _balanceAsOf(a, entries, monthEnd);
+        final b = balanceAsOf(a, entries, monthEnd);
         net += b;
       }
       points.add(net);
@@ -65,7 +65,7 @@ class AccountBalanceService {
     return points.length > 6 ? points.sublist(points.length - 6) : points;
   }
 
-  static double _balanceAsOf(
+  static double balanceAsOf(
     Account account,
     List<Map<String, Object?>> entries,
     DateTime asOf,

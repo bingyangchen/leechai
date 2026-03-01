@@ -436,7 +436,6 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     final typeColor = EntryTypeColors.forType(context, _entryType);
-
     return PopScope(
       canPop: !_hasUnsavedChanges,
       onPopInvokedWithResult: (didPop, result) {

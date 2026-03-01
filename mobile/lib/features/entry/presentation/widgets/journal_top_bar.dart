@@ -51,7 +51,7 @@ class JournalTopBar extends StatelessWidget {
           const SizedBox(width: 12),
           IconButton(
             icon: Icon(
-              privacyMode ? Icons.visibility_off : Icons.visibility,
+              privacyMode ? Icons.visibility_off_outlined : Icons.visibility_outlined,
               color: theme.colorScheme.onSurface,
             ),
             onPressed: onPrivacyModeToggle,
