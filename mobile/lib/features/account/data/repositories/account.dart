@@ -141,6 +141,8 @@ class AccountRepository {
         return AccountType.expense;
       case 'income':
         return AccountType.income;
+      case 'equity':
+        return AccountType.equity;
       case 'asset':
       default:
         return AccountType.asset;

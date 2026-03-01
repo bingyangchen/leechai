@@ -15,6 +15,7 @@ class TransactionRow extends StatelessWidget {
     required this.onTap,
     required this.onDelete,
     required this.onCopy,
+    this.perspectiveAccountId,
   });
 
   final Map<String, Object?> entry;
@@ -24,6 +25,7 @@ class TransactionRow extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onDelete;
   final VoidCallback onCopy;
+  final String? perspectiveAccountId;
 
   @override
   Widget build(BuildContext context) {
@@ -48,13 +50,20 @@ class TransactionRow extends StatelessWidget {
     final entryId = entry['id'] as String? ?? '';
     final tagTitles = entryTagTitles[entryId] ?? [];
 
-    final color = EntryTypeColors.forType(context, type);
+    final color = type == EntryType.adjustment && perspectiveAccountId != null
+        ? EntryTypeColors.forAdjustment(
+            context,
+            isGain: perspectiveAccountId == debitId,
+          )
+        : EntryTypeColors.forType(context, type);
     final amountText = privacyMode
         ? '****'
         : (type == EntryType.income
               ? '+${formatAmountForDisplay(amount)}'
               : type == EntryType.expense
               ? '-${formatAmountForDisplay(amount)}'
+              : type == EntryType.adjustment
+              ? (_adjustmentAmountText(amount, debitId, creditId))
               : formatAmountForDisplay(amount));
 
     return Slidable(
@@ -147,14 +156,16 @@ class TransactionRow extends StatelessWidget {
             : null,
         trailing: Text(
           amountText,
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-            color: EntryTypeColors.forType(context, type),
-          ),
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: color),
         ),
       ),
     );
+  }
+
+  String _adjustmentAmountText(double amount, String debitId, String creditId) {
+    if (perspectiveAccountId == debitId) return '+${formatAmountForDisplay(amount)}';
+    if (perspectiveAccountId == creditId) return '-${formatAmountForDisplay(amount)}';
+    return formatAmountForDisplay(amount);
   }
 
   String _categoryLabel(EntryType type, Account? debit, Account? credit) {
@@ -167,6 +178,8 @@ class TransactionRow extends StatelessWidget {
         return credit?.subType.isNotEmpty == true
             ? credit!.subType
             : (credit?.name ?? '收入');
+      case EntryType.adjustment:
+        return type.label;
       default:
         return type.label;
     }
@@ -184,6 +197,8 @@ class TransactionRow extends StatelessWidget {
         return Icons.handshake;
       case EntryType.repay:
         return Icons.reply;
+      case EntryType.adjustment:
+        return Icons.show_chart;
     }
   }
 
@@ -199,6 +214,8 @@ class TransactionRow extends StatelessWidget {
         if (debit != null && credit != null) {
           return '${credit.name ?? credit.subType} → ${debit.name ?? debit.subType}';
         }
+        return null;
+      case EntryType.adjustment:
         return null;
     }
   }

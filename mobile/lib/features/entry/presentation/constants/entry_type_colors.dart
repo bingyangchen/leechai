@@ -18,6 +18,13 @@ class EntryTypeColors {
         return c.borrow;
       case EntryType.repay:
         return c.repay;
+      case EntryType.adjustment:
+        return c.transfer;
     }
+  }
+
+  static Color forAdjustment(BuildContext context, {required bool isGain}) {
+    final c = AccountingColors.of(context);
+    return isGain ? c.income : c.expense;
   }
 }

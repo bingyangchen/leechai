@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/features/account/domain/constants.dart';
 import 'package:sqflite/sqflite.dart';
 
 Future<void> run(Database db) async {
@@ -87,4 +88,13 @@ Future<void> seedDefaults(Database db) async {
       'icon': icon,
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
+
+  // Equity
+  await db.insert('account', {
+    'id': defaultEquityUnrealizedGainId,
+    'type': 'equity',
+    'sub_type': 'unrealizedGain',
+    'name': '未實現損益',
+    'icon': Icons.balance.codePoint.toString(),
+  }, conflictAlgorithm: ConflictAlgorithm.ignore);
 }

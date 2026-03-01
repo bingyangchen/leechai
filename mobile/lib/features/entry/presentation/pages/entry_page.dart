@@ -62,7 +62,11 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(vsync: this, length: 5, initialIndex: 0);
+    _tabController = TabController(
+      vsync: this,
+      length: EntryTypeX.userFacingTypes.length,
+      initialIndex: 0,
+    );
     _pageController = PageController(initialPage: 0);
     _amountController.addListener(() => setState(() {}));
     _tagInputController.addListener(() => setState(() {}));
@@ -95,7 +99,20 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
 
     final typeStr = entry['type'] as String? ?? 'expense';
     final type = EntryType.values.asNameMap()[typeStr] ?? EntryType.expense;
-    final typeIndex = type.index;
+    if (type == EntryType.adjustment) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('系統調整紀錄無法編輯'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        Navigator.of(context).pop();
+      });
+      return;
+    }
+    final typeIndex = EntryTypeX.userFacingTypes.indexOf(type);
     final amount = (entry['amount'] as num?)?.toDouble() ?? 0.0;
     final occurredAtStr = entry['occurred_at'] as String?;
     DateTime occurredAt = DateTime.now();
@@ -117,6 +134,8 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
       _tags.clear();
       _tags.addAll(tagTitles);
       switch (type) {
+        case EntryType.adjustment:
+          return;
         case EntryType.expense:
           _selectedAccountId = creditId;
           final idx = _categoryExpenseAccounts.indexWhere((a) => a.id == debitId);
@@ -146,7 +165,7 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
   void _syncEntryTypeFromTab() {
     if (!_tabController.indexIsChanging && mounted) {
       final index = _tabController.index;
-      final newType = EntryType.values[index];
+      final newType = EntryTypeX.userFacingTypes[index];
       final didChangeType = newType != _entryType;
       setState(() => _entryType = newType);
       if (didChangeType) _applyDefaultAccounts();
@@ -158,7 +177,7 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
     if (_tabController.index != index) {
       _tabController.animateTo(index);
     }
-    final newType = EntryType.values[index];
+    final newType = EntryTypeX.userFacingTypes[index];
     final didChangeType = newType != _entryType;
     setState(() => _entryType = newType);
     if (didChangeType) _applyDefaultAccounts();
@@ -345,6 +364,8 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
       case EntryType.repay:
         if (_selectedAccountFromId == null || _selectedAccountToId == null) return null;
         return (debit: _selectedAccountToId!, credit: _selectedAccountFromId!);
+      case EntryType.adjustment:
+        return null;
     }
   }
 
@@ -465,7 +486,9 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
                       ).colorScheme.onSurfaceVariant.withValues(alpha: 0.38)
                     : Theme.of(context).colorScheme.onSurfaceVariant,
                 indicatorSize: TabBarIndicatorSize.label,
-                tabs: EntryType.values.map((t) => Tab(text: t.label)).toList(),
+                tabs: EntryTypeX.userFacingTypes
+                    .map((t) => Tab(text: t.label))
+                    .toList(),
                 onTap: (index) {
                   _pageController.jumpToPage(index);
                 },
@@ -479,9 +502,9 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
             controller: _pageController,
             physics: _isEditMode ? const NeverScrollableScrollPhysics() : null,
             onPageChanged: _onPageChanged,
-            itemCount: 5,
+            itemCount: EntryTypeX.userFacingTypes.length,
             itemBuilder: (context, index) {
-              final pageType = EntryType.values[index];
+              final pageType = EntryTypeX.userFacingTypes[index];
               final pageColor = EntryTypeColors.forType(context, pageType);
               return CustomScrollView(
                 key: PageStorageKey<int>(index),
