@@ -259,13 +259,6 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
           },
         ),
         actions: [
-          IconButton(
-            onPressed: () => setState(() => _privacyMode = !_privacyMode),
-            icon: Icon(
-              _privacyMode ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-            ),
-            tooltip: _privacyMode ? '顯示金額' : '隱藏金額',
-          ),
           FutureBuilder<_DetailData>(
             future: _future,
             builder: (context, snapshot) {
@@ -278,6 +271,13 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
                 label: const Text('更新市值'),
               );
             },
+          ),
+          IconButton(
+            onPressed: () => setState(() => _privacyMode = !_privacyMode),
+            icon: Icon(
+              _privacyMode ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+            ),
+            tooltip: _privacyMode ? '顯示金額' : '隱藏金額',
           ),
           IconButton(
             onPressed: _onOpenSettings,
