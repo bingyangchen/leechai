@@ -253,6 +253,7 @@ class _IncomeExpenseTabState extends State<IncomeExpenseTab> {
                   subType: item.subType,
                   isExpense: _isExpense,
                   dateRange: widget.dateRange,
+                  privacyMode: widget.privacyMode,
                 ),
               ),
             );

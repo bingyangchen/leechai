@@ -65,18 +65,18 @@ class DateRange {
     }
   }
 
+  String toRangeLabel() {
+    if (start.year == end.year && start.month == end.month) {
+      return '${start.year} 年 ${start.month.toString().padLeft(2, '0')} 月';
+    }
+    return '${start.year} 年 ${start.month.toString().padLeft(2, '0')} 月 - ${end.year} 年 ${end.month.toString().padLeft(2, '0')} 月';
+  }
+
   String toShortLabel([DateRangePreset? preset]) {
     if (preset != null && preset != DateRangePreset.custom) {
       return preset.label;
     }
-    if (start.year == end.year && start.month == end.month) {
-      return '${start.year}年 ${start.month}月';
-    }
-    return '${start.year.toString().substring(2)}/${start.month.toString().padLeft(2, '0')} - ${end.year.toString().substring(2)}/${end.month.toString().padLeft(2, '0')}';
-  }
-
-  String toRangeLabel() {
-    return '${start.year.toString().substring(2)}/${start.month.toString().padLeft(2, '0')} - ${end.year.toString().substring(2)}/${end.month.toString().padLeft(2, '0')}';
+    return toRangeLabel();
   }
 
   bool containsMonth(DateTime month) {
