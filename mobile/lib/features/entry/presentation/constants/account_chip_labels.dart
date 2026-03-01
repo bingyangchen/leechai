@@ -12,5 +12,7 @@ String accountChipLabel(EntryType entryType, {required bool isFrom}) {
       return isFrom ? '債權人' : '存入';
     case EntryType.repay:
       return isFrom ? '付款源' : '還債';
+    case EntryType.adjustment:
+      return '';
   }
 }

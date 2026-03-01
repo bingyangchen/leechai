@@ -5,6 +5,7 @@ import 'package:mobile/features/account/data/repositories/account.dart'
 import 'package:mobile/features/account/data/services/account_balance.dart';
 import 'package:mobile/features/account/domain/account.dart';
 import 'package:mobile/features/account/domain/asset_type.dart';
+import 'package:mobile/features/account/domain/constants.dart';
 import 'package:mobile/features/account/domain/liability_type.dart';
 import 'package:mobile/features/account/presentation/widgets/add_account_sheet.dart';
 import 'package:mobile/features/entry/data/repositories/entry.dart'
@@ -92,28 +93,26 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
     final diff = newValue - oldBalance;
     if (diff == 0) return;
 
-    const incomeAccountId = 'default_income_2';
-    const expenseAccountId = 'default_expense_5';
     final accountId = data.account.id;
 
     if (diff > 0) {
       await EntryRepository.insert(
-        type: EntryType.income.name,
+        type: EntryType.adjustment.name,
         debitAccountId: accountId,
-        creditAccountId: incomeAccountId,
+        creditAccountId: defaultEquityUnrealizedGainId,
         amount: diff,
         tagIds: [],
-        memo: '市值更新（未實現損益）',
+        memo: '市值更新',
         occurredAt: DateTime.now(),
       );
     } else {
       await EntryRepository.insert(
-        type: EntryType.expense.name,
-        debitAccountId: expenseAccountId,
+        type: EntryType.adjustment.name,
+        debitAccountId: defaultEquityUnrealizedGainId,
         creditAccountId: accountId,
         amount: -diff,
         tagIds: [],
-        memo: '市值更新（未實現損益）',
+        memo: '市值更新',
         occurredAt: DateTime.now(),
       );
     }
@@ -259,13 +258,6 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
           },
         ),
         actions: [
-          IconButton(
-            onPressed: () => setState(() => _privacyMode = !_privacyMode),
-            icon: Icon(
-              _privacyMode ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-            ),
-            tooltip: _privacyMode ? '顯示金額' : '隱藏金額',
-          ),
           FutureBuilder<_DetailData>(
             future: _future,
             builder: (context, snapshot) {
@@ -278,6 +270,13 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
                 label: const Text('更新市值'),
               );
             },
+          ),
+          IconButton(
+            onPressed: () => setState(() => _privacyMode = !_privacyMode),
+            icon: Icon(
+              _privacyMode ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+            ),
+            tooltip: _privacyMode ? '顯示金額' : '隱藏金額',
           ),
           IconButton(
             onPressed: _onOpenSettings,
@@ -349,21 +348,13 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
                         accounts: data.accounts,
                         entryTagTitles: data.entryTagTitles,
                         privacyMode: _privacyMode,
-                        onTap: () => EntryListHandlers.openEntry(
-                          context,
-                          row['id'] as String,
-                          _onRefresh,
-                        ),
-                        onDelete: () => EntryListHandlers.deleteEntry(
-                          context,
-                          row['id'] as String,
-                          _onRefresh,
-                        ),
-                        onCopy: () => EntryListHandlers.copyEntry(
-                          context,
-                          row['id'] as String,
-                          _onRefresh,
-                        ),
+                        perspectiveAccountId: data.account.id,
+                        onTap: () =>
+                            EntryListHandlers.openEntry(context, row, _onRefresh),
+                        onDelete: () =>
+                            EntryListHandlers.deleteEntry(context, row, _onRefresh),
+                        onCopy: () =>
+                            EntryListHandlers.copyEntry(context, row, _onRefresh),
                       );
                     }, childCount: e.value.length),
                   ),
@@ -412,6 +403,12 @@ class _MarketValueDialogState extends State<_MarketValueDialog> {
     _controller = TextEditingController(
       text: formatAmountForDisplay(widget.currentValue),
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _controller.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: _controller.text.length,
+      );
+    });
   }
 
   @override

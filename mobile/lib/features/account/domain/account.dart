@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile/features/account/domain/asset_type.dart';
 import 'package:mobile/features/account/domain/liability_type.dart';
 
-enum AccountType { asset, liability, expense, income }
+enum AccountType { asset, liability, expense, income, equity }
 
 class Account {
   const Account({
@@ -29,6 +29,7 @@ class Account {
         return LiabilityTypeX.fromName(subType)?.isPaymentMethod ?? false;
       case AccountType.expense:
       case AccountType.income:
+      case AccountType.equity:
         return false;
     }
   }
@@ -44,6 +45,8 @@ class Account {
         return Icons.payments;
       case AccountType.income:
         return Icons.trending_up;
+      case AccountType.equity:
+        return Icons.balance;
     }
   }
 }

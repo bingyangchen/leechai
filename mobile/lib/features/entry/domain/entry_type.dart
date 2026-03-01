@@ -1,10 +1,4 @@
-enum EntryType {
-  expense,
-  income,
-  transfer,
-  borrow,
-  repay,
-}
+enum EntryType { expense, income, transfer, borrow, repay, adjustment }
 
 extension EntryTypeX on EntryType {
   String get label {
@@ -19,11 +13,19 @@ extension EntryTypeX on EntryType {
         return '借入';
       case EntryType.repay:
         return '還款';
+      case EntryType.adjustment:
+        return '調整';
     }
   }
 
   bool get isDualAccount =>
-      this == EntryType.transfer ||
-      this == EntryType.borrow ||
-      this == EntryType.repay;
+      this == EntryType.transfer || this == EntryType.borrow || this == EntryType.repay;
+
+  static const userFacingTypes = [
+    EntryType.expense,
+    EntryType.income,
+    EntryType.transfer,
+    EntryType.borrow,
+    EntryType.repay,
+  ];
 }

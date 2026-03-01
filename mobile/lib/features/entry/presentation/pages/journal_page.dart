@@ -109,7 +109,12 @@ class _JournalPageState extends State<JournalPage> {
   }
 
   Future<_JournalData> _loadData() async {
-    final entries = await EntryRepository.getByMonth(_selectedMonth);
+    final rawEntries = await EntryRepository.getByMonth(_selectedMonth);
+    final entries = rawEntries.where((e) {
+      final typeStr = e['type'] as String? ?? 'expense';
+      final type = EntryType.values.asNameMap()[typeStr];
+      return type != EntryType.adjustment;
+    }).toList();
     final allAccounts = <String, Account>{};
     for (final a in await AccountRepository.getAll()) {
       allAccounts[a.id] = a;
@@ -279,17 +284,17 @@ class _JournalPageState extends State<JournalPage> {
                                         privacyMode: _privacyMode,
                                         onTap: () => EntryListHandlers.openEntry(
                                           context,
-                                          row['id'] as String,
+                                          row,
                                           _onRefreshTrigger,
                                         ),
                                         onDelete: () => EntryListHandlers.deleteEntry(
                                           context,
-                                          row['id'] as String,
+                                          row,
                                           _onRefreshTrigger,
                                         ),
                                         onCopy: () => EntryListHandlers.copyEntry(
                                           context,
-                                          row['id'] as String,
+                                          row,
                                           _onRefreshTrigger,
                                         ),
                                       );
