@@ -25,7 +25,7 @@ class _ShellState extends State<Shell> {
     _pageController = PageController(initialPage: 0);
     _pages = [
       JournalPage(refreshTrigger: _dataRefreshTrigger),
-      AnalysisPage(),
+      AnalysisPage(refreshTrigger: _dataRefreshTrigger),
       AssetsPage(refreshTrigger: _dataRefreshTrigger),
       SettingsPage(),
     ];

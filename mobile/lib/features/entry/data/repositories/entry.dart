@@ -38,6 +38,32 @@ class EntryRepository {
     );
   }
 
+  static Future<List<Map<String, Object?>>> getByDateRange(
+    DateTime start,
+    DateTime end,
+  ) async {
+    final db = await AppDatabase.database;
+    final startStr = start.toUtc().toIso8601String();
+    final endStr = end.toUtc().toIso8601String();
+    return db.query(
+      _table,
+      where: 'deleted_at IS NULL AND occurred_at >= ? AND occurred_at <= ?',
+      whereArgs: [startStr, endStr],
+      orderBy: 'occurred_at ASC',
+    );
+  }
+
+  static Future<List<Map<String, Object?>>> getUpTo(DateTime end) async {
+    final db = await AppDatabase.database;
+    final endStr = end.toUtc().toIso8601String();
+    return db.query(
+      _table,
+      where: 'deleted_at IS NULL AND occurred_at <= ?',
+      whereArgs: [endStr],
+      orderBy: 'occurred_at ASC',
+    );
+  }
+
   static Future<void> softDelete(String id) async {
     final db = await AppDatabase.database;
     final now = DateTime.now().toUtc().toIso8601String();
