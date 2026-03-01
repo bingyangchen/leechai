@@ -243,6 +243,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: kToolbarHeight,
         title: FutureBuilder<_DetailData>(
           future: _future,
           builder: (context, snapshot) {
