@@ -3,7 +3,7 @@ import 'package:mobile/features/account/presentation/pages/account_page.dart';
 import 'package:mobile/features/entry/presentation/pages/entry_page.dart';
 import 'package:mobile/features/entry/presentation/pages/journal_page.dart';
 import 'package:mobile/features/settings/presentation/pages/settings_page.dart';
-import 'package:mobile/features/statistics/presentation/pages/analysis_page.dart';
+import 'package:mobile/features/statistics/presentation/pages/statistics_page.dart';
 
 class Shell extends StatefulWidget {
   const Shell({super.key});
@@ -15,17 +15,15 @@ class Shell extends StatefulWidget {
 class _ShellState extends State<Shell> {
   static const double _bottomNavBarHeight = 88;
   int _currentIndex = 0;
-  late final PageController _pageController;
   final ValueNotifier<int> _dataRefreshTrigger = ValueNotifier(0);
   late final List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: 0);
     _pages = [
       JournalPage(refreshTrigger: _dataRefreshTrigger),
-      AnalysisPage(refreshTrigger: _dataRefreshTrigger),
+      StatisticsPage(refreshTrigger: _dataRefreshTrigger),
       AssetsPage(refreshTrigger: _dataRefreshTrigger),
       SettingsPage(),
     ];
@@ -34,18 +32,13 @@ class _ShellState extends State<Shell> {
   @override
   void dispose() {
     _dataRefreshTrigger.dispose();
-    _pageController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: PageView(
-        controller: _pageController,
-        onPageChanged: (index) => setState(() => _currentIndex = index),
-        children: _pages,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _pages),
       floatingActionButton: _currentIndex < 3
           ? FloatingActionButton(
               onPressed: () async {
@@ -77,13 +70,7 @@ class _ShellState extends State<Shell> {
             backgroundColor: Colors.transparent,
             elevation: 0,
             currentIndex: _currentIndex,
-            onTap: (index) {
-              _pageController.animateToPage(
-                index,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-              );
-            },
+            onTap: (index) => setState(() => _currentIndex = index),
             type: BottomNavigationBarType.fixed,
             selectedLabelStyle: const TextStyle(fontSize: 12),
             unselectedLabelStyle: const TextStyle(fontSize: 12),

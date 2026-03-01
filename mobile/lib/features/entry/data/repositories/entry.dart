@@ -26,10 +26,10 @@ class EntryRepository {
 
   static Future<List<Map<String, Object?>>> getByMonth(DateTime yearMonth) async {
     final db = await AppDatabase.database;
-    final start = DateTime.utc(yearMonth.year, yearMonth.month, 1);
-    final end = DateTime.utc(yearMonth.year, yearMonth.month + 1, 0, 23, 59, 59, 999);
-    final startStr = start.toIso8601String();
-    final endStr = end.toIso8601String();
+    final start = DateTime(yearMonth.year, yearMonth.month, 1);
+    final end = DateTime(yearMonth.year, yearMonth.month + 1, 0, 23, 59, 59, 999);
+    final startStr = start.toUtc().toIso8601String();
+    final endStr = end.toUtc().toIso8601String();
     return db.query(
       _table,
       where: 'deleted_at IS NULL AND occurred_at >= ? AND occurred_at <= ?',
