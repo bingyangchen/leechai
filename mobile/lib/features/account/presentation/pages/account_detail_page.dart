@@ -403,6 +403,12 @@ class _MarketValueDialogState extends State<_MarketValueDialog> {
     _controller = TextEditingController(
       text: formatAmountForDisplay(widget.currentValue),
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _controller.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: _controller.text.length,
+      );
+    });
   }
 
   @override

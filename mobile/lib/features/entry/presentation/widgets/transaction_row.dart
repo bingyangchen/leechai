@@ -66,6 +66,7 @@ class TransactionRow extends StatelessWidget {
               ? (_adjustmentAmountText(amount, debitId, creditId))
               : formatAmountForDisplay(amount));
 
+    final showCopyAction = type != EntryType.adjustment;
     return Slidable(
       key: ValueKey(entry['id']),
       endActionPane: ActionPane(
@@ -81,19 +82,21 @@ class TransactionRow extends StatelessWidget {
           ),
         ],
       ),
-      startActionPane: ActionPane(
-        motion: const DrawerMotion(),
-        extentRatio: 0.25,
-        children: [
-          SlidableAction(
-            onPressed: (_) => onCopy(),
-            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-            foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
-            icon: Icons.copy,
-            label: '複製',
-          ),
-        ],
-      ),
+      startActionPane: showCopyAction
+          ? ActionPane(
+              motion: const DrawerMotion(),
+              extentRatio: 0.25,
+              children: [
+                SlidableAction(
+                  onPressed: (_) => onCopy(),
+                  backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+                  icon: Icons.copy,
+                  label: '複製',
+                ),
+              ],
+            )
+          : null,
       child: ListTile(
         onTap: onTap,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
