@@ -68,13 +68,10 @@ class CategoryMonthlyBarChart extends StatelessWidget {
                       return const SizedBox.shrink();
                     }
                     final d = monthlyTotals[i].month;
-                    final label = d.month == 1
-                        ? '${d.year.toString().substring(2)}年\n${d.month}月'
-                        : '${d.month}月';
                     return Padding(
                       padding: const EdgeInsets.only(top: 8),
                       child: Text(
-                        label,
+                        '${d.month}月',
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
