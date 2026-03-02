@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/shared/data_refresh_scope.dart';
+import 'package:mobile/shared/scopes/data_refresh.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shell.dart';
 

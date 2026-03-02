@@ -4,6 +4,7 @@ import 'package:mobile/features/entry/data/repositories/entry.dart'
     show EntryRepository;
 import 'package:mobile/features/entry/domain/entry_type.dart';
 import 'package:mobile/features/entry/presentation/pages/entry_page.dart';
+import 'package:mobile/shared/scopes/data_refresh.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
@@ -29,7 +30,10 @@ class EntryListHandlers {
           MaterialPageRoute<bool?>(builder: (_) => EntryPage(entryId: entryId)),
         )
         .then((saved) {
-          if (saved == true) onSaved();
+          if (saved == true) {
+            onSaved();
+            if (context.mounted) DataRefreshScope.notify(context);
+          }
         });
   }
 
@@ -105,7 +109,10 @@ class EntryListHandlers {
     final confirmed = await ConfirmDeleteDialog.show(context);
     if (confirmed != true || !context.mounted) return;
     await EntryRepository.softDelete(entryId);
-    if (context.mounted) onDeleted();
+    if (context.mounted) {
+      onDeleted();
+      DataRefreshScope.notify(context);
+    }
   }
 
   static Future<void> copyEntry(
@@ -118,6 +125,7 @@ class EntryListHandlers {
       await EntryRepository.duplicate(entryId, DateTime.now());
       if (context.mounted) {
         onCopied();
+        DataRefreshScope.notify(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('已複製一筆紀錄'), behavior: SnackBarBehavior.floating),
         );

@@ -9,6 +9,7 @@ import 'package:mobile/features/statistics/presentation/constants/category_color
 import 'package:mobile/features/statistics/presentation/pages/category_detail_page.dart';
 import 'package:mobile/features/statistics/presentation/widgets/category_donut_chart.dart';
 import 'package:mobile/features/statistics/presentation/widgets/category_ranking_tile.dart';
+import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
 
 class IncomeExpenseTab extends StatefulWidget {
   const IncomeExpenseTab({
@@ -18,6 +19,7 @@ class IncomeExpenseTab extends StatefulWidget {
     required this.onDateRangeChanged,
     required this.privacyMode,
     this.refreshTrigger,
+    this.rankingAnimationTrigger = 0,
   });
 
   final DateRange dateRange;
@@ -25,6 +27,7 @@ class IncomeExpenseTab extends StatefulWidget {
   final void Function(DateRange range, DateRangePreset? preset) onDateRangeChanged;
   final bool privacyMode;
   final ValueListenable<int>? refreshTrigger;
+  final int rankingAnimationTrigger;
 
   @override
   State<IncomeExpenseTab> createState() => _IncomeExpenseTabState();
@@ -103,62 +106,67 @@ class _IncomeExpenseTabState extends State<IncomeExpenseTab> {
         });
         await _future;
       },
-      child: CustomScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        slivers: [
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
-              child: _buildSegmentedControl(context),
+      child: HapticRefreshWrapper(
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+                child: _buildSegmentedControl(context),
+              ),
             ),
-          ),
-          SliverToBoxAdapter(
-            child: FutureBuilder<_TabData>(
-              future: _future,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting &&
-                    !snapshot.hasData) {
-                  return const Padding(
-                    padding: EdgeInsets.all(48),
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                }
-                if (snapshot.hasError) {
-                  return Padding(
-                    padding: const EdgeInsets.all(48),
-                    child: Center(
-                      child: Text('錯誤：${snapshot.error}', textAlign: TextAlign.center),
-                    ),
-                  );
-                }
-                final data = snapshot.data;
-                if (data == null) return const SizedBox.shrink();
+            SliverToBoxAdapter(
+              child: FutureBuilder<_TabData>(
+                future: _future,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting &&
+                      !snapshot.hasData) {
+                    return const Padding(
+                      padding: EdgeInsets.all(48),
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+                  if (snapshot.hasError) {
+                    return Padding(
+                      padding: const EdgeInsets.all(48),
+                      child: Center(
+                        child: Text(
+                          '錯誤：${snapshot.error}',
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    );
+                  }
+                  final data = snapshot.data;
+                  if (data == null) return const SizedBox.shrink();
 
-                if (data.breakdown.isEmpty) {
-                  return const CategoryChartEmptyState();
-                }
+                  if (data.breakdown.isEmpty) {
+                    return const CategoryChartEmptyState();
+                  }
 
-                return Column(
-                  children: [
-                    CategoryDonutChart(
-                      breakdown: data.breakdown,
-                      total: data.total,
-                      touchedIndex: _touchedIndex,
-                      isExpense: _isExpense,
-                      privacyMode: widget.privacyMode,
-                      onSectionTouched: (i) {
-                        setState(() => _touchedIndex = i);
-                      },
-                    ),
-                    const SizedBox(height: 32),
-                    _buildRankingList(context, data),
-                  ],
-                );
-              },
+                  return Column(
+                    children: [
+                      CategoryDonutChart(
+                        breakdown: data.breakdown,
+                        total: data.total,
+                        touchedIndex: _touchedIndex,
+                        isExpense: _isExpense,
+                        privacyMode: widget.privacyMode,
+                        onSectionTouched: (i) {
+                          setState(() => _touchedIndex = i);
+                        },
+                      ),
+                      const SizedBox(height: 32),
+                      _buildRankingList(context, data),
+                    ],
+                  );
+                },
+              ),
             ),
-          ),
-          const SliverPadding(padding: EdgeInsets.only(bottom: 88)),
-        ],
+            const SliverPadding(padding: EdgeInsets.only(bottom: 88)),
+          ],
+        ),
       ),
     );
   }
@@ -240,6 +248,7 @@ class _IncomeExpenseTabState extends State<IncomeExpenseTab> {
         final item = data.breakdown[index];
         final color = colorForSubType(context, item.subType, index);
         return CategoryRankingTile(
+          key: ValueKey('${widget.rankingAnimationTrigger}-${item.subType}'),
           subType: item.subType,
           amount: item.amount,
           percent: item.percent,

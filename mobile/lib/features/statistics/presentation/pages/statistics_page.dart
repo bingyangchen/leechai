@@ -7,9 +7,10 @@ import 'package:mobile/features/statistics/presentation/widgets/income_expense_t
 import 'package:mobile/features/statistics/presentation/widgets/net_worth_tab.dart';
 
 class StatisticsPage extends StatefulWidget {
-  const StatisticsPage({super.key, this.refreshTrigger});
+  const StatisticsPage({super.key, this.refreshTrigger, this.isPageVisible = false});
 
   final ValueListenable<int>? refreshTrigger;
+  final bool isPageVisible;
 
   @override
   State<StatisticsPage> createState() => _StatisticsPageState();
@@ -22,6 +23,8 @@ class _StatisticsPageState extends State<StatisticsPage>
   late DateRange _dateRange;
   DateRangePreset? _preset;
   NetWorthRange _netWorthRange = NetWorthRange.sixMonths;
+  int _rankingAnimationTrigger = 0;
+  int _prevTabIndex = 0;
 
   @override
   void initState() {
@@ -33,7 +36,17 @@ class _StatisticsPageState extends State<StatisticsPage>
     widget.refreshTrigger?.addListener(_onRefreshTrigger);
   }
 
-  void _onTabChanged() => setState(() {});
+  void _onTabChanged() {
+    final idx = _tabController.index;
+    if (_prevTabIndex != idx && idx == 0) {
+      setState(() {
+        _rankingAnimationTrigger++;
+        _prevTabIndex = idx;
+      });
+    } else {
+      setState(() => _prevTabIndex = idx);
+    }
+  }
 
   @override
   void didUpdateWidget(StatisticsPage oldWidget) {
@@ -41,6 +54,10 @@ class _StatisticsPageState extends State<StatisticsPage>
     if (oldWidget.refreshTrigger != widget.refreshTrigger) {
       oldWidget.refreshTrigger?.removeListener(_onRefreshTrigger);
       widget.refreshTrigger?.addListener(_onRefreshTrigger);
+    }
+    if (!oldWidget.isPageVisible && widget.isPageVisible &&
+        _tabController.index == 0) {
+      setState(() => _rankingAnimationTrigger++);
     }
   }
 
@@ -187,6 +204,7 @@ class _StatisticsPageState extends State<StatisticsPage>
                     }),
                     privacyMode: _privacyMode,
                     refreshTrigger: widget.refreshTrigger,
+                    rankingAnimationTrigger: _rankingAnimationTrigger,
                   ),
                   NetWorthTab(
                     range: _netWorthRange,
