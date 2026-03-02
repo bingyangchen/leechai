@@ -16,23 +16,21 @@ class Shell extends StatefulWidget {
 class _ShellState extends State<Shell> {
   static const double _bottomNavBarHeight = 88;
   int _currentIndex = 0;
-  late final List<Widget> _pages;
 
-  @override
-  void initState() {
-    super.initState();
-    _pages = [
-      JournalPage(refreshTrigger: widget.refreshTrigger),
-      StatisticsPage(refreshTrigger: widget.refreshTrigger),
-      AssetsPage(refreshTrigger: widget.refreshTrigger),
-      SettingsPage(),
-    ];
-  }
+  List<Widget> _buildPages() => [
+    JournalPage(refreshTrigger: widget.refreshTrigger),
+    StatisticsPage(
+      refreshTrigger: widget.refreshTrigger,
+      isPageVisible: _currentIndex == 1,
+    ),
+    AssetsPage(refreshTrigger: widget.refreshTrigger),
+    SettingsPage(),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: _pages),
+      body: IndexedStack(index: _currentIndex, children: _buildPages()),
       floatingActionButton: _currentIndex < 3
           ? FloatingActionButton(
               onPressed: () async {
