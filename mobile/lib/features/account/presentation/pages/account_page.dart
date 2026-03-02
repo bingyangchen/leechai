@@ -12,6 +12,7 @@ import 'package:mobile/features/account/presentation/widgets/account_group_secti
 import 'package:mobile/features/account/presentation/widgets/add_account_sheet.dart';
 import 'package:mobile/features/account/presentation/widgets/net_worth_header.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
+import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
 
 class AssetsPage extends StatefulWidget {
   const AssetsPage({super.key, this.refreshTrigger});
@@ -216,105 +217,107 @@ class _AssetsPageState extends State<AssetsPage> {
             _onRefresh();
             await _future;
           },
-          child: FutureBuilder<_AccountPageData>(
-            future: _future,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting &&
-                  !snapshot.hasData) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (snapshot.hasError) {
-                return Center(
-                  child: Text('錯誤：${snapshot.error}', textAlign: TextAlign.center),
+          child: HapticRefreshWrapper(
+            child: FutureBuilder<_AccountPageData>(
+              future: _future,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting &&
+                    !snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Text('錯誤：${snapshot.error}', textAlign: TextAlign.center),
+                  );
+                }
+                final data = snapshot.data;
+                if (data == null) return const SizedBox.shrink();
+
+                final currentAssets = data.accounts
+                    .where(
+                      (a) =>
+                          a.type == AccountType.asset &&
+                          _currentAssetsSubTypes.contains(a.subType),
+                    )
+                    .toList();
+                final creditCards = data.accounts
+                    .where(
+                      (a) =>
+                          a.type == AccountType.liability &&
+                          a.subType == LiabilityType.creditCard.name,
+                    )
+                    .toList();
+                final investments = data.accounts
+                    .where(
+                      (a) =>
+                          a.type == AccountType.asset &&
+                          a.subType == AssetType.securities.name,
+                    )
+                    .toList();
+                final loans = data.accounts
+                    .where(
+                      (a) =>
+                          a.type == AccountType.liability &&
+                          a.subType == LiabilityType.loan.name,
+                    )
+                    .toList();
+
+                final netWorth = data.totalAssets - data.totalLiabilities;
+
+                return SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      NetWorthHeader(
+                        netWorth: netWorth,
+                        totalAssets: data.totalAssets,
+                        totalLiabilities: data.totalLiabilities,
+                        sparklinePoints: data.sparkline,
+                        privacyMode: _privacyMode,
+                        onPrivacyToggle: () =>
+                            setState(() => _privacyMode = !_privacyMode),
+                      ),
+                      const SizedBox(height: 8),
+                      AccountGroupSection(
+                        kind: AccountGroupKind.currentAssets,
+                        accounts: currentAssets,
+                        balances: data.balances,
+                        privacyMode: _privacyMode,
+                        onAdd: _onAddCurrentAssets,
+                        onTapAccount: _onTapAccount,
+                      ),
+                      AccountGroupSection(
+                        kind: AccountGroupKind.creditCard,
+                        accounts: creditCards,
+                        balances: data.balances,
+                        privacyMode: _privacyMode,
+                        onAdd: _onAddCreditCard,
+                        onTapAccount: _onTapAccount,
+                      ),
+                      AccountGroupSection(
+                        kind: AccountGroupKind.investments,
+                        accounts: investments,
+                        balances: data.balances,
+                        privacyMode: _privacyMode,
+                        roiPercent: _mockRoi(investments, data.balances),
+                        onAdd: _onAddInvestments,
+                        onTapAccount: _onTapAccount,
+                      ),
+                      AccountGroupSection(
+                        kind: AccountGroupKind.loans,
+                        accounts: loans,
+                        balances: data.balances,
+                        privacyMode: _privacyMode,
+                        onAdd: _onAddLoans,
+                        onTapAccount: _onTapAccount,
+                      ),
+                      const SizedBox(height: 88),
+                    ],
+                  ),
                 );
-              }
-              final data = snapshot.data;
-              if (data == null) return const SizedBox.shrink();
-
-              final currentAssets = data.accounts
-                  .where(
-                    (a) =>
-                        a.type == AccountType.asset &&
-                        _currentAssetsSubTypes.contains(a.subType),
-                  )
-                  .toList();
-              final creditCards = data.accounts
-                  .where(
-                    (a) =>
-                        a.type == AccountType.liability &&
-                        a.subType == LiabilityType.creditCard.name,
-                  )
-                  .toList();
-              final investments = data.accounts
-                  .where(
-                    (a) =>
-                        a.type == AccountType.asset &&
-                        a.subType == AssetType.securities.name,
-                  )
-                  .toList();
-              final loans = data.accounts
-                  .where(
-                    (a) =>
-                        a.type == AccountType.liability &&
-                        a.subType == LiabilityType.loan.name,
-                  )
-                  .toList();
-
-              final netWorth = data.totalAssets - data.totalLiabilities;
-
-              return SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    NetWorthHeader(
-                      netWorth: netWorth,
-                      totalAssets: data.totalAssets,
-                      totalLiabilities: data.totalLiabilities,
-                      sparklinePoints: data.sparkline,
-                      privacyMode: _privacyMode,
-                      onPrivacyToggle: () =>
-                          setState(() => _privacyMode = !_privacyMode),
-                    ),
-                    const SizedBox(height: 8),
-                    AccountGroupSection(
-                      kind: AccountGroupKind.currentAssets,
-                      accounts: currentAssets,
-                      balances: data.balances,
-                      privacyMode: _privacyMode,
-                      onAdd: _onAddCurrentAssets,
-                      onTapAccount: _onTapAccount,
-                    ),
-                    AccountGroupSection(
-                      kind: AccountGroupKind.creditCard,
-                      accounts: creditCards,
-                      balances: data.balances,
-                      privacyMode: _privacyMode,
-                      onAdd: _onAddCreditCard,
-                      onTapAccount: _onTapAccount,
-                    ),
-                    AccountGroupSection(
-                      kind: AccountGroupKind.investments,
-                      accounts: investments,
-                      balances: data.balances,
-                      privacyMode: _privacyMode,
-                      roiPercent: _mockRoi(investments, data.balances),
-                      onAdd: _onAddInvestments,
-                      onTapAccount: _onTapAccount,
-                    ),
-                    AccountGroupSection(
-                      kind: AccountGroupKind.loans,
-                      accounts: loans,
-                      balances: data.balances,
-                      privacyMode: _privacyMode,
-                      onAdd: _onAddLoans,
-                      onTapAccount: _onTapAccount,
-                    ),
-                    const SizedBox(height: 88),
-                  ],
-                ),
-              );
-            },
+              },
+            ),
           ),
         ),
       ),

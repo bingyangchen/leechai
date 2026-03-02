@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mobile/features/account/data/repositories/account.dart'
     show AccountRepository;
 import 'package:mobile/features/account/domain/account.dart';
@@ -213,6 +214,7 @@ class _AddAccountFormState extends State<_AddAccountForm> {
     }
 
     if (!mounted) return;
+    if (!_isEdit) HapticFeedback.mediumImpact();
     widget.onSuccess();
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mobile/features/account/data/repositories/account.dart'
     show AccountRepository;
 import 'package:mobile/features/account/domain/account.dart';
@@ -430,6 +431,7 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
     }
 
     if (!mounted) return;
+    if (!_isEditMode) HapticFeedback.mediumImpact();
     Navigator.of(context).pop(true);
   }
 

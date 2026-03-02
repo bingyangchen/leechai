@@ -6,7 +6,8 @@ import 'package:mobile/features/settings/presentation/pages/settings_page.dart';
 import 'package:mobile/features/statistics/presentation/pages/statistics_page.dart';
 
 class Shell extends StatefulWidget {
-  const Shell({super.key});
+  const Shell({super.key, required this.refreshTrigger});
+  final ValueNotifier<int> refreshTrigger;
 
   @override
   State<Shell> createState() => _ShellState();
@@ -15,30 +16,21 @@ class Shell extends StatefulWidget {
 class _ShellState extends State<Shell> {
   static const double _bottomNavBarHeight = 88;
   int _currentIndex = 0;
-  final ValueNotifier<int> _dataRefreshTrigger = ValueNotifier(0);
-  late final List<Widget> _pages;
 
-  @override
-  void initState() {
-    super.initState();
-    _pages = [
-      JournalPage(refreshTrigger: _dataRefreshTrigger),
-      StatisticsPage(refreshTrigger: _dataRefreshTrigger),
-      AssetsPage(refreshTrigger: _dataRefreshTrigger),
-      SettingsPage(),
-    ];
-  }
-
-  @override
-  void dispose() {
-    _dataRefreshTrigger.dispose();
-    super.dispose();
-  }
+  List<Widget> _buildPages() => [
+    JournalPage(refreshTrigger: widget.refreshTrigger),
+    StatisticsPage(
+      refreshTrigger: widget.refreshTrigger,
+      isPageVisible: _currentIndex == 1,
+    ),
+    AssetsPage(refreshTrigger: widget.refreshTrigger),
+    SettingsPage(),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: _pages),
+      body: IndexedStack(index: _currentIndex, children: _buildPages()),
       floatingActionButton: _currentIndex < 3
           ? FloatingActionButton(
               onPressed: () async {
@@ -47,7 +39,7 @@ class _ShellState extends State<Shell> {
                 );
                 if (!context.mounted) return;
                 if (added == true) {
-                  _dataRefreshTrigger.value++;
+                  widget.refreshTrigger.value++;
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('紀錄已新增'),

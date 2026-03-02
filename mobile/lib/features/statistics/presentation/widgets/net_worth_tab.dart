@@ -6,6 +6,7 @@ import 'package:mobile/features/statistics/domain/net_worth_snapshot.dart';
 import 'package:mobile/features/statistics/presentation/widgets/net_worth_line_chart.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
+import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
 
 class NetWorthTab extends StatefulWidget {
   const NetWorthTab({
@@ -73,74 +74,74 @@ class _NetWorthTabState extends State<NetWorthTab> {
         });
         await _future;
       },
-      child: CustomScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        slivers: [
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: FutureBuilder<List<NetWorthSnapshot>>(
-                future: _future,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting &&
-                      !snapshot.hasData) {
-                    return const Padding(
-                      padding: EdgeInsets.all(48),
-                      child: Center(child: CircularProgressIndicator()),
-                    );
-                  }
-                  if (snapshot.hasError) {
-                    return Padding(
-                      padding: const EdgeInsets.all(48),
-                      child: Center(
-                        child: Text(
-                          '錯誤：${snapshot.error}',
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    );
-                  }
-                  final data = snapshot.data ?? [];
-                  if (data.isEmpty) {
-                    return _buildEmptyState(context);
-                  }
-
-                  final latest = data.last;
-                  final first = data.first;
-                  final netChange = latest.netWorth - first.netWorth;
-                  final assetChange = latest.totalAssets - first.totalAssets;
-                  final liabilityChange =
-                      latest.totalLiabilities - first.totalLiabilities;
-
-                  final chartHeight = (MediaQuery.of(context).size.height * 0.35).clamp(
-                    200.0,
-                    360.0,
-                  );
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _buildHeroMetrics(context, latest.netWorth, netChange),
-                      const SizedBox(height: 24),
-                      SizedBox(
-                        height: chartHeight,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: NetWorthLineChart(
-                            data: data,
-                            privacyMode: widget.privacyMode,
+      child: HapticRefreshWrapper(
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: FutureBuilder<List<NetWorthSnapshot>>(
+                  future: _future,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting &&
+                        !snapshot.hasData) {
+                      return const Padding(
+                        padding: EdgeInsets.all(48),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    if (snapshot.hasError) {
+                      return Padding(
+                        padding: const EdgeInsets.all(48),
+                        child: Center(
+                          child: Text(
+                            '錯誤：${snapshot.error}',
+                            textAlign: TextAlign.center,
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 24),
-                      _buildChangeBreakdown(context, assetChange, liabilityChange),
-                    ],
-                  );
-                },
+                      );
+                    }
+                    final data = snapshot.data ?? [];
+                    if (data.isEmpty) {
+                      return _buildEmptyState(context);
+                    }
+
+                    final latest = data.last;
+                    final first = data.first;
+                    final netChange = latest.netWorth - first.netWorth;
+                    final assetChange = latest.totalAssets - first.totalAssets;
+                    final liabilityChange =
+                        latest.totalLiabilities - first.totalLiabilities;
+
+                    final chartHeight = (MediaQuery.of(context).size.height * 0.35)
+                        .clamp(200.0, 360.0);
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildHeroMetrics(context, latest.netWorth, netChange),
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          height: chartHeight,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: NetWorthLineChart(
+                              data: data,
+                              privacyMode: widget.privacyMode,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        _buildChangeBreakdown(context, assetChange, liabilityChange),
+                      ],
+                    );
+                  },
+                ),
               ),
             ),
-          ),
-          const SliverPadding(padding: EdgeInsets.only(bottom: 88)),
-        ],
+            const SliverPadding(padding: EdgeInsets.only(bottom: 88)),
+          ],
+        ),
       ),
     );
   }

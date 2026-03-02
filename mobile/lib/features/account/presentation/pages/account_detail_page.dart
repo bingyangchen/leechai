@@ -19,6 +19,7 @@ import 'package:mobile/features/entry/presentation/widgets/sticky_date_header.da
 import 'package:mobile/features/entry/presentation/widgets/transaction_row.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
+import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
 
 class AccountDetailPage extends StatefulWidget {
   const AccountDetailPage({super.key, required this.accountId});
@@ -329,39 +330,41 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
               _onRefresh();
               await _future;
             },
-            child: CustomScrollView(
-              slivers: [
-                for (final e in grouped.entries) ...[
-                  SliverToBoxAdapter(
-                    child: buildDateHeaderSection(
-                      context: context,
-                      date: e.key,
-                      dayExpense: dayExpense(e.value),
-                      dayIncome: dayIncome(e.value),
-                      privacyMode: _privacyMode,
-                    ),
-                  ),
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate((context, index) {
-                      final row = e.value[index];
-                      return TransactionRow(
-                        entry: row,
-                        accounts: data.accounts,
-                        entryTagTitles: data.entryTagTitles,
+            child: HapticRefreshWrapper(
+              child: CustomScrollView(
+                slivers: [
+                  for (final e in grouped.entries) ...[
+                    SliverToBoxAdapter(
+                      child: buildDateHeaderSection(
+                        context: context,
+                        date: e.key,
+                        dayExpense: dayExpense(e.value),
+                        dayIncome: dayIncome(e.value),
                         privacyMode: _privacyMode,
-                        perspectiveAccountId: data.account.id,
-                        onTap: () =>
-                            EntryListHandlers.openEntry(context, row, _onRefresh),
-                        onDelete: () =>
-                            EntryListHandlers.deleteEntry(context, row, _onRefresh),
-                        onCopy: () =>
-                            EntryListHandlers.copyEntry(context, row, _onRefresh),
-                      );
-                    }, childCount: e.value.length),
-                  ),
+                      ),
+                    ),
+                    SliverList(
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final row = e.value[index];
+                        return TransactionRow(
+                          entry: row,
+                          accounts: data.accounts,
+                          entryTagTitles: data.entryTagTitles,
+                          privacyMode: _privacyMode,
+                          perspectiveAccountId: data.account.id,
+                          onTap: () =>
+                              EntryListHandlers.openEntry(context, row, _onRefresh),
+                          onDelete: () =>
+                              EntryListHandlers.deleteEntry(context, row, _onRefresh),
+                          onCopy: () =>
+                              EntryListHandlers.copyEntry(context, row, _onRefresh),
+                        );
+                      }, childCount: e.value.length),
+                    ),
+                  ],
+                  const SliverPadding(padding: EdgeInsets.only(bottom: 88)),
                 ],
-                const SliverPadding(padding: EdgeInsets.only(bottom: 88)),
-              ],
+              ),
             ),
           );
         },
