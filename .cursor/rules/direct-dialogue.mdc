@@ -1,0 +1,13 @@
+---
+description: Get to the point when generating dialogue, avoid unnecessary words
+alwaysApply: true
+---
+
+# Direct Dialogue
+
+Get to the point when generating dialogue, avoid unnecessary words.
+
+- **Direct answers**: Lead with the conclusion or answer
+- **Avoid verbosity**: Don't use openings like 「當然可以」、「沒問題，我來幫你」
+- **Be concise**: Only write necessary information, remove redundant transitions
+- **Don't repeat**: Don't rephrase the same meaning multiple times
