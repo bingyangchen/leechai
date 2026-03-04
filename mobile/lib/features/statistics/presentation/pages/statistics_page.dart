@@ -33,7 +33,7 @@ class _StatisticsPageState extends State<StatisticsPage>
     _tabController.addListener(_onTabChanged);
     _dateRange = DateRange.forPreset(DateRangePreset.thisMonth, DateTime.now());
     _preset = DateRangePreset.thisMonth;
-    widget.refreshTrigger?.addListener(_onRefreshTrigger);
+    widget.refreshTrigger?.addListener(_onRefresh);
   }
 
   void _onTabChanged() {
@@ -52,11 +52,10 @@ class _StatisticsPageState extends State<StatisticsPage>
   void didUpdateWidget(StatisticsPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.refreshTrigger != widget.refreshTrigger) {
-      oldWidget.refreshTrigger?.removeListener(_onRefreshTrigger);
-      widget.refreshTrigger?.addListener(_onRefreshTrigger);
+      oldWidget.refreshTrigger?.removeListener(_onRefresh);
+      widget.refreshTrigger?.addListener(_onRefresh);
     }
-    if (!oldWidget.isPageVisible && widget.isPageVisible &&
-        _tabController.index == 0) {
+    if (!oldWidget.isPageVisible && widget.isPageVisible && _tabController.index == 0) {
       setState(() => _rankingAnimationTrigger++);
     }
   }
@@ -65,11 +64,11 @@ class _StatisticsPageState extends State<StatisticsPage>
   void dispose() {
     _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
-    widget.refreshTrigger?.removeListener(_onRefreshTrigger);
+    widget.refreshTrigger?.removeListener(_onRefresh);
     super.dispose();
   }
 
-  void _onRefreshTrigger() {
+  void _onRefresh() {
     setState(() {});
   }
 
