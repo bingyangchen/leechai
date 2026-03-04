@@ -1,4 +1,12 @@
-String formatDateTimeShort(DateTime dateTime) {
+String formatDate(DateTime dateTime) {
+  final d = dateTime;
+  final monthStr = d.month.toString().padLeft(2, '0');
+  final dayStr = d.day.toString().padLeft(2, '0');
+  final now = DateTime.now();
+  return d.year != now.year ? '${d.year}/$monthStr/$dayStr' : '$monthStr/$dayStr';
+}
+
+String formatDateTime(DateTime dateTime) {
   final d = dateTime;
   final h24 = d.hour;
   final hour12 = h24 == 0 ? 12 : (h24 > 12 ? h24 - 12 : h24);
