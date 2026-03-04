@@ -1,0 +1,31 @@
+---
+description: Avoid abbreviations in identifiers; use full words
+alwaysApply: true
+---
+
+# No Abbreviation When Coding
+
+Use full, readable names for variables, functions, parameters, and types. Avoid abbreviations and single-letter names except for very common conventions (e.g. `i`, `j` in tight loops, `e` for event).
+
+## Examples
+
+```dart
+// ❌ Abbreviated
+final usr = getCurrentUser();
+final acctBal = account.balance;
+void onBtnTap() {}
+int calcAmt(Order o) => o.items.length;
+
+// ✅ Full words
+final user = getCurrentUser();
+final accountBalance = account.balance;
+void onButtonTap() {}
+int calculateAmount(Order order) => order.items.length;
+```
+
+## Exceptions
+
+- **Loop indices**: `i`, `j`, `k` in short loops are fine.
+- **Domain terms**: Use the team’s established shorthand if it’s the standard (e.g. `db` for database only if the codebase already uses it consistently).
+
+When in doubt, prefer the longer, clearer name.

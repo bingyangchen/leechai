@@ -9,6 +9,16 @@ class EntryRepository {
   static const String _entryTagTable = 'entry_tag';
   static final _uuid = Uuid();
 
+  static Future<int> getCount() async {
+    final db = await AppDatabase.database;
+    final r = await db.query(
+      _table,
+      columns: ['COUNT(*) AS c'],
+      where: 'deleted_at IS NULL',
+    );
+    return (r.single['c'] as int?) ?? 0;
+  }
+
   static Future<List<Map<String, Object?>>> getAll() async {
     final db = await AppDatabase.database;
     return db.query(_table, where: 'deleted_at IS NULL', orderBy: 'occurred_at DESC');

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile/features/account/data/repositories/account.dart'
@@ -17,6 +18,7 @@ import 'package:mobile/features/entry/presentation/entry_list_handlers.dart';
 import 'package:mobile/features/entry/presentation/widgets/sticky_date_header.dart'
     show buildDateHeaderSection;
 import 'package:mobile/features/entry/presentation/widgets/transaction_row.dart';
+import 'package:mobile/shared/constants/refresh_trigger.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
 import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
@@ -325,46 +327,47 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
             );
           }
 
-          return RefreshIndicator(
-            onRefresh: () async {
-              _onRefresh();
-              await _future;
-            },
-            child: HapticRefreshWrapper(
-              child: CustomScrollView(
-                slivers: [
-                  for (final e in grouped.entries) ...[
-                    SliverToBoxAdapter(
-                      child: buildDateHeaderSection(
-                        context: context,
-                        date: e.key,
-                        dayExpense: dayExpense(e.value),
-                        dayIncome: dayIncome(e.value),
+          return HapticRefreshWrapper(
+            child: CustomScrollView(
+              slivers: [
+                CupertinoSliverRefreshControl(
+                  refreshTriggerPullDistance: kRefreshTriggerPullDistance,
+                  onRefresh: () async {
+                    _onRefresh();
+                    await _future;
+                  },
+                ),
+                for (final e in grouped.entries) ...[
+                  SliverToBoxAdapter(
+                    child: buildDateHeaderSection(
+                      context: context,
+                      date: e.key,
+                      dayExpense: dayExpense(e.value),
+                      dayIncome: dayIncome(e.value),
+                      privacyMode: _privacyMode,
+                    ),
+                  ),
+                  SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final row = e.value[index];
+                      return TransactionRow(
+                        entry: row,
+                        accounts: data.accounts,
+                        entryTagTitles: data.entryTagTitles,
                         privacyMode: _privacyMode,
-                      ),
-                    ),
-                    SliverList(
-                      delegate: SliverChildBuilderDelegate((context, index) {
-                        final row = e.value[index];
-                        return TransactionRow(
-                          entry: row,
-                          accounts: data.accounts,
-                          entryTagTitles: data.entryTagTitles,
-                          privacyMode: _privacyMode,
-                          perspectiveAccountId: data.account.id,
-                          onTap: () =>
-                              EntryListHandlers.openEntry(context, row, _onRefresh),
-                          onDelete: () =>
-                              EntryListHandlers.deleteEntry(context, row, _onRefresh),
-                          onCopy: () =>
-                              EntryListHandlers.copyEntry(context, row, _onRefresh),
-                        );
-                      }, childCount: e.value.length),
-                    ),
-                  ],
-                  const SliverPadding(padding: EdgeInsets.only(bottom: 88)),
+                        perspectiveAccountId: data.account.id,
+                        onTap: () =>
+                            EntryListHandlers.openEntry(context, row, _onRefresh),
+                        onDelete: () =>
+                            EntryListHandlers.deleteEntry(context, row, _onRefresh),
+                        onCopy: () =>
+                            EntryListHandlers.copyEntry(context, row, _onRefresh),
+                      );
+                    }, childCount: e.value.length),
+                  ),
                 ],
-              ),
+                const SliverPadding(padding: EdgeInsets.only(bottom: 88)),
+              ],
             ),
           );
         },

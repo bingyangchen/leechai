@@ -1,9 +1,11 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/features/statistics/data/services/statistics.dart';
 import 'package:mobile/features/statistics/domain/net_worth_range.dart';
 import 'package:mobile/features/statistics/domain/net_worth_snapshot.dart';
 import 'package:mobile/features/statistics/presentation/widgets/net_worth_line_chart.dart';
+import 'package:mobile/shared/constants/refresh_trigger.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
@@ -31,15 +33,15 @@ class _NetWorthTabState extends State<NetWorthTab> {
   void initState() {
     super.initState();
     _future = _loadData();
-    widget.refreshTrigger?.addListener(_onRefreshTrigger);
+    widget.refreshTrigger?.addListener(_onRefresh);
   }
 
   @override
   void didUpdateWidget(NetWorthTab oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.refreshTrigger != widget.refreshTrigger) {
-      oldWidget.refreshTrigger?.removeListener(_onRefreshTrigger);
-      widget.refreshTrigger?.addListener(_onRefreshTrigger);
+      oldWidget.refreshTrigger?.removeListener(_onRefresh);
+      widget.refreshTrigger?.addListener(_onRefresh);
     }
     if (oldWidget.range != widget.range ||
         oldWidget.privacyMode != widget.privacyMode) {
@@ -50,11 +52,11 @@ class _NetWorthTabState extends State<NetWorthTab> {
 
   @override
   void dispose() {
-    widget.refreshTrigger?.removeListener(_onRefreshTrigger);
+    widget.refreshTrigger?.removeListener(_onRefresh);
     super.dispose();
   }
 
-  void _onRefreshTrigger() {
+  void _onRefresh() {
     setState(() {
       _future = _loadData();
     });
@@ -67,81 +69,82 @@ class _NetWorthTabState extends State<NetWorthTab> {
 
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator(
-      onRefresh: () async {
-        setState(() {
-          _future = _loadData();
-        });
-        await _future;
-      },
-      child: HapticRefreshWrapper(
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 16),
-                child: FutureBuilder<List<NetWorthSnapshot>>(
-                  future: _future,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting &&
-                        !snapshot.hasData) {
-                      return const Padding(
-                        padding: EdgeInsets.all(48),
-                        child: Center(child: CircularProgressIndicator()),
-                      );
-                    }
-                    if (snapshot.hasError) {
-                      return Padding(
-                        padding: const EdgeInsets.all(48),
-                        child: Center(
-                          child: Text(
-                            '錯誤：${snapshot.error}',
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      );
-                    }
-                    final data = snapshot.data ?? [];
-                    if (data.isEmpty) {
-                      return _buildEmptyState(context);
-                    }
-
-                    final latest = data.last;
-                    final first = data.first;
-                    final netChange = latest.netWorth - first.netWorth;
-                    final assetChange = latest.totalAssets - first.totalAssets;
-                    final liabilityChange =
-                        latest.totalLiabilities - first.totalLiabilities;
-
-                    final chartHeight = (MediaQuery.of(context).size.height * 0.35)
-                        .clamp(200.0, 360.0);
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _buildHeroMetrics(context, latest.netWorth, netChange),
-                        const SizedBox(height: 24),
-                        SizedBox(
-                          height: chartHeight,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            child: NetWorthLineChart(
-                              data: data,
-                              privacyMode: widget.privacyMode,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        _buildChangeBreakdown(context, assetChange, liabilityChange),
-                      ],
+    return HapticRefreshWrapper(
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          CupertinoSliverRefreshControl(
+            refreshTriggerPullDistance: kRefreshTriggerPullDistance,
+            onRefresh: () async {
+              _onRefresh();
+              await _future;
+            },
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: FutureBuilder<List<NetWorthSnapshot>>(
+                future: _future,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting &&
+                      !snapshot.hasData) {
+                    return const Padding(
+                      padding: EdgeInsets.all(48),
+                      child: Center(child: CircularProgressIndicator()),
                     );
-                  },
-                ),
+                  }
+                  if (snapshot.hasError) {
+                    return Padding(
+                      padding: const EdgeInsets.all(48),
+                      child: Center(
+                        child: Text(
+                          '錯誤：${snapshot.error}',
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    );
+                  }
+                  final data = snapshot.data ?? [];
+                  if (data.isEmpty) {
+                    return _buildEmptyState(context);
+                  }
+
+                  final latest = data.last;
+                  final first = data.first;
+                  final netChange = latest.netWorth - first.netWorth;
+                  final assetChange = latest.totalAssets - first.totalAssets;
+                  final liabilityChange =
+                      latest.totalLiabilities - first.totalLiabilities;
+
+                  final chartHeight = (MediaQuery.of(context).size.height * 0.35).clamp(
+                    200.0,
+                    360.0,
+                  );
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildHeroMetrics(context, latest.netWorth, netChange),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        height: chartHeight,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: NetWorthLineChart(
+                            data: data,
+                            privacyMode: widget.privacyMode,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      _buildChangeBreakdown(context, assetChange, liabilityChange),
+                    ],
+                  );
+                },
               ),
             ),
-            const SliverPadding(padding: EdgeInsets.only(bottom: 88)),
-          ],
-        ),
+          ),
+          const SliverPadding(padding: EdgeInsets.only(bottom: 88)),
+        ],
       ),
     );
   }

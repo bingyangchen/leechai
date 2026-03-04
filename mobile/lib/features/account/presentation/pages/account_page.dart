@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/features/account/data/repositories/account.dart'
@@ -11,6 +12,7 @@ import 'package:mobile/features/account/presentation/pages/account_detail_page.d
 import 'package:mobile/features/account/presentation/widgets/account_group_section.dart';
 import 'package:mobile/features/account/presentation/widgets/add_account_sheet.dart';
 import 'package:mobile/features/account/presentation/widgets/net_worth_header.dart';
+import 'package:mobile/shared/constants/refresh_trigger.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
 import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
 
@@ -30,25 +32,25 @@ class _AssetsPageState extends State<AssetsPage> {
   void initState() {
     super.initState();
     _future = _loadData();
-    widget.refreshTrigger?.addListener(_onRefreshTrigger);
+    widget.refreshTrigger?.addListener(_onRefresh);
   }
 
   @override
   void didUpdateWidget(AssetsPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.refreshTrigger != widget.refreshTrigger) {
-      oldWidget.refreshTrigger?.removeListener(_onRefreshTrigger);
-      widget.refreshTrigger?.addListener(_onRefreshTrigger);
+      oldWidget.refreshTrigger?.removeListener(_onRefresh);
+      widget.refreshTrigger?.addListener(_onRefresh);
     }
   }
 
   @override
   void dispose() {
-    widget.refreshTrigger?.removeListener(_onRefreshTrigger);
+    widget.refreshTrigger?.removeListener(_onRefresh);
     super.dispose();
   }
 
-  void _onRefreshTrigger() {
+  void _onRefresh() {
     setState(() {
       _future = _loadData();
     });
@@ -75,12 +77,6 @@ class _AssetsPageState extends State<AssetsPage> {
       totalAssets: totalAssets,
       totalLiabilities: totalLiabilities,
     );
-  }
-
-  void _onRefresh() {
-    setState(() {
-      _future = _loadData();
-    });
   }
 
   void _onAddCurrentAssets() {
@@ -212,112 +208,117 @@ class _AssetsPageState extends State<AssetsPage> {
       body: SafeArea(
         top: true,
         bottom: false,
-        child: RefreshIndicator(
-          onRefresh: () async {
-            _onRefresh();
-            await _future;
-          },
-          child: HapticRefreshWrapper(
-            child: FutureBuilder<_AccountPageData>(
-              future: _future,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting &&
-                    !snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Text('錯誤：${snapshot.error}', textAlign: TextAlign.center),
-                  );
-                }
-                final data = snapshot.data;
-                if (data == null) return const SizedBox.shrink();
-
-                final currentAssets = data.accounts
-                    .where(
-                      (a) =>
-                          a.type == AccountType.asset &&
-                          _currentAssetsSubTypes.contains(a.subType),
-                    )
-                    .toList();
-                final creditCards = data.accounts
-                    .where(
-                      (a) =>
-                          a.type == AccountType.liability &&
-                          a.subType == LiabilityType.creditCard.name,
-                    )
-                    .toList();
-                final investments = data.accounts
-                    .where(
-                      (a) =>
-                          a.type == AccountType.asset &&
-                          a.subType == AssetType.securities.name,
-                    )
-                    .toList();
-                final loans = data.accounts
-                    .where(
-                      (a) =>
-                          a.type == AccountType.liability &&
-                          a.subType == LiabilityType.loan.name,
-                    )
-                    .toList();
-
-                final netWorth = data.totalAssets - data.totalLiabilities;
-
-                return SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      NetWorthHeader(
-                        netWorth: netWorth,
-                        totalAssets: data.totalAssets,
-                        totalLiabilities: data.totalLiabilities,
-                        sparklinePoints: data.sparkline,
-                        privacyMode: _privacyMode,
-                        onPrivacyToggle: () =>
-                            setState(() => _privacyMode = !_privacyMode),
-                      ),
-                      const SizedBox(height: 8),
-                      AccountGroupSection(
-                        kind: AccountGroupKind.currentAssets,
-                        accounts: currentAssets,
-                        balances: data.balances,
-                        privacyMode: _privacyMode,
-                        onAdd: _onAddCurrentAssets,
-                        onTapAccount: _onTapAccount,
-                      ),
-                      AccountGroupSection(
-                        kind: AccountGroupKind.creditCard,
-                        accounts: creditCards,
-                        balances: data.balances,
-                        privacyMode: _privacyMode,
-                        onAdd: _onAddCreditCard,
-                        onTapAccount: _onTapAccount,
-                      ),
-                      AccountGroupSection(
-                        kind: AccountGroupKind.investments,
-                        accounts: investments,
-                        balances: data.balances,
-                        privacyMode: _privacyMode,
-                        roiPercent: _mockRoi(investments, data.balances),
-                        onAdd: _onAddInvestments,
-                        onTapAccount: _onTapAccount,
-                      ),
-                      AccountGroupSection(
-                        kind: AccountGroupKind.loans,
-                        accounts: loans,
-                        balances: data.balances,
-                        privacyMode: _privacyMode,
-                        onAdd: _onAddLoans,
-                        onTapAccount: _onTapAccount,
-                      ),
-                      const SizedBox(height: 88),
-                    ],
-                  ),
+        child: HapticRefreshWrapper(
+          child: FutureBuilder<_AccountPageData>(
+            future: _future,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting &&
+                  !snapshot.hasData) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return Center(
+                  child: Text('錯誤：${snapshot.error}', textAlign: TextAlign.center),
                 );
-              },
-            ),
+              }
+              final data = snapshot.data;
+              if (data == null) return const SizedBox.shrink();
+
+              final currentAssets = data.accounts
+                  .where(
+                    (a) =>
+                        a.type == AccountType.asset &&
+                        _currentAssetsSubTypes.contains(a.subType),
+                  )
+                  .toList();
+              final creditCards = data.accounts
+                  .where(
+                    (a) =>
+                        a.type == AccountType.liability &&
+                        a.subType == LiabilityType.creditCard.name,
+                  )
+                  .toList();
+              final investments = data.accounts
+                  .where(
+                    (a) =>
+                        a.type == AccountType.asset &&
+                        a.subType == AssetType.securities.name,
+                  )
+                  .toList();
+              final loans = data.accounts
+                  .where(
+                    (a) =>
+                        a.type == AccountType.liability &&
+                        a.subType == LiabilityType.loan.name,
+                  )
+                  .toList();
+
+              final netWorth = data.totalAssets - data.totalLiabilities;
+
+              return CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  CupertinoSliverRefreshControl(
+                    refreshTriggerPullDistance: kRefreshTriggerPullDistance,
+                    onRefresh: () async {
+                      _onRefresh();
+                      await _future;
+                    },
+                  ),
+                  SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        NetWorthHeader(
+                          netWorth: netWorth,
+                          totalAssets: data.totalAssets,
+                          totalLiabilities: data.totalLiabilities,
+                          sparklinePoints: data.sparkline,
+                          privacyMode: _privacyMode,
+                          onPrivacyToggle: () =>
+                              setState(() => _privacyMode = !_privacyMode),
+                        ),
+                        const SizedBox(height: 8),
+                        AccountGroupSection(
+                          kind: AccountGroupKind.currentAssets,
+                          accounts: currentAssets,
+                          balances: data.balances,
+                          privacyMode: _privacyMode,
+                          onAdd: _onAddCurrentAssets,
+                          onTapAccount: _onTapAccount,
+                        ),
+                        AccountGroupSection(
+                          kind: AccountGroupKind.creditCard,
+                          accounts: creditCards,
+                          balances: data.balances,
+                          privacyMode: _privacyMode,
+                          onAdd: _onAddCreditCard,
+                          onTapAccount: _onTapAccount,
+                        ),
+                        AccountGroupSection(
+                          kind: AccountGroupKind.investments,
+                          accounts: investments,
+                          balances: data.balances,
+                          privacyMode: _privacyMode,
+                          roiPercent: _mockRoi(investments, data.balances),
+                          onAdd: _onAddInvestments,
+                          onTapAccount: _onTapAccount,
+                        ),
+                        AccountGroupSection(
+                          kind: AccountGroupKind.loans,
+                          accounts: loans,
+                          balances: data.balances,
+                          privacyMode: _privacyMode,
+                          onAdd: _onAddLoans,
+                          onTapAccount: _onTapAccount,
+                        ),
+                        const SizedBox(height: 88),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),

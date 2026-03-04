@@ -3,11 +3,7 @@ import 'package:mobile/shared/utils/date_time_utils.dart';
 import 'package:mobile/shared/widgets/meta_chip.dart';
 
 class DateChipRow extends StatelessWidget {
-  const DateChipRow({
-    super.key,
-    required this.selectedDate,
-    required this.onDateTap,
-  });
+  const DateChipRow({super.key, required this.selectedDate, required this.onDateTap});
 
   final DateTime selectedDate;
   final VoidCallback onDateTap;
@@ -20,7 +16,7 @@ class DateChipRow extends StatelessWidget {
         children: [
           MetaChip(
             icon: Icons.calendar_today_outlined,
-            label: formatDateTimeShort(selectedDate),
+            label: formatDateTime(selectedDate),
             onTap: onDateTap,
           ),
         ],

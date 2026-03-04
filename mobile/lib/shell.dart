@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile/features/account/presentation/pages/account_page.dart';
 import 'package:mobile/features/entry/presentation/pages/entry_page.dart';
 import 'package:mobile/features/entry/presentation/pages/journal_page.dart';
-import 'package:mobile/features/settings/presentation/pages/settings_page.dart';
+import 'package:mobile/features/profile/presentation/pages/profile_page.dart';
 import 'package:mobile/features/statistics/presentation/pages/statistics_page.dart';
 
 class Shell extends StatefulWidget {
@@ -24,7 +24,7 @@ class _ShellState extends State<Shell> {
       isPageVisible: _currentIndex == 1,
     ),
     AssetsPage(refreshTrigger: widget.refreshTrigger),
-    SettingsPage(),
+    ProfilePage(refreshTrigger: widget.refreshTrigger),
   ];
 
   @override
@@ -83,9 +83,9 @@ class _ShellState extends State<Shell> {
                 label: '資產',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.settings_outlined),
-                activeIcon: Icon(Icons.settings),
-                label: '設定',
+                icon: Icon(Icons.person_outline),
+                activeIcon: Icon(Icons.person),
+                label: '個人',
               ),
             ],
           ),
