@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/features/account/data/repositories/account.dart'
@@ -17,6 +18,7 @@ import 'package:mobile/features/entry/presentation/widgets/sticky_date_header.da
     show buildDateHeaderSection, dateHeaderContent;
 import 'package:mobile/features/entry/presentation/widgets/sync_indicator.dart';
 import 'package:mobile/features/entry/presentation/widgets/transaction_row.dart';
+import 'package:mobile/shared/constants/refresh_trigger.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
 
@@ -197,37 +199,70 @@ class _JournalPageState extends State<JournalPage> {
             Expanded(
               child: Stack(
                 children: [
-                  RefreshIndicator(
-                    onRefresh: _onRefresh,
-                    child: HapticRefreshWrapper(
-                      child: FutureBuilder<_JournalData>(
-                        future: _future,
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting &&
-                              !snapshot.hasData) {
-                            return const Center(child: CircularProgressIndicator());
-                          }
-                          if (snapshot.hasError) {
-                            return Center(
-                              child: Text(
-                                '錯誤：${snapshot.error}',
-                                textAlign: TextAlign.center,
+                  HapticRefreshWrapper(
+                    child: FutureBuilder<_JournalData>(
+                      future: _future,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting &&
+                            !snapshot.hasData) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
+                        if (snapshot.hasError) {
+                          return Center(
+                            child: Text(
+                              '錯誤：${snapshot.error}',
+                              textAlign: TextAlign.center,
+                            ),
+                          );
+                        }
+                        final data = snapshot.data;
+                        if (data == null) return const SizedBox.shrink();
+                        final grouped = groupEntriesByDate(data.entries);
+                        _lastGrouped = grouped;
+                        for (final date in grouped.keys) {
+                          _headerKeys.putIfAbsent(date, () => GlobalKey());
+                        }
+                        final summary = _computeSummary(data.entries);
+                        if (data.entries.isEmpty) {
+                          return CustomScrollView(
+                            controller: _scrollController,
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            slivers: [
+                              CupertinoSliverRefreshControl(
+                                refreshTriggerPullDistance: kRefreshTriggerPullDistance,
+                                onRefresh: _onRefresh,
                               ),
-                            );
-                          }
-                          final data = snapshot.data;
-                          if (data == null) return const SizedBox.shrink();
-                          final grouped = groupEntriesByDate(data.entries);
-                          _lastGrouped = grouped;
-                          for (final date in grouped.keys) {
-                            _headerKeys.putIfAbsent(date, () => GlobalKey());
-                          }
-                          final summary = _computeSummary(data.entries);
-                          if (data.entries.isEmpty) {
-                            return CustomScrollView(
+                              SliverToBoxAdapter(
+                                child: MonthSummaryCard(
+                                  income: summary.income,
+                                  expense: summary.expense,
+                                  balance: summary.balance,
+                                  privacyMode: _privacyMode,
+                                ),
+                              ),
+                              SliverFillRemaining(
+                                hasScrollBody: false,
+                                child: const JournalEmptyState(),
+                              ),
+                            ],
+                          );
+                        }
+                        final dateToShow =
+                            _currentStickyDate ??
+                            (grouped.keys.isNotEmpty ? grouped.keys.first : null);
+                        final showStickyBar =
+                            _showCollapsedSummary && dateToShow != null;
+                        return Stack(
+                          children: [
+                            CustomScrollView(
                               controller: _scrollController,
                               physics: const AlwaysScrollableScrollPhysics(),
                               slivers: [
+                                CupertinoSliverRefreshControl(
+                                  refreshTriggerPullDistance:
+                                      kRefreshTriggerPullDistance,
+                                  onRefresh: _onRefresh,
+                                ),
                                 SliverToBoxAdapter(
                                   child: MonthSummaryCard(
                                     income: summary.income,
@@ -236,102 +271,75 @@ class _JournalPageState extends State<JournalPage> {
                                     privacyMode: _privacyMode,
                                   ),
                                 ),
-                                SliverFillRemaining(
-                                  hasScrollBody: false,
-                                  child: const JournalEmptyState(),
-                                ),
-                              ],
-                            );
-                          }
-                          final dateToShow =
-                              _currentStickyDate ??
-                              (grouped.keys.isNotEmpty ? grouped.keys.first : null);
-                          final showStickyBar =
-                              _showCollapsedSummary && dateToShow != null;
-                          return Stack(
-                            children: [
-                              CustomScrollView(
-                                controller: _scrollController,
-                                physics: const AlwaysScrollableScrollPhysics(),
-                                slivers: [
+                                for (final e in grouped.entries) ...[
                                   SliverToBoxAdapter(
-                                    child: MonthSummaryCard(
-                                      income: summary.income,
-                                      expense: summary.expense,
-                                      balance: summary.balance,
+                                    child: buildDateHeaderSection(
+                                      key: _headerKeys[e.key],
+                                      context: context,
+                                      date: e.key,
+                                      dayExpense: dayExpense(e.value),
+                                      dayIncome: dayIncome(e.value),
                                       privacyMode: _privacyMode,
                                     ),
                                   ),
-                                  for (final e in grouped.entries) ...[
-                                    SliverToBoxAdapter(
-                                      child: buildDateHeaderSection(
-                                        key: _headerKeys[e.key],
-                                        context: context,
-                                        date: e.key,
-                                        dayExpense: dayExpense(e.value),
-                                        dayIncome: dayIncome(e.value),
+                                  SliverList(
+                                    delegate: SliverChildBuilderDelegate((
+                                      context,
+                                      index,
+                                    ) {
+                                      final row = e.value[index];
+                                      return TransactionRow(
+                                        entry: row,
+                                        accounts: data.accounts,
+                                        entryTagTitles: data.entryTagTitles,
                                         privacyMode: _privacyMode,
-                                      ),
-                                    ),
-                                    SliverList(
-                                      delegate: SliverChildBuilderDelegate((
-                                        context,
-                                        index,
-                                      ) {
-                                        final row = e.value[index];
-                                        return TransactionRow(
-                                          entry: row,
-                                          accounts: data.accounts,
-                                          entryTagTitles: data.entryTagTitles,
-                                          privacyMode: _privacyMode,
-                                          onTap: () => EntryListHandlers.openEntry(
-                                            context,
-                                            row,
-                                            _onRefreshTrigger,
-                                          ),
-                                          onDelete: () => EntryListHandlers.deleteEntry(
-                                            context,
-                                            row,
-                                            _onRefreshTrigger,
-                                          ),
-                                          onCopy: () => EntryListHandlers.copyEntry(
-                                            context,
-                                            row,
-                                            _onRefreshTrigger,
-                                          ),
-                                        );
-                                      }, childCount: e.value.length),
-                                    ),
-                                  ],
-                                  const SliverPadding(
-                                    padding: EdgeInsets.only(bottom: 88),
+                                        onTap: () => EntryListHandlers.openEntry(
+                                          context,
+                                          row,
+                                          _onRefreshTrigger,
+                                        ),
+                                        onDelete: () => EntryListHandlers.deleteEntry(
+                                          context,
+                                          row,
+                                          _onRefreshTrigger,
+                                        ),
+                                        onCopy: () => EntryListHandlers.copyEntry(
+                                          context,
+                                          row,
+                                          _onRefreshTrigger,
+                                        ),
+                                      );
+                                    }, childCount: e.value.length),
                                   ),
                                 ],
-                              ),
-                              if (showStickyBar)
-                                Positioned(
-                                  top: _showCollapsedSummary
-                                      ? _kCollapsedSummaryBarHeight
-                                      : 0,
-                                  left: 0,
-                                  right: 0,
-                                  key: _stickyBarKey,
-                                  child: dateHeaderContent(
-                                    context: context,
-                                    date: dateToShow,
-                                    dayExpense: dateToShow == _currentStickyDate
-                                        ? _currentStickyExpense
-                                        : dayExpense(grouped[dateToShow]!),
-                                    dayIncome: dateToShow == _currentStickyDate
-                                        ? _currentStickyIncome
-                                        : dayIncome(grouped[dateToShow]!),
-                                    privacyMode: _privacyMode,
-                                  ),
+                                const SliverPadding(
+                                  padding: EdgeInsets.only(bottom: 88),
                                 ),
-                            ],
-                          );
-                        },
-                      ),
+                              ],
+                            ),
+                            if (showStickyBar)
+                              Positioned(
+                                top: _showCollapsedSummary
+                                    ? _kCollapsedSummaryBarHeight
+                                    : 0,
+                                left: 0,
+                                right: 0,
+                                key: _stickyBarKey,
+                                child: dateHeaderContent(
+                                  context: context,
+                                  date: dateToShow,
+                                  dayExpense: dateToShow == _currentStickyDate
+                                      ? _currentStickyExpense
+                                      : dayExpense(grouped[dateToShow]!),
+                                  dayIncome: dateToShow == _currentStickyDate
+                                      ? _currentStickyIncome
+                                      : dayIncome(grouped[dateToShow]!),
+                                  privacyMode: _privacyMode,
+                                ),
+                              ),
+                          ],
+                        );
+                      },
                     ),
                   ),
                   if (_showCollapsedSummary)

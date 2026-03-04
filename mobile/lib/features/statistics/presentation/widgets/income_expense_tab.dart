@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/features/entry/domain/entry_type.dart';
@@ -9,6 +10,7 @@ import 'package:mobile/features/statistics/presentation/constants/category_color
 import 'package:mobile/features/statistics/presentation/pages/category_detail_page.dart';
 import 'package:mobile/features/statistics/presentation/widgets/category_donut_chart.dart';
 import 'package:mobile/features/statistics/presentation/widgets/category_ranking_tile.dart';
+import 'package:mobile/shared/constants/refresh_trigger.dart';
 import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
 
 class IncomeExpenseTab extends StatefulWidget {
@@ -42,15 +44,15 @@ class _IncomeExpenseTabState extends State<IncomeExpenseTab> {
   void initState() {
     super.initState();
     _future = _loadData();
-    widget.refreshTrigger?.addListener(_onRefreshTrigger);
+    widget.refreshTrigger?.addListener(_onRefresh);
   }
 
   @override
   void didUpdateWidget(IncomeExpenseTab oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.refreshTrigger != widget.refreshTrigger) {
-      oldWidget.refreshTrigger?.removeListener(_onRefreshTrigger);
-      widget.refreshTrigger?.addListener(_onRefreshTrigger);
+      oldWidget.refreshTrigger?.removeListener(_onRefresh);
+      widget.refreshTrigger?.addListener(_onRefresh);
     }
     if (oldWidget.dateRange.start != widget.dateRange.start ||
         oldWidget.dateRange.end != widget.dateRange.end ||
@@ -61,11 +63,11 @@ class _IncomeExpenseTabState extends State<IncomeExpenseTab> {
 
   @override
   void dispose() {
-    widget.refreshTrigger?.removeListener(_onRefreshTrigger);
+    widget.refreshTrigger?.removeListener(_onRefresh);
     super.dispose();
   }
 
-  void _onRefreshTrigger() {
+  void _onRefresh() {
     setState(() {
       _future = _loadData();
     });
@@ -99,74 +101,70 @@ class _IncomeExpenseTabState extends State<IncomeExpenseTab> {
 
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator(
-      onRefresh: () async {
-        setState(() {
-          _future = _loadData();
-        });
-        await _future;
-      },
-      child: HapticRefreshWrapper(
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
-                child: _buildSegmentedControl(context),
-              ),
+    return HapticRefreshWrapper(
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          CupertinoSliverRefreshControl(
+            refreshTriggerPullDistance: kRefreshTriggerPullDistance,
+            onRefresh: () async {
+              _onRefresh();
+              await _future;
+            },
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+              child: _buildSegmentedControl(context),
             ),
-            SliverToBoxAdapter(
-              child: FutureBuilder<_TabData>(
-                future: _future,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting &&
-                      !snapshot.hasData) {
-                    return const Padding(
-                      padding: EdgeInsets.all(48),
-                      child: Center(child: CircularProgressIndicator()),
-                    );
-                  }
-                  if (snapshot.hasError) {
-                    return Padding(
-                      padding: const EdgeInsets.all(48),
-                      child: Center(
-                        child: Text(
-                          '錯誤：${snapshot.error}',
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    );
-                  }
-                  final data = snapshot.data;
-                  if (data == null) return const SizedBox.shrink();
-
-                  if (data.breakdown.isEmpty) {
-                    return const CategoryChartEmptyState();
-                  }
-
-                  return Column(
-                    children: [
-                      CategoryDonutChart(
-                        breakdown: data.breakdown,
-                        total: data.total,
-                        touchedIndex: _touchedIndex,
-                        isExpense: _isExpense,
-                        privacyMode: widget.privacyMode,
-                        onSectionTouched: (i) {
-                          setState(() => _touchedIndex = i);
-                        },
-                      ),
-                      const SizedBox(height: 32),
-                      _buildRankingList(context, data),
-                    ],
+          ),
+          SliverToBoxAdapter(
+            child: FutureBuilder<_TabData>(
+              future: _future,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting &&
+                    !snapshot.hasData) {
+                  return const Padding(
+                    padding: EdgeInsets.all(48),
+                    child: Center(child: CircularProgressIndicator()),
                   );
-                },
-              ),
+                }
+                if (snapshot.hasError) {
+                  return Padding(
+                    padding: const EdgeInsets.all(48),
+                    child: Center(
+                      child: Text('錯誤：${snapshot.error}', textAlign: TextAlign.center),
+                    ),
+                  );
+                }
+                final data = snapshot.data;
+                if (data == null) return const SizedBox.shrink();
+
+                if (data.breakdown.isEmpty) {
+                  return const CategoryChartEmptyState();
+                }
+
+                return Column(
+                  children: [
+                    CategoryDonutChart(
+                      breakdown: data.breakdown,
+                      total: data.total,
+                      touchedIndex: _touchedIndex,
+                      isExpense: _isExpense,
+                      privacyMode: widget.privacyMode,
+                      onSectionTouched: (i) {
+                        setState(() => _touchedIndex = i);
+                      },
+                    ),
+                    const SizedBox(height: 32),
+                    _buildRankingList(context, data),
+                  ],
+                );
+              },
             ),
-            const SliverPadding(padding: EdgeInsets.only(bottom: 88)),
-          ],
-        ),
+          ),
+          const SliverPadding(padding: EdgeInsets.only(bottom: 88)),
+        ],
       ),
     );
   }
@@ -266,11 +264,7 @@ class _IncomeExpenseTabState extends State<IncomeExpenseTab> {
                 ),
               ),
             );
-            if (mounted) {
-              setState(() {
-                _future = _loadData();
-              });
-            }
+            if (mounted) _onRefresh();
           },
         );
       },
