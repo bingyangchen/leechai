@@ -12,8 +12,9 @@ import 'package:mobile/shared/constants/refresh_trigger.dart';
 import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key, this.refreshTrigger});
+  const ProfilePage({super.key, this.refreshTrigger, this.isPageVisible = true});
   final ValueListenable<int>? refreshTrigger;
+  final bool isPageVisible;
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -22,6 +23,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   late Future<ProfilePageData> _future;
   ProfilePageData? _lastData;
+  final ValueNotifier<bool> _cardInteracting = ValueNotifier<bool>(false);
 
   @override
   void initState() {
@@ -42,6 +44,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void dispose() {
     widget.refreshTrigger?.removeListener(_onRefresh);
+    _cardInteracting.dispose();
     super.dispose();
   }
 
@@ -105,32 +108,43 @@ class _ProfilePageState extends State<ProfilePage> {
           }
           final data = snapshot.data ?? _lastData!;
           return HapticRefreshWrapper(
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                CupertinoSliverRefreshControl(
-                  refreshTriggerPullDistance: kRefreshTriggerPullDistance,
-                  onRefresh: () async {
-                    _onRefresh();
-                    await _future;
-                  },
-                ),
-                SliverToBoxAdapter(child: UserStatsCard(data: data)),
-                SliverToBoxAdapter(
-                  child: AchievementShowcase(
-                    achievements: data.achievements,
-                    totalEntries: data.totalEntries,
-                    onEntryAdded: () =>
-                        (widget.refreshTrigger as ValueNotifier<int>?)?.value++,
+            child: ValueListenableBuilder<bool>(
+              valueListenable: _cardInteracting,
+              builder: (context, isCardInteracting, child) => CustomScrollView(
+                physics: isCardInteracting
+                    ? const NeverScrollableScrollPhysics()
+                    : const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  CupertinoSliverRefreshControl(
+                    refreshTriggerPullDistance: kRefreshTriggerPullDistance,
+                    onRefresh: () async {
+                      _onRefresh();
+                      await _future;
+                    },
                   ),
-                ),
-                SliverToBoxAdapter(
-                  child: ProfileSettingsSection(
-                    totalBudgetSummary: data.totalBudgetSummary,
-                    refreshTrigger: widget.refreshTrigger,
+                  SliverToBoxAdapter(
+                    child: UserStatsCard(
+                      data: data,
+                      isPageVisible: widget.isPageVisible,
+                      interactionNotifier: _cardInteracting,
+                    ),
                   ),
-                ),
-              ],
+                  SliverToBoxAdapter(
+                    child: AchievementShowcase(
+                      achievements: data.achievements,
+                      totalEntries: data.totalEntries,
+                      onEntryAdded: () =>
+                          (widget.refreshTrigger as ValueNotifier<int>?)?.value++,
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: ProfileSettingsSection(
+                      totalBudgetSummary: data.totalBudgetSummary,
+                      refreshTrigger: widget.refreshTrigger,
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         },
