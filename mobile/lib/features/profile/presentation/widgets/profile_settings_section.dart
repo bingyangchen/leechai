@@ -14,7 +14,9 @@ class ProfileSettingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    final theme = Theme.of(context);
+    return Container(
+      color: theme.colorScheme.surfaceContainerLowest,
       padding: const EdgeInsets.only(top: 8, bottom: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -130,14 +132,15 @@ class _TileGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final list = <Widget>[];
-    for (var i = 0; i < children.length; i++) {
-      list.add(children[i]);
-      if (i < children.length - 1) list.add(const Divider(height: 1));
-    }
-    return Card(
+    final theme = Theme.of(context);
+    return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(children: list),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(mainAxisSize: MainAxisSize.min, children: children),
     );
   }
 }
@@ -154,6 +157,9 @@ class _SettingsTile extends StatelessWidget {
   final String title;
   final String? trailing;
   final VoidCallback onTap;
+
+  static const double _iconBoxSize = 32;
+  static const double _iconBoxRadius = 8;
 
   @override
   Widget build(BuildContext context) {
@@ -176,9 +182,22 @@ class _SettingsTile extends StatelessWidget {
               ),
             ],
           )
-        : const Icon(Icons.chevron_right);
+        : Icon(
+            Icons.chevron_right,
+            size: 24,
+            color: theme.colorScheme.onSurfaceVariant,
+          );
     return ListTile(
-      leading: Icon(icon, size: 24, color: theme.colorScheme.onSurface),
+      leading: Container(
+        width: _iconBoxSize,
+        height: _iconBoxSize,
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(_iconBoxRadius),
+        ),
+        alignment: Alignment.center,
+        child: Icon(icon, size: 20, color: theme.colorScheme.onSurface),
+      ),
       title: Text(title),
       trailing: trailingWidget,
       onTap: onTap,
