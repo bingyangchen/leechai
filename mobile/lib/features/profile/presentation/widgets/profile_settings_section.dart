@@ -21,7 +21,7 @@ class ProfileSettingsSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SectionHeader(icon: Icons.folder_outlined, title: '財務管理'),
+          _SectionHeader(title: '財務管理'),
           _TileGroup(
             children: [
               _SettingsTile(
@@ -45,7 +45,7 @@ class ProfileSettingsSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          _SectionHeader(icon: Icons.settings_outlined, title: '系統設定'),
+          _SectionHeader(title: '系統設定'),
           _TileGroup(
             children: [
               _SettingsTile(
@@ -66,7 +66,7 @@ class ProfileSettingsSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          _SectionHeader(icon: Icons.info_outline, title: '關於'),
+          _SectionHeader(title: '關於'),
           _TileGroup(
             children: [
               _SettingsTile(
@@ -99,9 +99,7 @@ class ProfileSettingsSection extends StatelessWidget {
 }
 
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.icon, required this.title});
-
-  final IconData icon;
+  const _SectionHeader({required this.title});
   final String title;
 
   @override
@@ -109,18 +107,12 @@ class _SectionHeader extends StatelessWidget {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: theme.colorScheme.onSurfaceVariant),
-          const SizedBox(width: 8),
-          Text(
-            title,
-            style: theme.textTheme.titleSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
+      child: Text(
+        title,
+        style: theme.textTheme.titleSmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -134,7 +126,7 @@ class _TileGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 0),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),

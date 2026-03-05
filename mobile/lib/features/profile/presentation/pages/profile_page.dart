@@ -4,9 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:mobile/features/entry/data/repositories/entry.dart'
     show EntryRepository;
 import 'package:mobile/features/profile/domain/profile_page_data.dart';
-import 'package:mobile/features/profile/presentation/widgets/achievement_showcase.dart';
+import 'package:mobile/features/profile/presentation/pages/achievement_list_page.dart';
 import 'package:mobile/features/profile/presentation/widgets/profile_settings_section.dart';
 import 'package:mobile/features/profile/presentation/widgets/profile_skeleton.dart';
+import 'package:mobile/features/profile/presentation/widgets/user_profile_header.dart';
 import 'package:mobile/features/profile/presentation/widgets/user_stats_card.dart';
 import 'package:mobile/shared/constants/refresh_trigger.dart';
 import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
@@ -76,7 +77,6 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('個人')),
       body: FutureBuilder<ProfilePageData>(
         future: _future,
         builder: (context, snapshot) {
@@ -108,43 +108,57 @@ class _ProfilePageState extends State<ProfilePage> {
           }
           final data = snapshot.data ?? _lastData!;
           return HapticRefreshWrapper(
-            child: ValueListenableBuilder<bool>(
-              valueListenable: _cardInteracting,
-              builder: (context, isCardInteracting, child) => CustomScrollView(
-                physics: isCardInteracting
-                    ? const NeverScrollableScrollPhysics()
-                    : const AlwaysScrollableScrollPhysics(),
-                slivers: [
-                  CupertinoSliverRefreshControl(
-                    refreshTriggerPullDistance: kRefreshTriggerPullDistance,
-                    onRefresh: () async {
-                      _onRefresh();
-                      await _future;
-                    },
-                  ),
-                  SliverToBoxAdapter(
-                    child: UserStatsCard(
-                      data: data,
-                      isPageVisible: widget.isPageVisible,
-                      interactionNotifier: _cardInteracting,
+            child: SafeArea(
+              bottom: false,
+              child: ValueListenableBuilder<bool>(
+                valueListenable: _cardInteracting,
+                builder: (context, isCardInteracting, child) => CustomScrollView(
+                  physics: isCardInteracting
+                      ? const NeverScrollableScrollPhysics()
+                      : const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    CupertinoSliverRefreshControl(
+                      refreshTriggerPullDistance: kRefreshTriggerPullDistance,
+                      onRefresh: () async {
+                        _onRefresh();
+                        await _future;
+                      },
                     ),
-                  ),
-                  SliverToBoxAdapter(
-                    child: AchievementShowcase(
-                      achievements: data.achievements,
-                      totalEntries: data.totalEntries,
-                      isPageVisible: widget.isPageVisible,
-                      onEntryAdded: () =>
-                          (widget.refreshTrigger as ValueNotifier<int>?)?.value++,
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: UserStatsCard(
+                          data: data,
+                          isPageVisible: widget.isPageVisible,
+                          interactionNotifier: _cardInteracting,
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => AchievementListPage(
+                                  achievements: data.achievements,
+                                  totalEntries: data.totalEntries,
+                                  onEntryAdded: () =>
+                                      (widget.refreshTrigger as ValueNotifier<int>?)
+                                          ?.value++,
+                                  refreshTrigger: widget.refreshTrigger,
+                                  loadData: _loadData,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
                     ),
-                  ),
-                  SliverToBoxAdapter(
-                    child: ProfileSettingsSection(
-                      totalBudgetSummary: data.totalBudgetSummary,
-                      refreshTrigger: widget.refreshTrigger,
+                    const SliverToBoxAdapter(child: SizedBox(height: 12)),
+                    SliverToBoxAdapter(child: UserProfileHeader()),
+                    SliverToBoxAdapter(
+                      child: ProfileSettingsSection(
+                        totalBudgetSummary: data.totalBudgetSummary,
+                        refreshTrigger: widget.refreshTrigger,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           );

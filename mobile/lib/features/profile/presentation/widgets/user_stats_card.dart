@@ -10,10 +10,12 @@ class UserStatsCard extends StatefulWidget {
     required this.data,
     this.isPageVisible = true,
     this.interactionNotifier,
+    this.onTap,
   });
   final ProfilePageData data;
   final bool isPageVisible;
   final ValueNotifier<bool>? interactionNotifier;
+  final VoidCallback? onTap;
 
   @override
   State<UserStatsCard> createState() => _UserStatsCardState();
@@ -23,7 +25,9 @@ class _UserStatsCardState extends State<UserStatsCard> with TickerProviderStateM
   double _tiltX = 0;
   double _tiltY = 0;
   Offset? _lastPosition;
+  Offset? _pointerDownPosition;
   static const double _maxTilt = 0.12;
+  static const double _tapSlop = 18;
   static const double _dragSensitivity = 0.003;
   static const int _springBackDurationMs = 200;
   static const int _entranceDurationMs = 700;
@@ -88,6 +92,7 @@ class _UserStatsCardState extends State<UserStatsCard> with TickerProviderStateM
 
   void _onPointerDown(PointerDownEvent event) {
     _lastPosition = event.position;
+    _pointerDownPosition = event.position;
     _springController.stop();
     widget.interactionNotifier?.value = true;
   }
@@ -105,8 +110,15 @@ class _UserStatsCardState extends State<UserStatsCard> with TickerProviderStateM
   }
 
   void _onPointerUp(PointerUpEvent event) {
+    final down = _pointerDownPosition;
     _lastPosition = null;
+    _pointerDownPosition = null;
     widget.interactionNotifier?.value = false;
+    if (down != null &&
+        widget.onTap != null &&
+        (event.position - down).distance <= _tapSlop) {
+      widget.onTap!();
+    }
     _tiltXBeforeSpring = _tiltX;
     _tiltYBeforeSpring = _tiltY;
     _springController.forward(from: 0);
@@ -114,6 +126,7 @@ class _UserStatsCardState extends State<UserStatsCard> with TickerProviderStateM
 
   void _onPointerCancel(PointerCancelEvent event) {
     _lastPosition = null;
+    _pointerDownPosition = null;
     widget.interactionNotifier?.value = false;
     _tiltXBeforeSpring = _tiltX;
     _tiltYBeforeSpring = _tiltY;
