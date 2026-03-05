@@ -4,16 +4,18 @@ import 'package:flutter/material.dart';
 import 'package:mobile/features/entry/data/repositories/entry.dart'
     show EntryRepository;
 import 'package:mobile/features/profile/domain/profile_page_data.dart';
-import 'package:mobile/features/profile/presentation/widgets/achievement_showcase.dart';
+import 'package:mobile/features/profile/presentation/pages/achievement_list_page.dart';
 import 'package:mobile/features/profile/presentation/widgets/profile_settings_section.dart';
 import 'package:mobile/features/profile/presentation/widgets/profile_skeleton.dart';
+import 'package:mobile/features/profile/presentation/widgets/user_profile_header.dart';
 import 'package:mobile/features/profile/presentation/widgets/user_stats_card.dart';
 import 'package:mobile/shared/constants/refresh_trigger.dart';
 import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key, this.refreshTrigger});
+  const ProfilePage({super.key, this.refreshTrigger, this.isPageVisible = true});
   final ValueListenable<int>? refreshTrigger;
+  final bool isPageVisible;
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -22,6 +24,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   late Future<ProfilePageData> _future;
   ProfilePageData? _lastData;
+  final ValueNotifier<bool> _cardInteracting = ValueNotifier<bool>(false);
 
   @override
   void initState() {
@@ -42,6 +45,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void dispose() {
     widget.refreshTrigger?.removeListener(_onRefresh);
+    _cardInteracting.dispose();
     super.dispose();
   }
 
@@ -53,9 +57,17 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<ProfilePageData> _loadData() async {
     final totalEntries = await EntryRepository.getCount();
+    final now = DateTime.now();
+    final earliest = await EntryRepository.getEarliestCreatedAt();
+    final totalDays = earliest != null
+        ? now.difference(earliest.toLocal()).inDays + 1
+        : 0;
+    final monthEntries = await EntryRepository.getByMonth(now);
     return ProfilePageData(
       weeklyStreak: 0,
       totalEntries: totalEntries,
+      totalDays: totalDays,
+      entriesThisMonth: monthEntries.length,
       noSpendDaysThisWeek: 0,
       achievements: buildAchievements(totalEntries),
       totalBudgetSummary: 20000,
@@ -65,7 +77,6 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('個人')),
       body: FutureBuilder<ProfilePageData>(
         future: _future,
         builder: (context, snapshot) {
@@ -97,32 +108,58 @@ class _ProfilePageState extends State<ProfilePage> {
           }
           final data = snapshot.data ?? _lastData!;
           return HapticRefreshWrapper(
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                CupertinoSliverRefreshControl(
-                  refreshTriggerPullDistance: kRefreshTriggerPullDistance,
-                  onRefresh: () async {
-                    _onRefresh();
-                    await _future;
-                  },
+            child: SafeArea(
+              bottom: false,
+              child: ValueListenableBuilder<bool>(
+                valueListenable: _cardInteracting,
+                builder: (context, isCardInteracting, child) => CustomScrollView(
+                  physics: isCardInteracting
+                      ? const NeverScrollableScrollPhysics()
+                      : const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    CupertinoSliverRefreshControl(
+                      refreshTriggerPullDistance: kRefreshTriggerPullDistance,
+                      onRefresh: () async {
+                        _onRefresh();
+                        await _future;
+                      },
+                    ),
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: UserStatsCard(
+                          data: data,
+                          isPageVisible: widget.isPageVisible,
+                          interactionNotifier: _cardInteracting,
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => AchievementListPage(
+                                  achievements: data.achievements,
+                                  totalEntries: data.totalEntries,
+                                  onEntryAdded: () =>
+                                      (widget.refreshTrigger as ValueNotifier<int>?)
+                                          ?.value++,
+                                  refreshTrigger: widget.refreshTrigger,
+                                  loadData: _loadData,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 12)),
+                    SliverToBoxAdapter(child: UserProfileHeader()),
+                    SliverToBoxAdapter(
+                      child: ProfileSettingsSection(
+                        totalBudgetSummary: data.totalBudgetSummary,
+                        refreshTrigger: widget.refreshTrigger,
+                      ),
+                    ),
+                  ],
                 ),
-                SliverToBoxAdapter(child: UserStatsCard(data: data)),
-                SliverToBoxAdapter(
-                  child: AchievementShowcase(
-                    achievements: data.achievements,
-                    totalEntries: data.totalEntries,
-                    onEntryAdded: () =>
-                        (widget.refreshTrigger as ValueNotifier<int>?)?.value++,
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: ProfileSettingsSection(
-                    totalBudgetSummary: data.totalBudgetSummary,
-                    refreshTrigger: widget.refreshTrigger,
-                  ),
-                ),
-              ],
+              ),
             ),
           );
         },

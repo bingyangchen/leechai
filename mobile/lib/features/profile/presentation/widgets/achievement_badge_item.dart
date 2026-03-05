@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/features/entry/presentation/pages/entry_page.dart';
 import 'package:mobile/features/profile/domain/profile_page_data.dart';
-import 'package:mobile/shared/utils/date_time_utils.dart';
 
 class AchievementBadgeItem extends StatelessWidget {
   const AchievementBadgeItem({
@@ -42,27 +41,84 @@ class AchievementBadgeItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const size = 72.0;
+    const ringStrokeWidth = 4.0;
     final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    final primaryContainer = theme.colorScheme.primaryContainer;
 
-    Widget badgeIcon = Material(
-      color: theme.colorScheme.primaryContainer,
-      borderRadius: BorderRadius.circular(size / 2),
-      elevation: item.isUnlocked ? 2 : 0,
-      shadowColor: theme.colorScheme.primary.withValues(alpha: 0.4),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(size / 2),
-        child: SizedBox(
-          width: size,
-          height: size,
-          child: Icon(
-            _iconForId(item.id),
-            size: 36,
-            color: item.isUnlocked
-                ? theme.colorScheme.primary
-                : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+    Widget badgeIcon = SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          if (!item.isUnlocked && item.target > 0)
+            SizedBox(
+              width: size,
+              height: size,
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: item.progress),
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.easeOut,
+                builder: (context, value, child) {
+                  return CircularProgressIndicator(
+                    value: value,
+                    strokeWidth: ringStrokeWidth,
+                    strokeCap: StrokeCap.round,
+                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      primary.withValues(alpha: 0.5),
+                    ),
+                  );
+                },
+              ),
+            ),
+          GestureDetector(
+            onTap: onTap,
+            child: Container(
+              width: size - ringStrokeWidth - 4,
+              height: size - ringStrokeWidth - 4,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: item.isUnlocked
+                    ? LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          primary.withValues(alpha: 0.35),
+                          primaryContainer,
+                          primary.withValues(alpha: 0.2),
+                        ],
+                        stops: const [0.0, 0.5, 1.0],
+                      )
+                    : null,
+                color: item.isUnlocked ? null : primaryContainer.withValues(alpha: 0.6),
+                boxShadow: item.isUnlocked
+                    ? [
+                        BoxShadow(
+                          color: primary.withValues(alpha: 0.35),
+                          blurRadius: 12,
+                          spreadRadius: 0,
+                        ),
+                        BoxShadow(
+                          color: primary.withValues(alpha: 0.2),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                          spreadRadius: 0,
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Icon(
+                _iconForId(item.id),
+                size: 32,
+                color: item.isUnlocked
+                    ? primary
+                    : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
     if (!item.isUnlocked) {
@@ -87,44 +143,24 @@ class AchievementBadgeItem extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        if (!item.isUnlocked && item.target > 0) ...[
-          const SizedBox(height: 4),
-          SizedBox(
-            width: 80,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(2),
-                child: LinearProgressIndicator(
-                  value: item.progress,
-                  minHeight: 4,
-                  backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    theme.colorScheme.primary.withValues(alpha: 0.9),
-                  ),
+        if (!item.isUnlocked && item.target > 0)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                color: theme.colorScheme.surfaceContainerHighest,
+              ),
+              child: Text(
+                '${item.current}/${item.target}',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontSize: 10,
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 2),
-          Text(
-            '${item.current}/${item.target}',
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              fontSize: 10,
-            ),
-          ),
-        ],
-        if (item.isUnlocked && item.unlockedAt != null) ...[
-          const SizedBox(height: 2),
-          Text(
-            formatDate(item.unlockedAt!),
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              fontSize: 10,
-            ),
-          ),
-        ],
         if (highlightCta) ...[
           const SizedBox(height: 6),
           TextButton(

@@ -24,7 +24,10 @@ class _ShellState extends State<Shell> {
       isPageVisible: _currentIndex == 1,
     ),
     AssetsPage(refreshTrigger: widget.refreshTrigger),
-    ProfilePage(refreshTrigger: widget.refreshTrigger),
+    ProfilePage(
+      refreshTrigger: widget.refreshTrigger,
+      isPageVisible: _currentIndex == 3,
+    ),
   ];
 
   @override

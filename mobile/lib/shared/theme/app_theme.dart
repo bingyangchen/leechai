@@ -26,6 +26,14 @@ class _AccountingColorValues {
   static const Color neutral = Color(0xFF616161);
 }
 
+class _HeroCardContentValues {
+  _HeroCardContentValues._();
+
+  static const Color content = Color(0xFFFFFFFF);
+  static const Color contentMuted = Color(0xE6FFFFFF);
+  static final Color shadowSubtle = Colors.black.withValues(alpha: 0.08);
+}
+
 class _ChartPaletteValues {
   _ChartPaletteValues._();
 
@@ -104,6 +112,11 @@ class AppTheme {
           neutral: _AccountingColorValues.neutral,
         ),
         ChartPalette(palette: _ChartPaletteValues.light),
+        HeroCardColors(
+          content: _HeroCardContentValues.content,
+          contentMuted: _HeroCardContentValues.contentMuted,
+          shadowSubtle: _HeroCardContentValues.shadowSubtle,
+        ),
       ],
     );
   }
@@ -149,7 +162,48 @@ class AppTheme {
           neutral: _AccountingColorValues.neutral,
         ),
         ChartPalette(palette: _ChartPaletteValues.dark),
+        HeroCardColors(
+          content: _HeroCardContentValues.content,
+          contentMuted: _HeroCardContentValues.contentMuted,
+          shadowSubtle: _HeroCardContentValues.shadowSubtle,
+        ),
       ],
+    );
+  }
+}
+
+class HeroCardColors extends ThemeExtension<HeroCardColors> {
+  const HeroCardColors({
+    required this.content,
+    required this.contentMuted,
+    required this.shadowSubtle,
+  });
+
+  final Color content;
+  final Color contentMuted;
+  final Color shadowSubtle;
+
+  static HeroCardColors of(BuildContext context) {
+    final ext = Theme.of(context).extension<HeroCardColors>();
+    assert(ext != null);
+    return ext!;
+  }
+
+  @override
+  HeroCardColors copyWith({Color? content, Color? contentMuted, Color? shadowSubtle}) =>
+      HeroCardColors(
+        content: content ?? this.content,
+        contentMuted: contentMuted ?? this.contentMuted,
+        shadowSubtle: shadowSubtle ?? this.shadowSubtle,
+      );
+
+  @override
+  HeroCardColors lerp(ThemeExtension<HeroCardColors>? other, double t) {
+    if (other is! HeroCardColors) return this;
+    return HeroCardColors(
+      content: Color.lerp(content, other.content, t)!,
+      contentMuted: Color.lerp(contentMuted, other.contentMuted, t)!,
+      shadowSubtle: Color.lerp(shadowSubtle, other.shadowSubtle, t)!,
     );
   }
 }

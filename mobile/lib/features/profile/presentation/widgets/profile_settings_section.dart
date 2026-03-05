@@ -14,12 +14,14 @@ class ProfileSettingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    final theme = Theme.of(context);
+    return Container(
+      color: theme.colorScheme.surfaceContainerLowest,
       padding: const EdgeInsets.only(top: 8, bottom: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SectionHeader(icon: Icons.folder_outlined, title: '財務管理'),
+          _SectionHeader(title: '財務管理'),
           _TileGroup(
             children: [
               _SettingsTile(
@@ -43,7 +45,7 @@ class ProfileSettingsSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          _SectionHeader(icon: Icons.settings_outlined, title: '系統設定'),
+          _SectionHeader(title: '系統設定'),
           _TileGroup(
             children: [
               _SettingsTile(
@@ -64,7 +66,7 @@ class ProfileSettingsSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          _SectionHeader(icon: Icons.info_outline, title: '關於'),
+          _SectionHeader(title: '關於'),
           _TileGroup(
             children: [
               _SettingsTile(
@@ -97,9 +99,7 @@ class ProfileSettingsSection extends StatelessWidget {
 }
 
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.icon, required this.title});
-
-  final IconData icon;
+  const _SectionHeader({required this.title});
   final String title;
 
   @override
@@ -107,18 +107,12 @@ class _SectionHeader extends StatelessWidget {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: theme.colorScheme.onSurfaceVariant),
-          const SizedBox(width: 8),
-          Text(
-            title,
-            style: theme.textTheme.titleSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
+      child: Text(
+        title,
+        style: theme.textTheme.titleSmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -130,14 +124,15 @@ class _TileGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final list = <Widget>[];
-    for (var i = 0; i < children.length; i++) {
-      list.add(children[i]);
-      if (i < children.length - 1) list.add(const Divider(height: 1));
-    }
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(children: list),
+    final theme = Theme.of(context);
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 0),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(mainAxisSize: MainAxisSize.min, children: children),
     );
   }
 }
@@ -154,6 +149,9 @@ class _SettingsTile extends StatelessWidget {
   final String title;
   final String? trailing;
   final VoidCallback onTap;
+
+  static const double _iconBoxSize = 32;
+  static const double _iconBoxRadius = 8;
 
   @override
   Widget build(BuildContext context) {
@@ -176,9 +174,22 @@ class _SettingsTile extends StatelessWidget {
               ),
             ],
           )
-        : const Icon(Icons.chevron_right);
+        : Icon(
+            Icons.chevron_right,
+            size: 24,
+            color: theme.colorScheme.onSurfaceVariant,
+          );
     return ListTile(
-      leading: Icon(icon, size: 24, color: theme.colorScheme.onSurface),
+      leading: Container(
+        width: _iconBoxSize,
+        height: _iconBoxSize,
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(_iconBoxRadius),
+        ),
+        alignment: Alignment.center,
+        child: Icon(icon, size: 20, color: theme.colorScheme.onSurface),
+      ),
       title: Text(title),
       trailing: trailingWidget,
       onTap: onTap,
