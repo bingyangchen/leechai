@@ -56,13 +56,21 @@ class AchievementBadgeItem extends StatelessWidget {
             SizedBox(
               width: size,
               height: size,
-              child: CircularProgressIndicator(
-                value: item.progress,
-                strokeWidth: ringStrokeWidth,
-                backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  primary.withValues(alpha: 0.5),
-                ),
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: item.progress),
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.easeOut,
+                builder: (context, value, child) {
+                  return CircularProgressIndicator(
+                    value: value,
+                    strokeWidth: ringStrokeWidth,
+                    strokeCap: StrokeCap.round,
+                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      primary.withValues(alpha: 0.5),
+                    ),
+                  );
+                },
               ),
             ),
           GestureDetector(

@@ -183,6 +183,7 @@ class _UserStatsCardState extends State<UserStatsCard> with TickerProviderStateM
                         child: _HeroStreakBlock(
                           value: '${(widget.data.weeklyStreak * entranceT).round()}',
                           label: '連續活躍週',
+                          progressFactor: entranceT,
                           contentColor: heroColors.content,
                           contentColorMuted: heroColors.contentMuted,
                         ),
@@ -293,17 +294,23 @@ class _HeroStreakBlock extends StatelessWidget {
   const _HeroStreakBlock({
     required this.value,
     required this.label,
+    this.progressFactor = 1.0,
     required this.contentColor,
     required this.contentColorMuted,
   });
 
   final String value;
   final String label;
+  final double progressFactor;
   final Color contentColor;
   final Color contentColorMuted;
 
+  static const double _iconSize = 40;
+
   @override
   Widget build(BuildContext context) {
+    final scale = Curves.easeOutBack.transform(progressFactor.clamp(0.0, 1.0));
+    final opacity = progressFactor.clamp(0.0, 1.0);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -312,7 +319,15 @@ class _HeroStreakBlock extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Icon(Icons.local_fire_department, size: 40, color: contentColor),
+            Transform.scale(
+              scale: scale,
+              alignment: Alignment.center,
+              child: Icon(
+                Icons.local_fire_department,
+                size: _iconSize,
+                color: contentColor.withValues(alpha: opacity),
+              ),
+            ),
             const SizedBox(width: 8),
             Text(
               value,
@@ -375,6 +390,7 @@ class _BadgeProgressBlock extends StatelessWidget {
               CircularProgressIndicator(
                 value: displayProgress,
                 strokeWidth: _strokeWidth,
+                strokeCap: StrokeCap.round,
                 backgroundColor: contentColorMuted.withValues(alpha: 0.35),
                 valueColor: AlwaysStoppedAnimation<Color>(contentColor),
               ),

@@ -4,21 +4,50 @@ import 'package:mobile/features/profile/presentation/pages/achievement_list_page
 import 'package:mobile/features/profile/presentation/widgets/achievement_badge_item.dart';
 import 'package:mobile/features/profile/presentation/widgets/achievement_detail_sheet.dart';
 
-class AchievementShowcase extends StatelessWidget {
+class AchievementShowcase extends StatefulWidget {
   const AchievementShowcase({
     super.key,
     required this.achievements,
     required this.totalEntries,
+    this.isPageVisible = true,
     this.onEntryAdded,
   });
 
   final List<AchievementItem> achievements;
   final int totalEntries;
+  final bool isPageVisible;
   final VoidCallback? onEntryAdded;
+
+  @override
+  State<AchievementShowcase> createState() => _AchievementShowcaseState();
+}
+
+class _AchievementShowcaseState extends State<AchievementShowcase> {
+  int _entranceKey = 0;
+  bool _wasPageVisible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _wasPageVisible = widget.isPageVisible;
+  }
+
+  @override
+  void didUpdateWidget(AchievementShowcase oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isPageVisible && !_wasPageVisible) {
+      setState(() => _entranceKey++);
+      _wasPageVisible = true;
+    } else if (!widget.isPageVisible) {
+      _wasPageVisible = false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final achievements = widget.achievements;
+    final totalEntries = widget.totalEntries;
     final isFirstEntryLocked =
         achievements.isNotEmpty &&
         achievements.first.id == 'first_entry' &&
@@ -63,11 +92,14 @@ class AchievementShowcase extends StatelessWidget {
                 for (var index = 0; index < achievements.length; index++) ...[
                   if (index > 0) const SizedBox(width: 8),
                   AchievementBadgeItem(
+                    key: ValueKey('${achievements[index].id}_$_entranceKey'),
                     item: achievements[index],
                     highlightCta: totalEntries == 0 && index == 0 && isFirstEntryLocked,
                     onTap: () =>
                         showAchievementDetailSheet(context, achievements[index]),
-                    onEntryAdded: totalEntries == 0 && index == 0 ? onEntryAdded : null,
+                    onEntryAdded: totalEntries == 0 && index == 0
+                        ? widget.onEntryAdded
+                        : null,
                   ),
                 ],
               ],
