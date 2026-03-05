@@ -53,9 +53,17 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<ProfilePageData> _loadData() async {
     final totalEntries = await EntryRepository.getCount();
+    final now = DateTime.now();
+    final earliest = await EntryRepository.getEarliestCreatedAt();
+    final totalDays = earliest != null
+        ? now.difference(earliest.toLocal()).inDays + 1
+        : 0;
+    final monthEntries = await EntryRepository.getByMonth(now);
     return ProfilePageData(
       weeklyStreak: 0,
       totalEntries: totalEntries,
+      totalDays: totalDays,
+      entriesThisMonth: monthEntries.length,
       noSpendDaysThisWeek: 0,
       achievements: buildAchievements(totalEntries),
       totalBudgetSummary: 20000,

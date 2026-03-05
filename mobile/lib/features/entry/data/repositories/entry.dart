@@ -19,6 +19,21 @@ class EntryRepository {
     return (r.single['c'] as int?) ?? 0;
   }
 
+  static Future<DateTime?> getEarliestCreatedAt() async {
+    final db = await AppDatabase.database;
+    final rows = await db.query(
+      _table,
+      columns: ['created_at'],
+      where: 'deleted_at IS NULL',
+      orderBy: 'created_at ASC',
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    final value = rows.single['created_at'];
+    if (value == null) return null;
+    return DateTime.parse(value as String);
+  }
+
   static Future<List<Map<String, Object?>>> getAll() async {
     final db = await AppDatabase.database;
     return db.query(_table, where: 'deleted_at IS NULL', orderBy: 'occurred_at DESC');

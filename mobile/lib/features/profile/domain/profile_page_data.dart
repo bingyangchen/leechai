@@ -26,6 +26,8 @@ class ProfilePageData {
   const ProfilePageData({
     required this.weeklyStreak,
     required this.totalEntries,
+    required this.totalDays,
+    required this.entriesThisMonth,
     required this.noSpendDaysThisWeek,
     required this.achievements,
     this.totalBudgetSummary,
@@ -33,9 +35,15 @@ class ProfilePageData {
 
   final int weeklyStreak;
   final int totalEntries;
+  final int totalDays;
+  final int entriesThisMonth;
   final int noSpendDaysThisWeek;
   final List<AchievementItem> achievements;
   final double? totalBudgetSummary;
+
+  int get unlockedBadgesCount =>
+      achievements.where((achievement) => achievement.isUnlocked).length;
+  int get totalBadgesCount => achievements.length;
 }
 
 List<AchievementItem> buildAchievements(int totalEntries) {
