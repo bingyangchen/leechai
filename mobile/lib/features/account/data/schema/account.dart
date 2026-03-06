@@ -3,7 +3,7 @@ import 'package:mobile/features/account/domain/constants.dart';
 import 'package:sqflite/sqflite.dart';
 
 Future<void> run(Database db) async {
-  await db.execute('''
+  await db.execute("""
   CREATE TABLE IF NOT EXISTS account (
     id TEXT PRIMARY KEY,
     type TEXT NOT NULL,
@@ -17,7 +17,7 @@ Future<void> run(Database db) async {
     deleted_at TEXT,
     synced INTEGER NOT NULL DEFAULT 0
   );
-  ''');
+  """);
   await seedDefaults(db);
 }
 
