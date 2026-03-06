@@ -65,7 +65,10 @@ class UserProfileHeader extends StatelessWidget {
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant),
+                Icon(
+                  Icons.chevron_right,
+                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                ),
               ],
             ),
           ),

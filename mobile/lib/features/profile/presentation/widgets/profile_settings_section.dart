@@ -163,21 +163,21 @@ class _SettingsTile extends StatelessWidget {
               Text(
                 trailing!,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                 ),
               ),
               const SizedBox(width: 4),
               Icon(
                 Icons.chevron_right,
                 size: 24,
-                color: theme.colorScheme.onSurfaceVariant,
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
               ),
             ],
           )
         : Icon(
             Icons.chevron_right,
             size: 24,
-            color: theme.colorScheme.onSurfaceVariant,
+            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
           );
     return ListTile(
       leading: Container(
