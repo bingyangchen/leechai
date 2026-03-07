@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
 
 class CategorySection extends StatelessWidget {
   const CategorySection({
@@ -17,18 +18,15 @@ class CategorySection extends StatelessWidget {
     if (categories.isEmpty) return const SizedBox.shrink();
 
     final theme = Theme.of(context);
+    final appTextStyles = AppTextStyles.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '類別',
-            style: theme.textTheme.titleSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
+          Text('類別', style: appTextStyles.sectionLabel),
           const SizedBox(height: 8),
           SizedBox(
             height: 56,
@@ -41,11 +39,11 @@ class CategorySection extends StatelessWidget {
                 final selected = index == selectedIndex;
                 final icon = cat.icon ?? Icons.more_horiz;
                 final backgroundColor = selected
-                    ? theme.colorScheme.primary.withValues(alpha: 0.22)
-                    : theme.colorScheme.surfaceContainerHighest;
+                    ? colorScheme.primary.withValues(alpha: 0.22)
+                    : colorScheme.surfaceContainerHighest;
                 final contentColor = selected
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.onSurfaceVariant;
+                    ? colorScheme.primary
+                    : colorScheme.onSurfaceVariant;
                 return Material(
                   color: backgroundColor,
                   borderRadius: BorderRadius.circular(12),
@@ -61,7 +59,9 @@ class CategorySection extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             cat.name,
-                            style: TextStyle(fontSize: 12, color: contentColor),
+                            style: appTextStyles.bodySmallMuted.copyWith(
+                              color: contentColor,
+                            ),
                           ),
                         ],
                       ),
