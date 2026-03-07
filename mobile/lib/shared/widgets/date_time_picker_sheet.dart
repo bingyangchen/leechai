@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
 
 typedef DateTimePickerOnConfirm = void Function(DateTime value, {bool fromDrag});
 
@@ -279,16 +280,11 @@ class _DateTimePickerSheetState extends State<DateTimePickerSheet> {
   }
 
   Widget _wheelSeparator(String text) {
-    final theme = Theme.of(context);
+    final appTextStyles = AppTextStyles.of(context);
     return Center(
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: _separatorPadding),
-        child: Text(
-          text,
-          style: theme.textTheme.titleMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
+        child: Text(text, style: appTextStyles.titleMuted),
       ),
     );
   }
@@ -300,7 +296,7 @@ class _DateTimePickerSheetState extends State<DateTimePickerSheet> {
     required ScrollController controller,
     required ValueChanged<T> onChanged,
   }) {
-    final theme = Theme.of(context);
+    final appTextStyles = AppTextStyles.of(context);
     final index = items.indexOf(value);
     if (index < 0) return const SizedBox.shrink();
     return ListWheelScrollView.useDelegate(
@@ -313,20 +309,12 @@ class _DateTimePickerSheetState extends State<DateTimePickerSheet> {
         HapticFeedback.selectionClick();
         onChanged(items[i]);
       },
+      overAndUnderCenterOpacity: 0.4,
       childDelegate: ListWheelChildBuilderDelegate(
         childCount: items.length,
         builder: (context, i) {
-          final isSelected = i == index;
           return Center(
-            child: Text(
-              format(items[i]),
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: isSelected
-                    ? theme.colorScheme.onSurface
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              ),
-            ),
+            child: Text(format(items[i]), style: appTextStyles.titleEmphasis),
           );
         },
       ),
