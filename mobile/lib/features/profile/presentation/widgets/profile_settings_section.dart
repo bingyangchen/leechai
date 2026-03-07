@@ -1,6 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
+import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+const _appVersion = 'v1.0.0';
+const _privacyPolicyUrl = 'https://github.com/bingyangchen/leechai';
+const _termsOfServiceUrl = 'https://github.com/bingyangchen/leechai';
 
 class ProfileSettingsSection extends StatelessWidget {
   const ProfileSettingsSection({
@@ -77,13 +83,32 @@ class ProfileSettingsSection extends StatelessWidget {
               _SettingsTile(
                 icon: Icons.info_outline,
                 title: '版本資訊',
-                onTap: () => _pushPlaceholderPage(context, '版本資訊'), // TODO
+                trailing: _appVersion,
+                onTap: () => _showAboutBottomSheet(context),
               ),
             ],
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _openInBrowser(BuildContext context, String urlString) async {
+    final uri = Uri.parse(urlString);
+    try {
+      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched && context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('無法開啟連結')));
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('無法開啟連結')));
+      }
+    }
   }
 
   void _pushPlaceholderPage(BuildContext context, String title) {
@@ -94,6 +119,104 @@ class ProfileSettingsSection extends StatelessWidget {
           body: const Center(child: Text('敬請期待')),
         ),
       ),
+    );
+  }
+
+  void _showAboutBottomSheet(BuildContext context) {
+    final theme = Theme.of(context);
+    showAppBottomSheet<void>(
+      context,
+      mode: AppBottomSheetMode.static,
+      builder: (sheetContext) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 20),
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            alignment: Alignment.center,
+            child: Icon(
+              Icons.account_balance_wallet_rounded,
+              size: 40,
+              color: theme.colorScheme.onPrimaryContainer,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'LeeChai 理財',
+            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _appVersion,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 24),
+          _AboutSheetTile(
+            icon: Icons.description_outlined,
+            title: '隱私權政策',
+            trailing: Icons.open_in_new,
+            onTap: () {
+              Navigator.of(sheetContext).pop();
+              _openInBrowser(context, _privacyPolicyUrl);
+            },
+          ),
+          _AboutSheetTile(
+            icon: Icons.gavel_outlined,
+            title: '服務條款',
+            trailing: Icons.open_in_new,
+            onTap: () {
+              Navigator.of(sheetContext).pop();
+              _openInBrowser(context, _termsOfServiceUrl);
+            },
+          ),
+          _AboutSheetTile(
+            icon: Icons.code_outlined,
+            title: '開源授權',
+            trailing: Icons.chevron_right,
+            onTap: () {
+              Navigator.of(sheetContext).pop();
+              _pushPlaceholderPage(context, '開源授權');
+            },
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+}
+
+class _AboutSheetTile extends StatelessWidget {
+  const _AboutSheetTile({
+    required this.icon,
+    required this.title,
+    required this.trailing,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final IconData trailing;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return ListTile(
+      leading: Icon(icon, size: 22, color: theme.colorScheme.onSurfaceVariant),
+      title: Text(title),
+      trailing: Icon(
+        trailing,
+        size: 20,
+        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+      ),
+      onTap: onTap,
     );
   }
 }
