@@ -153,28 +153,58 @@ class AppTheme {
     final onSurfaceVariant = colorScheme.onSurfaceVariant;
     final onSurface = colorScheme.onSurface;
     TextStyle merge(TextStyle? base, double size, FontWeight weight, Color color) =>
-        (base ?? TextStyle()).copyWith(fontSize: size, fontWeight: weight, color: color);
+        (base ?? TextStyle()).copyWith(
+          fontSize: size,
+          fontWeight: weight,
+          color: color,
+        );
+    TextStyle mergePreserveWeight(TextStyle? base, double size, Color color) =>
+        (base ?? TextStyle()).copyWith(fontSize: size, color: color);
     return AppTextStyles(
       sectionLabel: merge(
-        textTheme.titleSmall, _sectionLabelSize, w500, onSurfaceVariant),
-      bodyMuted: merge(
-        textTheme.bodyMedium, _bodyMutedSize, w400, onSurfaceVariant),
-      bodyOnSurface: merge(
-        textTheme.bodyMedium, _bodyOnSurfaceSize, w400, onSurface),
+        textTheme.titleSmall,
+        _sectionLabelSize,
+        w500,
+        onSurfaceVariant,
+      ),
+      bodyMuted: merge(textTheme.bodyMedium, _bodyMutedSize, w400, onSurfaceVariant),
+      bodyOnSurface: merge(textTheme.bodyMedium, _bodyOnSurfaceSize, w400, onSurface),
       bodySmallMuted: merge(
-        textTheme.bodySmall, _bodySmallMutedSize, w400, onSurfaceVariant),
-      labelMuted: merge(
-        textTheme.labelSmall, _labelMutedSize, w500, onSurfaceVariant),
-      titleEmphasis: merge(
-        textTheme.titleMedium, _titleEmphasisSize, w600, onSurface),
+        textTheme.bodySmall,
+        _bodySmallMutedSize,
+        w400,
+        onSurfaceVariant,
+      ),
+      labelMuted: mergePreserveWeight(
+        textTheme.labelSmall,
+        _labelMutedSize,
+        onSurfaceVariant,
+      ),
+      titleEmphasis: merge(textTheme.titleMedium, _titleEmphasisSize, w600, onSurface),
       titleLargeEmphasis: merge(
-        textTheme.titleLarge, _titleLargeEmphasisSize, w600, onSurface),
+        textTheme.titleLarge,
+        _titleLargeEmphasisSize,
+        w600,
+        onSurface,
+      ),
       titleSmallEmphasis: merge(
-        textTheme.titleSmall, _titleSmallEmphasisSize, w600, onSurface),
+        textTheme.titleSmall,
+        _titleSmallEmphasisSize,
+        w600,
+        onSurface,
+      ),
       headlineEmphasis: merge(
-        textTheme.headlineMedium, _headlineEmphasisSize, bold, onSurface),
+        textTheme.headlineMedium,
+        _headlineEmphasisSize,
+        bold,
+        onSurface,
+      ),
       headlineLargeEmphasis: merge(
-        textTheme.headlineLarge, _headlineLargeEmphasisSize, bold, onSurface),
+        textTheme.headlineLarge,
+        _headlineLargeEmphasisSize,
+        bold,
+        onSurface,
+      ),
     );
   }
 
