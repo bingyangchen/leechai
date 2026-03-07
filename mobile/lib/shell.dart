@@ -32,6 +32,9 @@ class _ShellState extends State<Shell> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final navLabelStyle = theme.textTheme.bodySmall;
     return Scaffold(
       body: IndexedStack(index: _currentIndex, children: _buildPages()),
       floatingActionButton: _currentIndex < 3
@@ -58,17 +61,17 @@ class _ShellState extends State<Shell> {
         height: _bottomNavBarHeight,
         child: Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
+            color: colorScheme.surface,
+            border: Border(top: BorderSide(color: theme.dividerColor)),
           ),
           child: BottomNavigationBar(
-            backgroundColor: Colors.transparent,
+            backgroundColor: colorScheme.surface.withValues(alpha: 0),
             elevation: 0,
             currentIndex: _currentIndex,
             onTap: (index) => setState(() => _currentIndex = index),
             type: BottomNavigationBarType.fixed,
-            selectedLabelStyle: const TextStyle(fontSize: 12),
-            unselectedLabelStyle: const TextStyle(fontSize: 12),
+            selectedLabelStyle: navLabelStyle,
+            unselectedLabelStyle: navLabelStyle,
             items: const [
               BottomNavigationBarItem(
                 icon: Icon(Icons.list_alt_outlined),
