@@ -19,6 +19,7 @@ import 'package:mobile/features/entry/presentation/widgets/sticky_date_header.da
 import 'package:mobile/features/entry/presentation/widgets/sync_indicator.dart';
 import 'package:mobile/features/entry/presentation/widgets/transaction_row.dart';
 import 'package:mobile/shared/constants/refresh_trigger.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
 
@@ -165,6 +166,8 @@ class _JournalPageState extends State<JournalPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final appTextStyles = AppTextStyles.of(context);
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -186,13 +189,11 @@ class _JournalPageState extends State<JournalPage> {
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 6),
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                color: colorScheme.surfaceContainerHighest,
                 child: Text(
                   '正在與雲端同步資料...',
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                  style: appTextStyles.bodySmallMuted,
                 ),
               ),
             Expanded(
