@@ -9,6 +9,7 @@ import 'package:mobile/features/statistics/presentation/constants/category_color
 import 'package:mobile/features/statistics/presentation/pages/category_detail_page.dart';
 import 'package:mobile/features/statistics/presentation/widgets/category_donut_chart.dart';
 import 'package:mobile/features/statistics/presentation/widgets/category_ranking_tile.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/refresh_snap_back.dart';
 import 'package:mobile/shared/widgets/app_refresh_indicator.dart';
 import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
@@ -299,6 +300,7 @@ class _SlidingSegmentOptionState extends State<_SlidingSegmentOption> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final appTextStyles = AppTextStyles.of(context);
     final color = widget.selected
         ? widget.activeColor
         : theme.colorScheme.onSurfaceVariant;
@@ -318,7 +320,7 @@ class _SlidingSegmentOptionState extends State<_SlidingSegmentOption> {
           child: AnimatedDefaultTextStyle(
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeInOut,
-            style: theme.textTheme.labelLarge!.copyWith(
+            style: appTextStyles.sectionLabel.copyWith(
               color: color,
               fontWeight: widget.selected ? FontWeight.w600 : FontWeight.normal,
             ),

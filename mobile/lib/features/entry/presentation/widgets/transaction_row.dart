@@ -119,7 +119,7 @@ class TransactionRow extends StatelessWidget {
         ),
         title: Text(
           title,
-          style: theme.textTheme.titleMedium,
+          style: appTextStyles.title,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),

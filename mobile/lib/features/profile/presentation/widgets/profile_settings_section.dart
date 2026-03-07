@@ -149,7 +149,7 @@ class ProfileSettingsSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Text('LeeChai', style: appTextStyles.titleLargeEmphasis),
+          Text('LeeChai', style: appTextStyles.headlineSmallEmphasis),
           const SizedBox(height: 4),
           Text(_appVersion, style: appTextStyles.bodyMuted),
           const SizedBox(height: 24),

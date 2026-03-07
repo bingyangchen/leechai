@@ -287,7 +287,7 @@ class _AddAccountFormState extends State<_AddAccountForm> {
                             contentPadding: EdgeInsets.zero,
                             isDense: true,
                           ),
-                          style: appTextStyles.titleLargeEmphasis,
+                          style: appTextStyles.headlineSmallEmphasis,
                           textAlign: TextAlign.left,
                           enabled: !_isSubmitting,
                           validator: (value) {

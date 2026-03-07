@@ -174,10 +174,7 @@ class _AccountListTile extends StatelessWidget {
         ),
         child: Icon(icon, color: colorScheme.primary, size: 24),
       ),
-      title: Text(
-        account.name ?? _defaultName(account),
-        style: theme.textTheme.titleMedium,
-      ),
+      title: Text(account.name ?? _defaultName(account), style: appTextStyles.title),
       trailing: Text(
         '\$$amountStr',
         style: appTextStyles.titleSmallEmphasis.copyWith(

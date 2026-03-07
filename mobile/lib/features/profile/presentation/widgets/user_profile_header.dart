@@ -39,7 +39,7 @@ class UserProfileHeader extends StatelessWidget {
                   child: isLoggedIn && userName.isNotEmpty
                       ? Text(
                           userName[0],
-                          style: appTextStyles.titleLargeEmphasis.copyWith(
+                          style: appTextStyles.headlineSmallEmphasis.copyWith(
                             color: colorScheme.primary,
                           ),
                         )

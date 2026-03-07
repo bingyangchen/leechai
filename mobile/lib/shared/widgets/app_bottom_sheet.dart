@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
 
 enum AppBottomSheetMode { static, scrollable }
 
@@ -110,7 +111,7 @@ class _AppBottomSheetHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final appTextStyles = AppTextStyles.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Row(
@@ -121,7 +122,7 @@ class _AppBottomSheetHeader extends StatelessWidget {
                 alignment: titleAlignment == AppBottomSheetTitleAlignment.center
                     ? Alignment.center
                     : Alignment.centerLeft,
-                child: Text(title!, style: theme.textTheme.titleLarge),
+                child: Text(title!, style: appTextStyles.headlineSmall),
               ),
             )
           else

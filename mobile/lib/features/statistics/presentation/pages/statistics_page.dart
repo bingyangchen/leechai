@@ -181,7 +181,7 @@ class _StatisticsPageState extends State<StatisticsPage>
                 labelColor: colorScheme.onPrimaryContainer,
                 unselectedLabelColor: colorScheme.onSurfaceVariant,
                 labelStyle: appTextStyles.titleEmphasis,
-                unselectedLabelStyle: theme.textTheme.titleMedium,
+                unselectedLabelStyle: appTextStyles.title,
                 isScrollable: true,
                 tabAlignment: TabAlignment.center,
                 tabs: const [

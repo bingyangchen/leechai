@@ -86,7 +86,7 @@ class CategoryDonutChart extends StatelessWidget {
                             ? '****'
                             : formatAmountForDisplay(breakdown[touched].amount))
                       : displayAmount,
-                  style: appTextStyles.titleLargeEmphasis,
+                  style: appTextStyles.headlineSmallEmphasis,
                   textAlign: TextAlign.center,
                 ),
               ),
