@@ -17,6 +17,7 @@ import 'package:mobile/features/entry/presentation/entry_list_handlers.dart';
 import 'package:mobile/features/entry/presentation/widgets/sticky_date_header.dart'
     show buildDateHeaderSection;
 import 'package:mobile/features/entry/presentation/widgets/transaction_row.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/refresh_snap_back.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
@@ -144,6 +145,9 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
   Future<void> _onOpenSettings() async {
     final data = await _future;
     if (!mounted) return;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final appTextStyles = AppTextStyles.of(context);
     await showAppBottomSheet<void>(
       context,
       mode: AppBottomSheetMode.static,
@@ -159,13 +163,10 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
             },
           ),
           ListTile(
-            leading: Icon(
-              Icons.delete_outline,
-              color: Theme.of(context).colorScheme.error,
-            ),
+            leading: Icon(Icons.delete_outline, color: colorScheme.error),
             title: Text(
               '刪除帳戶',
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
+              style: appTextStyles.bodyLargeMuted.copyWith(color: colorScheme.error),
             ),
             onTap: () {
               Navigator.pop(ctx);
@@ -251,6 +252,9 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final appTextStyles = AppTextStyles.of(context);
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: kToolbarHeight,
@@ -336,17 +340,10 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
                           Icon(
                             Icons.receipt_long_outlined,
                             size: 64,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.outline.withValues(alpha: 0.5),
+                            color: colorScheme.outline.withValues(alpha: 0.5),
                           ),
                           const SizedBox(height: 16),
-                          Text(
-                            '此帳戶尚無交易紀錄',
-                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
-                          ),
+                          Text('此帳戶尚無交易紀錄', style: appTextStyles.titleMuted),
                         ],
                       ),
                     ),

@@ -133,7 +133,7 @@ class _AddAccountListTile extends StatelessWidget {
         ),
         child: Icon(Icons.add, color: colorScheme.onSurfaceVariant, size: 24),
       ),
-      title: Text(label, style: appTextStyles.titleMuted),
+      title: Text(label, style: appTextStyles.bodyLargeMuted),
     );
   }
 }

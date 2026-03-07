@@ -284,7 +284,7 @@ class _DateTimePickerSheetState extends State<DateTimePickerSheet> {
     return Center(
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: _separatorPadding),
-        child: Text(text, style: appTextStyles.titleMuted),
+        child: Text(text, style: appTextStyles.bodyLargeMuted),
       ),
     );
   }

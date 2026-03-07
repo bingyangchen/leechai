@@ -138,6 +138,7 @@ class AppTheme {
   static const double _sectionLabelSize = 14;
   static const double _bodySmallSize = 12;
   static const double _bodySize = 14;
+  static const double _bodyLargeSize = 16;
   static const double _titleSmallSize = 14;
   static const double _titleSize = 16;
   static const double _titleLargeSize = 22;
@@ -167,6 +168,12 @@ class AppTheme {
         onSurfaceVariant,
       ),
       bodyMuted: merge(textTheme.bodyMedium, _bodySize, w400, onSurfaceVariant),
+      bodyLargeMuted: merge(
+        textTheme.bodyLarge,
+        _bodyLargeSize,
+        w400,
+        onSurfaceVariant,
+      ),
       bodyOnSurface: merge(textTheme.bodyMedium, _bodySize, w400, onSurface),
       bodySmallMuted: merge(
         textTheme.bodySmall,
@@ -179,7 +186,7 @@ class AppTheme {
         _labelSize,
         onSurfaceVariant,
       ),
-      titleMuted: merge(textTheme.titleMedium, _titleSize, w400, onSurfaceVariant),
+      titleMuted: merge(textTheme.titleMedium, _titleSize, w500, onSurfaceVariant),
       titleEmphasis: merge(textTheme.titleMedium, _titleSize, w600, onSurface),
       titleLargeEmphasis: merge(textTheme.titleLarge, _titleLargeSize, w600, onSurface),
       titleSmallEmphasis: merge(textTheme.titleSmall, _titleSmallSize, w600, onSurface),
@@ -256,6 +263,7 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
   const AppTextStyles({
     required this.sectionLabel,
     required this.bodyMuted,
+    required this.bodyLargeMuted,
     required this.bodyOnSurface,
     required this.bodySmallMuted,
     required this.labelMuted,
@@ -269,6 +277,7 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
 
   final TextStyle sectionLabel;
   final TextStyle bodyMuted;
+  final TextStyle bodyLargeMuted;
   final TextStyle bodyOnSurface;
   final TextStyle bodySmallMuted;
   final TextStyle labelMuted;
@@ -289,6 +298,7 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
   AppTextStyles copyWith({
     TextStyle? sectionLabel,
     TextStyle? bodyMuted,
+    TextStyle? bodyLargeMuted,
     TextStyle? bodyOnSurface,
     TextStyle? bodySmallMuted,
     TextStyle? labelMuted,
@@ -301,6 +311,7 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
   }) => AppTextStyles(
     sectionLabel: sectionLabel ?? this.sectionLabel,
     bodyMuted: bodyMuted ?? this.bodyMuted,
+    bodyLargeMuted: bodyLargeMuted ?? this.bodyLargeMuted,
     bodyOnSurface: bodyOnSurface ?? this.bodyOnSurface,
     bodySmallMuted: bodySmallMuted ?? this.bodySmallMuted,
     labelMuted: labelMuted ?? this.labelMuted,
@@ -318,6 +329,7 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
     return AppTextStyles(
       sectionLabel: TextStyle.lerp(sectionLabel, other.sectionLabel, t)!,
       bodyMuted: TextStyle.lerp(bodyMuted, other.bodyMuted, t)!,
+      bodyLargeMuted: TextStyle.lerp(bodyLargeMuted, other.bodyLargeMuted, t)!,
       bodyOnSurface: TextStyle.lerp(bodyOnSurface, other.bodyOnSurface, t)!,
       bodySmallMuted: TextStyle.lerp(bodySmallMuted, other.bodySmallMuted, t)!,
       labelMuted: TextStyle.lerp(labelMuted, other.labelMuted, t)!,
