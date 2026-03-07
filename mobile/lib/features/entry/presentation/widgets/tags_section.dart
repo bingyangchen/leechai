@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:mobile/features/entry/data/repositories/tag.dart' show TagRepository;
+import 'package:mobile/shared/theme/app_theme.dart';
 
 class TagsSection extends StatefulWidget {
   const TagsSection({
@@ -143,17 +144,14 @@ class _TagsSectionState extends State<TagsSection> {
       });
     }
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final appTextStyles = AppTextStyles.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '標籤',
-            style: theme.textTheme.titleSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
+          Text('標籤', style: appTextStyles.sectionLabel),
           const SizedBox(height: 8),
           InputDecorator(
             key: _anchorKey,
@@ -176,7 +174,7 @@ class _TagsSectionState extends State<TagsSection> {
                           deleteIcon: Icon(
                             Icons.close,
                             size: 18,
-                            color: theme.colorScheme.onSurfaceVariant,
+                            color: colorScheme.onSurfaceVariant,
                           ),
                           onDeleted: widget.enabled
                               ? () => widget.onRemoveTag(tag)
