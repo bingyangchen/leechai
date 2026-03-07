@@ -134,16 +134,15 @@ class AppTheme {
     );
   }
 
+  static const double _labelSize = 11;
   static const double _sectionLabelSize = 14;
-  static const double _bodyMutedSize = 14;
-  static const double _bodyOnSurfaceSize = 14;
-  static const double _bodySmallMutedSize = 12;
-  static const double _labelMutedSize = 11;
-  static const double _titleEmphasisSize = 16;
-  static const double _titleLargeEmphasisSize = 22;
-  static const double _titleSmallEmphasisSize = 14;
-  static const double _headlineEmphasisSize = 28;
-  static const double _headlineLargeEmphasisSize = 32;
+  static const double _bodySmallSize = 12;
+  static const double _bodySize = 14;
+  static const double _titleSmallSize = 14;
+  static const double _titleSize = 16;
+  static const double _titleLargeSize = 22;
+  static const double _headlineSize = 28;
+  static const double _headlineLargeSize = 32;
 
   static AppTextStyles _appTextStyles(TextTheme textTheme, ColorScheme colorScheme) {
     const w400 = FontWeight.w400;
@@ -167,41 +166,27 @@ class AppTheme {
         w500,
         onSurfaceVariant,
       ),
-      bodyMuted: merge(textTheme.bodyMedium, _bodyMutedSize, w400, onSurfaceVariant),
-      bodyOnSurface: merge(textTheme.bodyMedium, _bodyOnSurfaceSize, w400, onSurface),
+      bodyMuted: merge(textTheme.bodyMedium, _bodySize, w400, onSurfaceVariant),
+      bodyOnSurface: merge(textTheme.bodyMedium, _bodySize, w400, onSurface),
       bodySmallMuted: merge(
         textTheme.bodySmall,
-        _bodySmallMutedSize,
+        _bodySmallSize,
         w400,
         onSurfaceVariant,
       ),
       labelMuted: mergePreserveWeight(
         textTheme.labelSmall,
-        _labelMutedSize,
+        _labelSize,
         onSurfaceVariant,
       ),
-      titleEmphasis: merge(textTheme.titleMedium, _titleEmphasisSize, w600, onSurface),
-      titleLargeEmphasis: merge(
-        textTheme.titleLarge,
-        _titleLargeEmphasisSize,
-        w600,
-        onSurface,
-      ),
-      titleSmallEmphasis: merge(
-        textTheme.titleSmall,
-        _titleSmallEmphasisSize,
-        w600,
-        onSurface,
-      ),
-      headlineEmphasis: merge(
-        textTheme.headlineMedium,
-        _headlineEmphasisSize,
-        bold,
-        onSurface,
-      ),
+      titleMuted: merge(textTheme.titleMedium, _titleSize, w400, onSurfaceVariant),
+      titleEmphasis: merge(textTheme.titleMedium, _titleSize, w600, onSurface),
+      titleLargeEmphasis: merge(textTheme.titleLarge, _titleLargeSize, w600, onSurface),
+      titleSmallEmphasis: merge(textTheme.titleSmall, _titleSmallSize, w600, onSurface),
+      headlineEmphasis: merge(textTheme.headlineMedium, _headlineSize, bold, onSurface),
       headlineLargeEmphasis: merge(
         textTheme.headlineLarge,
-        _headlineLargeEmphasisSize,
+        _headlineLargeSize,
         bold,
         onSurface,
       ),
@@ -274,6 +259,7 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
     required this.bodyOnSurface,
     required this.bodySmallMuted,
     required this.labelMuted,
+    required this.titleMuted,
     required this.titleEmphasis,
     required this.titleLargeEmphasis,
     required this.titleSmallEmphasis,
@@ -286,6 +272,7 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
   final TextStyle bodyOnSurface;
   final TextStyle bodySmallMuted;
   final TextStyle labelMuted;
+  final TextStyle titleMuted;
   final TextStyle titleEmphasis;
   final TextStyle titleLargeEmphasis;
   final TextStyle titleSmallEmphasis;
@@ -305,6 +292,7 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
     TextStyle? bodyOnSurface,
     TextStyle? bodySmallMuted,
     TextStyle? labelMuted,
+    TextStyle? titleMuted,
     TextStyle? titleEmphasis,
     TextStyle? titleLargeEmphasis,
     TextStyle? titleSmallEmphasis,
@@ -316,6 +304,7 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
     bodyOnSurface: bodyOnSurface ?? this.bodyOnSurface,
     bodySmallMuted: bodySmallMuted ?? this.bodySmallMuted,
     labelMuted: labelMuted ?? this.labelMuted,
+    titleMuted: titleMuted ?? this.titleMuted,
     titleEmphasis: titleEmphasis ?? this.titleEmphasis,
     titleLargeEmphasis: titleLargeEmphasis ?? this.titleLargeEmphasis,
     titleSmallEmphasis: titleSmallEmphasis ?? this.titleSmallEmphasis,
@@ -332,6 +321,7 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
       bodyOnSurface: TextStyle.lerp(bodyOnSurface, other.bodyOnSurface, t)!,
       bodySmallMuted: TextStyle.lerp(bodySmallMuted, other.bodySmallMuted, t)!,
       labelMuted: TextStyle.lerp(labelMuted, other.labelMuted, t)!,
+      titleMuted: TextStyle.lerp(titleMuted, other.titleMuted, t)!,
       titleEmphasis: TextStyle.lerp(titleEmphasis, other.titleEmphasis, t)!,
       titleLargeEmphasis: TextStyle.lerp(
         titleLargeEmphasis,

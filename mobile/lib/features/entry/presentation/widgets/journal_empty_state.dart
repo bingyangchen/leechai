@@ -23,9 +23,7 @@ class JournalEmptyState extends StatelessWidget {
             const SizedBox(height: 24),
             Text(
               '這個月還沒有任何紀錄喔！',
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
+              style: appTextStyles.titleMuted,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
