@@ -12,6 +12,7 @@ import 'package:mobile/features/statistics/data/services/statistics.dart';
 import 'package:mobile/features/statistics/domain/date_range_preset.dart';
 import 'package:mobile/features/statistics/presentation/constants/category_colors.dart';
 import 'package:mobile/features/statistics/presentation/widgets/category_monthly_bar_chart.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 
 class CategoryDetailPage extends StatefulWidget {
@@ -156,25 +157,26 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '選定區間 (${widget.dateRange.toRangeLabel()})',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        widget.privacyMode
-                            ? '****'
-                            : '\$${formatAmountForDisplay(data.total)}',
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+                  child: Builder(
+                    builder: (context) {
+                      final appTextStyles = AppTextStyles.of(context);
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '選定區間 (${widget.dateRange.toRangeLabel()})',
+                            style: appTextStyles.bodySmallMuted,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            widget.privacyMode
+                                ? '****'
+                                : '\$${formatAmountForDisplay(data.total)}',
+                            style: appTextStyles.headlineEmphasis,
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ),
               ),
@@ -193,12 +195,7 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> {
                           ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                         ),
                         const SizedBox(height: 16),
-                        Text(
-                          '此區間尚無紀錄',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                        ),
+                        Text('此區間尚無紀錄', style: AppTextStyles.of(context).titleMuted),
                       ],
                     ),
                   ),

@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/features/statistics/domain/category_breakdown_item.dart';
 import 'package:mobile/features/statistics/presentation/constants/category_colors.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 
 class CategoryDonutChart extends StatelessWidget {
@@ -24,7 +25,7 @@ class CategoryDonutChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final appTextStyles = AppTextStyles.of(context);
     final displayAmount = privacyMode ? '****' : formatAmountForDisplay(total);
     final touched = touchedIndex;
     final isValidTouched =
@@ -71,10 +72,7 @@ class CategoryDonutChart extends StatelessWidget {
             children: [
               Text(
                 displayLabel,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  letterSpacing: 0.5,
-                ),
+                style: appTextStyles.bodySmallMuted,
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -88,9 +86,7 @@ class CategoryDonutChart extends StatelessWidget {
                             ? '****'
                             : formatAmountForDisplay(breakdown[touched].amount))
                       : displayAmount,
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: appTextStyles.titleLargeEmphasis,
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -107,7 +103,8 @@ class CategoryChartEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    final appTextStyles = AppTextStyles.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
       child: Column(
@@ -117,17 +114,12 @@ class CategoryChartEmptyState extends StatelessWidget {
             height: 160,
             child: CustomPaint(
               painter: _EmptyDonutPainter(
-                color: theme.colorScheme.outline.withValues(alpha: 0.3),
+                color: colorScheme.outline.withValues(alpha: 0.3),
               ),
             ),
           ),
           const SizedBox(height: 24),
-          Text(
-            '尚無紀錄',
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
+          Text('尚無紀錄', style: appTextStyles.titleMuted),
         ],
       ),
     );

@@ -191,7 +191,7 @@ class AppTheme {
       bodyLarge: merge(textTheme.bodyLarge, _bodyLargeSize, w400, onSurface),
       titleMuted: merge(textTheme.titleMedium, _titleSize, w500, onSurfaceVariant),
       titleEmphasis: merge(textTheme.titleMedium, _titleSize, w600, onSurface),
-      titleLargeEmphasis: merge(textTheme.titleLarge, _titleLargeSize, w600, onSurface),
+      titleLargeEmphasis: merge(textTheme.titleLarge, _titleLargeSize, bold, onSurface),
       titleSmallEmphasis: merge(textTheme.titleSmall, _titleSmallSize, w600, onSurface),
       headlineEmphasis: merge(textTheme.headlineMedium, _headlineSize, bold, onSurface),
       headlineLargeEmphasis: merge(
