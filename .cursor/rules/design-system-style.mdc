@@ -11,7 +11,8 @@ When writing or editing code that involves **style** (colors, typography, spacin
 ## Source of truth
 
 - **Flutter (mobile)**: `mobile/lib/shared/theme/app_theme.dart`
-  - `AppTheme.light` / `AppTheme.dark` define `ThemeData` with `ColorScheme` and theme extensions.
+  - `AppTheme.light` / `AppTheme.dark` define `ThemeData` with `ColorScheme`, `textTheme`, and theme extensions.
+  - **Typography**: `textTheme` is built from `Typography.material2021(colorScheme)` (Material 2021 type scale). Light theme uses `.black`, dark uses `.white`; colors come from `colorScheme`. To add a brand font later, derive `textTheme` with `.apply(fontFamily: '...')` in `_textTheme`.
 
 ## Do
 
@@ -19,11 +20,12 @@ When writing or editing code that involves **style** (colors, typography, spacin
   - `AccountingColors.of(context)` → `income`, `expense`, `transfer`, `borrow`, `repay`, `liability`, `neutral`
   - `ChartPalette.of(context)` → `palette` for charts
   - `HeroCardColors.of(context)` → `content`, `contentMuted`, `shadowSubtle`
-- **Typography**: Use `Theme.of(context).textTheme` (e.g. `bodySmall`, `titleMedium`, `headlineMedium`). Adjust only when needed via `copyWith(color: ...)` using theme colors.
+- **Typography**: Use `Theme.of(context).textTheme` (e.g. `displayLarge`, `headlineMedium`, `titleMedium`, `bodyLarge`, `bodySmall`, `labelLarge`). Adjust only when needed via `copyWith(color: ...)` using theme colors.
 - **Opacity**: Prefer `colorScheme.onSurfaceVariant.withValues(alpha: 0.5)` (or similar) over hardcoded transparent colors.
 - **New tokens**: Add new colors or semantic tokens in `app_theme.dart` (and to the right extension or `ColorScheme`), then reference them via theme in UI code.
 
 ## Don't
 
 - Don't hardcode `Color(0xFF...)` or `Colors.xxx` in UI widgets; use theme/context so light/dark and semantics stay consistent.
+- Don't hardcode font family or ad-hoc `TextStyle(fontSize: ..., fontWeight: ...)` in UI; use `textTheme` and override only when needed (e.g. `copyWith(color: ...)`).
 - Don't define parallel color or text-style constants in feature code; keep a single source in `app_theme.dart`.

@@ -71,6 +71,11 @@ class _ChartPaletteValues {
 class AppTheme {
   AppTheme._();
 
+  static TextTheme _textTheme(ColorScheme colorScheme, Brightness brightness) {
+    final typography = Typography.material2021(colorScheme: colorScheme);
+    return brightness == Brightness.light ? typography.black : typography.white;
+  }
+
   static ThemeData get light {
     const primary = _ShibaColors.primaryLight;
     final colorScheme = ColorScheme.light(
@@ -88,9 +93,11 @@ class AppTheme {
       error: const Color(0xFFBA1A1A),
       onError: Colors.white,
     );
+    final textTheme = _textTheme(colorScheme, Brightness.light);
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
+      textTheme: textTheme,
       dividerColor: const Color(0xFFE8DED5),
       inputDecorationTheme: InputDecorationTheme(
         hintStyle: TextStyle(
@@ -99,7 +106,12 @@ class AppTheme {
       ),
       appBarTheme: AppBarTheme(
         toolbarHeight: 36,
-        titleTextStyle: TextStyle(fontSize: 16, color: colorScheme.onSurface),
+        titleTextStyle:
+            textTheme.titleMedium?.copyWith(
+              fontSize: 16,
+              color: colorScheme.onSurface,
+            ) ??
+            TextStyle(fontSize: 16, color: colorScheme.onSurface),
       ),
       extensions: [
         AccountingColors(
@@ -138,9 +150,11 @@ class AppTheme {
       error: const Color(0xFFFFB4AB),
       onError: const Color(0xFF690005),
     );
+    final textTheme = _textTheme(colorScheme, Brightness.dark);
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
+      textTheme: textTheme,
       dividerColor: const Color(0xFF5C5048),
       inputDecorationTheme: InputDecorationTheme(
         hintStyle: TextStyle(
@@ -149,7 +163,12 @@ class AppTheme {
       ),
       appBarTheme: AppBarTheme(
         toolbarHeight: 36,
-        titleTextStyle: TextStyle(fontSize: 16, color: colorScheme.onSurface),
+        titleTextStyle:
+            textTheme.titleMedium?.copyWith(
+              fontSize: 16,
+              color: colorScheme.onSurface,
+            ) ??
+            TextStyle(fontSize: 16, color: colorScheme.onSurface),
       ),
       extensions: [
         AccountingColors(
