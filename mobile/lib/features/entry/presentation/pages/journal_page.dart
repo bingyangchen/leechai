@@ -36,7 +36,6 @@ class _JournalPageState extends State<JournalPage> {
   SyncStatus _syncStatus = SyncStatus.idle;
   final ScrollController _scrollController = ScrollController();
   static const double _summaryCardHeight = 140;
-  static const double _kCollapsedSummaryBarHeight = 44;
   bool _showCollapsedSummary = false;
   late Future<_JournalData> _future;
   DateTime? _currentStickyDate;
@@ -320,7 +319,7 @@ class _JournalPageState extends State<JournalPage> {
                             if (showStickyBar)
                               Positioned(
                                 top: _showCollapsedSummary
-                                    ? _kCollapsedSummaryBarHeight
+                                    ? CollapsedSummaryBar.height
                                     : 0,
                                 left: 0,
                                 right: 0,
