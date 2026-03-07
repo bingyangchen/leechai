@@ -46,9 +46,21 @@ class NetWorthLineChart extends StatelessWidget {
       xLabels[data.length - 1] = '${d.month}月';
     }
 
+    String formatScaled(double scaled, String suffix) {
+      final abs = scaled.abs();
+      final sign = scaled < 0 ? '-' : '';
+      if (abs >= 100) return '$sign${scaled.round()}$suffix';
+      if (abs == abs.roundToDouble()) return '$sign${scaled.round()}$suffix';
+      final s = abs.toStringAsFixed(1);
+      return '$sign${s.endsWith('.0') ? abs.toInt() : s}$suffix';
+    }
+
     String formatY(double v) {
       if (privacyMode) return '****';
-      if (v.abs() >= 10000) return '${(v / 10000).round()}萬';
+      final abs = v.abs();
+      if (abs >= 1000000000) return formatScaled(v / 1000000000, 'T');
+      if (abs >= 1000000) return formatScaled(v / 1000000, 'M');
+      if (abs >= 1000) return formatScaled(v / 1000, 'K');
       return v.round().toString();
     }
 
@@ -67,7 +79,7 @@ class NetWorthLineChart extends StatelessWidget {
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 36,
+              reservedSize: 44,
               interval: range / 4,
               getTitlesWidget: (v, meta) {
                 final nearBottom = (v - axisMinY).abs() < range * 0.02;

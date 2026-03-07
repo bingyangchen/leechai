@@ -112,7 +112,6 @@ class _JournalPageState extends State<JournalPage> {
   }
 
   Future<_JournalData> _loadData() async {
-    await Future.delayed(const Duration(seconds: 1)); // TODO: remove this
     final rawEntries = await EntryRepository.getByMonth(_selectedMonth);
     final entries = rawEntries.where((e) {
       final typeStr = e['type'] as String? ?? 'expense';
@@ -156,6 +155,7 @@ class _JournalPageState extends State<JournalPage> {
         _future = _loadData();
       });
       await _future;
+      await Future.delayed(const Duration(seconds: 1)); // TODO: remove this
       if (mounted) setState(() => _syncStatus = SyncStatus.idle);
     });
   }
