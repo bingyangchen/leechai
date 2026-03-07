@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 typedef DateTimePickerOnConfirm = void Function(DateTime value, {bool fromDrag});
 
@@ -23,10 +24,10 @@ class DateTimePickerSheet extends StatefulWidget {
 class _DateTimePickerSheetState extends State<DateTimePickerSheet> {
   static const int _minYear = 1970;
   static const int _maxYear = 9999;
-  static const double _wheelItemHeight = 44;
-  static const double _wheelWidthYear = 50;
-  static const double _wheelWidthTwoDigit = 36;
-  static const double _wheelWidthAmPm = 40;
+  static const double _wheelItemHeight = 36;
+  static const double _wheelWidthYear = 58;
+  static const double _wheelWidthTwoDigit = 44;
+  static const double _wheelWidthAmPm = 48;
   static const double _separatorPadding = 0;
 
   bool _didConfirm = false;
@@ -308,7 +309,10 @@ class _DateTimePickerSheetState extends State<DateTimePickerSheet> {
       diameterRatio: 1.2,
       physics: const FixedExtentScrollPhysics(),
       perspective: 0.005,
-      onSelectedItemChanged: (i) => onChanged(items[i]),
+      onSelectedItemChanged: (i) {
+        HapticFeedback.selectionClick();
+        onChanged(items[i]);
+      },
       childDelegate: ListWheelChildBuilderDelegate(
         childCount: items.length,
         builder: (context, i) {
