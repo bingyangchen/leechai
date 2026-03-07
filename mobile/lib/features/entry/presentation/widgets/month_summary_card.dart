@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/features/entry/domain/entry_type.dart';
 import 'package:mobile/features/entry/presentation/constants/entry_type_colors.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 
 class MonthSummaryCard extends StatelessWidget {
@@ -24,7 +25,8 @@ class MonthSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    final appTextStyles = AppTextStyles.of(context);
     final incomeStr = privacyMode ? '****' : formatAmountForDisplay(income);
     final expenseStr = privacyMode ? '****' : formatAmountForDisplay(expense);
     final balanceStr = privacyMode ? '****' : _formatBalance(balance);
@@ -33,61 +35,39 @@ class MonthSummaryCard extends StatelessWidget {
       child: Card(
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        color: theme.colorScheme.surfaceContainerHighest,
+        color: colorScheme.surfaceContainerHighest,
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                '本月結餘',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
+              Text('本月結餘', style: appTextStyles.sectionLabel),
               const SizedBox(height: 4),
-              Text(
-                balanceStr,
-                style: theme.textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              Text(balanceStr, style: appTextStyles.headlineEmphasis),
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   Column(
                     children: [
-                      Text(
-                        '本月支出',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
+                      Text('本月支出', style: appTextStyles.bodySmallMuted),
                       const SizedBox(height: 2),
                       Text(
                         expenseStr,
-                        style: theme.textTheme.titleMedium?.copyWith(
+                        style: appTextStyles.titleEmphasis.copyWith(
                           color: EntryTypeColors.forType(context, EntryType.expense),
-                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
                   ),
                   Column(
                     children: [
-                      Text(
-                        '本月收入',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
+                      Text('本月收入', style: appTextStyles.bodySmallMuted),
                       const SizedBox(height: 2),
                       Text(
                         incomeStr,
-                        style: theme.textTheme.titleMedium?.copyWith(
+                        style: appTextStyles.titleEmphasis.copyWith(
                           color: EntryTypeColors.forType(context, EntryType.income),
-                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
