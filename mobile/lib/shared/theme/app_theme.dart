@@ -142,7 +142,7 @@ class AppTheme {
   static const double _bodyLargeSize = 16;
   static const double _titleSmallSize = 14;
   static const double _titleSize = 16;
-  static const double _titleLargeSize = 22;
+  static const double _titleLargeSize = 24;
   static const double _headlineSize = 28;
   static const double _headlineLargeSize = 32;
 

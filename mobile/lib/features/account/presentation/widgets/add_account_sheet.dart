@@ -287,11 +287,7 @@ class _AddAccountFormState extends State<_AddAccountForm> {
                             contentPadding: EdgeInsets.zero,
                             isDense: true,
                           ),
-                          style:
-                              theme.textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ) ??
-                              appTextStyles.titleLargeEmphasis,
+                          style: appTextStyles.titleLargeEmphasis,
                           textAlign: TextAlign.left,
                           enabled: !_isSubmitting,
                           validator: (value) {
