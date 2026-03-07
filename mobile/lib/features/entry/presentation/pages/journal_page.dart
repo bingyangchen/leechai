@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/features/account/data/repositories/account.dart'
@@ -21,6 +20,7 @@ import 'package:mobile/features/entry/presentation/widgets/transaction_row.dart'
 import 'package:mobile/shared/constants/refresh_trigger.dart';
 import 'package:mobile/shared/utils/refresh_snap_back.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
+import 'package:mobile/shared/widgets/app_refresh_indicator.dart';
 import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
 
 class JournalPage extends StatefulWidget {
@@ -217,10 +217,7 @@ class _JournalPageState extends State<JournalPage> {
                             controller: _scrollController,
                             physics: const AlwaysScrollableScrollPhysics(),
                             slivers: [
-                              CupertinoSliverRefreshControl(
-                                refreshTriggerPullDistance: kRefreshTriggerPullDistance,
-                                onRefresh: _onRefresh,
-                              ),
+                              appSliverRefreshControl(onRefresh: _onRefresh),
                               SliverToBoxAdapter(
                                 child: MonthSummaryCard(
                                   income: summary.income,
@@ -231,7 +228,14 @@ class _JournalPageState extends State<JournalPage> {
                               ),
                               SliverFillRemaining(
                                 hasScrollBody: false,
-                                child: const JournalEmptyState(),
+                                child: Padding(
+                                  padding: EdgeInsets.only(
+                                    top: _syncStatus == SyncStatus.syncing
+                                        ? kRefreshIndicatorExtent
+                                        : 0,
+                                  ),
+                                  child: const Center(child: JournalEmptyState()),
+                                ),
                               ),
                             ],
                           );
@@ -247,11 +251,7 @@ class _JournalPageState extends State<JournalPage> {
                               controller: _scrollController,
                               physics: const AlwaysScrollableScrollPhysics(),
                               slivers: [
-                                CupertinoSliverRefreshControl(
-                                  refreshTriggerPullDistance:
-                                      kRefreshTriggerPullDistance,
-                                  onRefresh: _onRefresh,
-                                ),
+                                appSliverRefreshControl(onRefresh: _onRefresh),
                                 SliverToBoxAdapter(
                                   child: MonthSummaryCard(
                                     income: summary.income,

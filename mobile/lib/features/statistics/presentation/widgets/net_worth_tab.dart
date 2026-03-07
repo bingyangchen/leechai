@@ -1,14 +1,13 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/features/statistics/data/services/statistics.dart';
 import 'package:mobile/features/statistics/domain/net_worth_range.dart';
 import 'package:mobile/features/statistics/domain/net_worth_snapshot.dart';
 import 'package:mobile/features/statistics/presentation/widgets/net_worth_line_chart.dart';
-import 'package:mobile/shared/constants/refresh_trigger.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/refresh_snap_back.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
+import 'package:mobile/shared/widgets/app_refresh_indicator.dart';
 import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
 
 class NetWorthTab extends StatefulWidget {
@@ -77,8 +76,7 @@ class _NetWorthTabState extends State<NetWorthTab> {
         controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
-          CupertinoSliverRefreshControl(
-            refreshTriggerPullDistance: kRefreshTriggerPullDistance,
+          appSliverRefreshControl(
             onRefresh: () => runRefreshWithSnapBack(_scrollController, () async {
               _onRefresh();
               await _future;

@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile/features/account/data/repositories/account.dart'
@@ -18,10 +17,10 @@ import 'package:mobile/features/entry/presentation/entry_list_handlers.dart';
 import 'package:mobile/features/entry/presentation/widgets/sticky_date_header.dart'
     show buildDateHeaderSection;
 import 'package:mobile/features/entry/presentation/widgets/transaction_row.dart';
-import 'package:mobile/shared/constants/refresh_trigger.dart';
 import 'package:mobile/shared/utils/refresh_snap_back.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
+import 'package:mobile/shared/widgets/app_refresh_indicator.dart';
 import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
 
 class AccountDetailPage extends StatefulWidget {
@@ -321,8 +320,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
                   parent: AlwaysScrollableScrollPhysics(),
                 ),
                 slivers: [
-                  CupertinoSliverRefreshControl(
-                    refreshTriggerPullDistance: kRefreshTriggerPullDistance,
+                  appSliverRefreshControl(
                     onRefresh: () =>
                         runRefreshWithSnapBack(_scrollController, () async {
                           _onRefresh();
@@ -365,8 +363,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
                 parent: AlwaysScrollableScrollPhysics(),
               ),
               slivers: [
-                CupertinoSliverRefreshControl(
-                  refreshTriggerPullDistance: kRefreshTriggerPullDistance,
+                appSliverRefreshControl(
                   onRefresh: () => runRefreshWithSnapBack(_scrollController, () async {
                     _onRefresh();
                     await _future;

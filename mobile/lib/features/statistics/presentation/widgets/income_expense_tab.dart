@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/features/entry/domain/entry_type.dart';
@@ -10,8 +9,8 @@ import 'package:mobile/features/statistics/presentation/constants/category_color
 import 'package:mobile/features/statistics/presentation/pages/category_detail_page.dart';
 import 'package:mobile/features/statistics/presentation/widgets/category_donut_chart.dart';
 import 'package:mobile/features/statistics/presentation/widgets/category_ranking_tile.dart';
-import 'package:mobile/shared/constants/refresh_trigger.dart';
 import 'package:mobile/shared/utils/refresh_snap_back.dart';
+import 'package:mobile/shared/widgets/app_refresh_indicator.dart';
 import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
 
 class IncomeExpenseTab extends StatefulWidget {
@@ -109,8 +108,7 @@ class _IncomeExpenseTabState extends State<IncomeExpenseTab> {
         controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
-          CupertinoSliverRefreshControl(
-            refreshTriggerPullDistance: kRefreshTriggerPullDistance,
+          appSliverRefreshControl(
             onRefresh: () => runRefreshWithSnapBack(_scrollController, () async {
               _onRefresh();
               await _future;
