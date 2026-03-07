@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/features/statistics/domain/net_worth_snapshot.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 
 class NetWorthLineChart extends StatelessWidget {
@@ -11,18 +12,12 @@ class NetWorthLineChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final primary = theme.colorScheme.primary;
+    final colorScheme = Theme.of(context).colorScheme;
+    final appTextStyles = AppTextStyles.of(context);
+    final primary = colorScheme.primary;
 
     if (data.isEmpty || data.length == 1) {
-      return Center(
-        child: Text(
-          '資料不足',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-      );
+      return Center(child: Text('資料不足', style: appTextStyles.bodyMuted));
     }
 
     final spots = data.asMap().entries.map((e) {
@@ -71,7 +66,7 @@ class NetWorthLineChart extends StatelessWidget {
           drawVerticalLine: false,
           horizontalInterval: range / 4,
           getDrawingHorizontalLine: (v) => FlLine(
-            color: theme.colorScheme.outline.withValues(alpha: 0.15),
+            color: colorScheme.outline.withValues(alpha: 0.15),
             strokeWidth: 1,
           ),
         ),
@@ -87,12 +82,7 @@ class NetWorthLineChart extends StatelessWidget {
                 if (nearBottom || nearTop) return const SizedBox.shrink();
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
-                  child: Text(
-                    formatY(v),
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
+                  child: Text(formatY(v), style: appTextStyles.labelSmallMuted),
                 );
               },
             ),
@@ -112,12 +102,7 @@ class NetWorthLineChart extends StatelessWidget {
                 if (label.isEmpty) return const SizedBox.shrink();
                 return Padding(
                   padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                    label,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
+                  child: Text(label, style: appTextStyles.labelSmallMuted),
                 );
               },
             ),
@@ -133,7 +118,7 @@ class NetWorthLineChart extends StatelessWidget {
             return spotIndexes.map((index) {
               return TouchedSpotIndicatorData(
                 FlLine(
-                  color: theme.colorScheme.outline.withValues(alpha: 0.3),
+                  color: colorScheme.outline.withValues(alpha: 0.3),
                   strokeWidth: 1,
                   dashArray: const [4, 4],
                 ),
@@ -143,14 +128,14 @@ class NetWorthLineChart extends StatelessWidget {
                     radius: 4,
                     color: primary,
                     strokeWidth: 2,
-                    strokeColor: theme.colorScheme.surface,
+                    strokeColor: colorScheme.surface,
                   ),
                 ),
               );
             }).toList();
           },
           touchTooltipData: LineTouchTooltipData(
-            getTooltipColor: (_) => theme.colorScheme.surfaceContainerHighest,
+            getTooltipColor: (_) => colorScheme.surfaceContainerHighest,
             tooltipBorderRadius: BorderRadius.circular(8),
             getTooltipItems: (spots) {
               return spots.map((s) {
@@ -160,11 +145,12 @@ class NetWorthLineChart extends StatelessWidget {
                 final val = privacyMode
                     ? '****'
                     : formatAmountForDisplay(data[i].netWorth);
-                final style = theme.textTheme.bodySmall;
-                if (style == null) return null;
                 final dateStr =
                     '${d.year}/${d.month.toString().padLeft(2, '0')}/${d.day.toString().padLeft(2, '0')}';
-                return LineTooltipItem('$dateStr\n\$$val', style);
+                return LineTooltipItem(
+                  '$dateStr\n\$$val',
+                  appTextStyles.bodySmallMuted,
+                );
               }).toList();
             },
           ),

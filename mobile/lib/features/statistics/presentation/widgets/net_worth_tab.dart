@@ -152,7 +152,8 @@ class _NetWorthTabState extends State<NetWorthTab> {
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    final theme = Theme.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    final appTextStyles = AppTextStyles.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
       child: Column(
@@ -160,21 +161,14 @@ class _NetWorthTabState extends State<NetWorthTab> {
           Icon(
             Icons.show_chart_outlined,
             size: 64,
-            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
-          Text(
-            '尚無資料',
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
+          Text('尚無資料', style: appTextStyles.titleMuted),
           const SizedBox(height: 8),
           Text(
             '新增記帳後即可查看淨值趨勢',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+            style: appTextStyles.bodySmallMuted,
             textAlign: TextAlign.center,
           ),
         ],
@@ -183,7 +177,8 @@ class _NetWorthTabState extends State<NetWorthTab> {
   }
 
   Widget _buildHeroMetrics(BuildContext context, double netWorth, double netChange) {
-    final theme = Theme.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    final appTextStyles = AppTextStyles.of(context);
     final netStr = widget.privacyMode ? '****' : formatAmountForDisplay(netWorth);
     final changeStr = widget.privacyMode
         ? '****'
@@ -191,28 +186,16 @@ class _NetWorthTabState extends State<NetWorthTab> {
               ? '+\$${formatAmountForDisplay(netChange)}'
               : '-\$${formatAmountForDisplay(-netChange)}');
     final accountingColors = AccountingColors.of(context);
-    final changeColor = netChange >= 0
-        ? accountingColors.income
-        : theme.colorScheme.error;
+    final changeColor = netChange >= 0 ? accountingColors.income : colorScheme.error;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '當前總淨值',
-            style: theme.textTheme.titleSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
+          Text('當前總淨值', style: appTextStyles.sectionLabel),
           const SizedBox(height: 4),
-          Text(
-            '\$$netStr',
-            style: theme.textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          Text('\$$netStr', style: appTextStyles.headlineEmphasis),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -224,7 +207,7 @@ class _NetWorthTabState extends State<NetWorthTab> {
               const SizedBox(width: 4),
               Text(
                 '區間淨變化 $changeStr',
-                style: theme.textTheme.bodyMedium?.copyWith(
+                style: appTextStyles.bodyMuted.copyWith(
                   color: changeColor,
                   fontWeight: FontWeight.w500,
                 ),
@@ -241,7 +224,7 @@ class _NetWorthTabState extends State<NetWorthTab> {
     double assetChange,
     double liabilityChange,
   ) {
-    final theme = Theme.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
     final incomeColor = AccountingColors.of(context).income;
     final assetStr = widget.privacyMode
         ? '****'
@@ -262,7 +245,7 @@ class _NetWorthTabState extends State<NetWorthTab> {
             child: _BreakdownChip(
               label: '總資產變化',
               value: assetStr,
-              valueColor: assetChange >= 0 ? incomeColor : theme.colorScheme.error,
+              valueColor: assetChange >= 0 ? incomeColor : colorScheme.error,
             ),
           ),
           const SizedBox(width: 12),
@@ -270,7 +253,7 @@ class _NetWorthTabState extends State<NetWorthTab> {
             child: _BreakdownChip(
               label: '總負債變化',
               value: liabilityStr,
-              valueColor: liabilityChange >= 0 ? theme.colorScheme.error : incomeColor,
+              valueColor: liabilityChange >= 0 ? colorScheme.error : incomeColor,
             ),
           ),
         ],
@@ -292,29 +275,22 @@ class _BreakdownChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    final appTextStyles = AppTextStyles.of(context);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
+          Text(label, style: appTextStyles.bodySmallMuted),
           const SizedBox(height: 4),
           Text(
             value,
-            style: theme.textTheme.titleSmall?.copyWith(
-              color: valueColor,
-              fontWeight: FontWeight.w600,
-            ),
+            style: appTextStyles.titleSmallEmphasis.copyWith(color: valueColor),
           ),
         ],
       ),
