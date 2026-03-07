@@ -145,7 +145,7 @@ class TransactionRow extends StatelessWidget {
                           color: colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(4),
                         ),
-                        child: Text('#$t', style: appTextStyles.labelMuted),
+                        child: Text('#$t', style: appTextStyles.labelSmallMuted),
                       ),
                     ),
                   ],
