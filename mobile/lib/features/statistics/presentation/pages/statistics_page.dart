@@ -119,6 +119,7 @@ class _StatisticsPageState extends State<StatisticsPage>
                   setState(() => _netWorthRange = r);
                 }
               },
+              side: BorderSide(color: Theme.of(context).colorScheme.outline),
             ),
           );
         }).toList(),

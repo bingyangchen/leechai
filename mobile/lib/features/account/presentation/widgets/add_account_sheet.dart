@@ -236,10 +236,12 @@ class _AddAccountFormState extends State<_AddAccountForm> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final appTextStyles = AppTextStyles.of(context);
     final isLiability = widget.type == AccountType.liability;
     final amountColor = isLiability
         ? AccountingColors.of(context).liability
-        : theme.colorScheme.primary;
+        : colorScheme.primary;
 
     return PopScope(
       canPop: !_hasUnsavedChanges,
@@ -289,7 +291,7 @@ class _AddAccountFormState extends State<_AddAccountForm> {
                               theme.textTheme.headlineSmall?.copyWith(
                                 fontWeight: FontWeight.w600,
                               ) ??
-                              TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+                              appTextStyles.titleLargeEmphasis,
                           textAlign: TextAlign.left,
                           enabled: !_isSubmitting,
                           validator: (value) {
@@ -314,12 +316,7 @@ class _AddAccountFormState extends State<_AddAccountForm> {
                         crossAxisAlignment: CrossAxisAlignment.baseline,
                         textBaseline: TextBaseline.alphabetic,
                         children: [
-                          Text(
-                            _amountLabel,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
+                          Text(_amountLabel, style: appTextStyles.titleMuted),
                           const SizedBox(width: 16),
                           Expanded(
                             child: TextFormField(
@@ -331,8 +328,7 @@ class _AddAccountFormState extends State<_AddAccountForm> {
                                 contentPadding: EdgeInsets.zero,
                                 isDense: true,
                               ),
-                              style: TextStyle(
-                                fontSize: 28,
+                              style: appTextStyles.headlineEmphasis.copyWith(
                                 fontWeight: FontWeight.w500,
                                 color: amountColor,
                               ),
@@ -356,12 +352,7 @@ class _AddAccountFormState extends State<_AddAccountForm> {
                       ),
                       if (widget.hasEntries && _isEdit) ...[
                         const SizedBox(height: 8),
-                        Text(
-                          '修改初始餘額會影響帳戶最終餘額',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
+                        Text('修改初始餘額會影響帳戶最終餘額', style: appTextStyles.bodySmallMuted),
                       ],
                     ],
                   ),
@@ -389,7 +380,7 @@ class _AddAccountFormState extends State<_AddAccountForm> {
                                   width: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    color: Theme.of(context).colorScheme.onPrimary,
+                                    color: colorScheme.onPrimary,
                                   ),
                                 )
                               : Text(_isEdit ? '儲存修改' : '儲存'),
