@@ -66,7 +66,7 @@ class AccountGroupSection extends StatelessWidget {
               padding: const EdgeInsets.only(left: 8),
               child: Text(
                 '${roiPercent! >= 0 ? '+' : ''}${roiPercent!.toStringAsFixed(1)}%',
-                style: theme.textTheme.labelMedium?.copyWith(
+                style: appTextStyles.labelMuted.copyWith(
                   color: roiPercent! >= 0
                       ? AccountingColors.of(context).income
                       : colorScheme.error,
