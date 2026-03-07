@@ -134,14 +134,14 @@ class AppTheme {
     );
   }
 
-  static const double _labelSmallSize = 11;
   static const double _labelSize = 12;
+  static const double _labelSmallSize = 11;
   static const double _sectionLabelSize = 14;
-  static const double _bodySmallSize = 12;
   static const double _bodySize = 14;
+  static const double _bodySmallSize = 12;
   static const double _bodyLargeSize = 16;
-  static const double _titleSmallSize = 14;
   static const double _titleSize = 16;
+  static const double _titleSmallSize = 14;
   static const double _titleLargeSize = 24;
   static const double _headlineSize = 28;
   static const double _headlineLargeSize = 32;
@@ -153,14 +153,12 @@ class AppTheme {
     const bold = FontWeight.bold;
     final onSurfaceVariant = colorScheme.onSurfaceVariant;
     final onSurface = colorScheme.onSurface;
-    TextStyle merge(TextStyle? base, double size, FontWeight weight, Color color) =>
+    TextStyle merge(TextStyle? base, double? size, FontWeight? weight, Color? color) =>
         (base ?? TextStyle()).copyWith(
-          fontSize: size,
-          fontWeight: weight,
-          color: color,
+          fontSize: size ?? base?.fontSize,
+          fontWeight: weight ?? base?.fontWeight,
+          color: color ?? base?.color,
         );
-    TextStyle mergePreserveWeight(TextStyle? base, double size, Color color) =>
-        (base ?? TextStyle()).copyWith(fontSize: size, color: color);
     return AppTextStyles(
       sectionLabel: merge(
         textTheme.titleSmall,
@@ -168,30 +166,29 @@ class AppTheme {
         w500,
         onSurfaceVariant,
       ),
-      labelSmallMuted: mergePreserveWeight(
+      labelSmallMuted: merge(
         textTheme.labelSmall,
         _labelSmallSize,
+        null,
         onSurfaceVariant,
       ),
-      labelMuted: mergePreserveWeight(
-        textTheme.labelMedium,
-        _labelSize,
-        onSurfaceVariant,
-      ),
+      labelMuted: merge(textTheme.labelMedium, _labelSize, null, onSurfaceVariant),
+      labelEmphasis: merge(textTheme.labelMedium, _labelSize, w600, onSurface),
+      body: merge(textTheme.bodyMedium, _bodySize, w400, onSurface),
       bodyMuted: merge(textTheme.bodyMedium, _bodySize, w400, onSurfaceVariant),
+      bodySmallMuted: merge(
+        textTheme.bodySmall,
+        _bodySmallSize,
+        null,
+        onSurfaceVariant,
+      ),
       bodyLargeMuted: merge(
         textTheme.bodyLarge,
         _bodyLargeSize,
         w400,
         onSurfaceVariant,
       ),
-      bodyOnSurface: merge(textTheme.bodyMedium, _bodySize, w400, onSurface),
-      bodySmallMuted: merge(
-        textTheme.bodySmall,
-        _bodySmallSize,
-        w400,
-        onSurfaceVariant,
-      ),
+      bodyLarge: merge(textTheme.bodyLarge, _bodyLargeSize, w400, onSurface),
       titleMuted: merge(textTheme.titleMedium, _titleSize, w500, onSurfaceVariant),
       titleEmphasis: merge(textTheme.titleMedium, _titleSize, w600, onSurface),
       titleLargeEmphasis: merge(textTheme.titleLarge, _titleLargeSize, w600, onSurface),
@@ -270,10 +267,12 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
     required this.sectionLabel,
     required this.bodyMuted,
     required this.bodyLargeMuted,
-    required this.bodyOnSurface,
+    required this.bodyLarge,
+    required this.body,
     required this.bodySmallMuted,
     required this.labelSmallMuted,
     required this.labelMuted,
+    required this.labelEmphasis,
     required this.titleMuted,
     required this.titleEmphasis,
     required this.titleLargeEmphasis,
@@ -283,12 +282,14 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
   });
 
   final TextStyle sectionLabel;
-  final TextStyle bodyMuted;
-  final TextStyle bodyOnSurface;
-  final TextStyle bodySmallMuted;
-  final TextStyle bodyLargeMuted;
   final TextStyle labelMuted;
   final TextStyle labelSmallMuted;
+  final TextStyle labelEmphasis;
+  final TextStyle body;
+  final TextStyle bodyMuted;
+  final TextStyle bodySmallMuted;
+  final TextStyle bodyLargeMuted;
+  final TextStyle bodyLarge;
   final TextStyle titleMuted;
   final TextStyle titleEmphasis;
   final TextStyle titleLargeEmphasis;
@@ -305,12 +306,14 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
   @override
   AppTextStyles copyWith({
     TextStyle? sectionLabel,
-    TextStyle? bodyMuted,
-    TextStyle? bodyLargeMuted,
-    TextStyle? bodyOnSurface,
-    TextStyle? bodySmallMuted,
     TextStyle? labelSmallMuted,
     TextStyle? labelMuted,
+    TextStyle? labelEmphasis,
+    TextStyle? body,
+    TextStyle? bodyMuted,
+    TextStyle? bodyLargeMuted,
+    TextStyle? bodyLarge,
+    TextStyle? bodySmallMuted,
     TextStyle? titleMuted,
     TextStyle? titleEmphasis,
     TextStyle? titleLargeEmphasis,
@@ -319,12 +322,14 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
     TextStyle? headlineLargeEmphasis,
   }) => AppTextStyles(
     sectionLabel: sectionLabel ?? this.sectionLabel,
-    bodyMuted: bodyMuted ?? this.bodyMuted,
-    bodyLargeMuted: bodyLargeMuted ?? this.bodyLargeMuted,
-    bodyOnSurface: bodyOnSurface ?? this.bodyOnSurface,
-    bodySmallMuted: bodySmallMuted ?? this.bodySmallMuted,
     labelSmallMuted: labelSmallMuted ?? this.labelSmallMuted,
     labelMuted: labelMuted ?? this.labelMuted,
+    labelEmphasis: labelEmphasis ?? this.labelEmphasis,
+    body: body ?? this.body,
+    bodyMuted: bodyMuted ?? this.bodyMuted,
+    bodyLargeMuted: bodyLargeMuted ?? this.bodyLargeMuted,
+    bodyLarge: bodyLarge ?? this.bodyLarge,
+    bodySmallMuted: bodySmallMuted ?? this.bodySmallMuted,
     titleMuted: titleMuted ?? this.titleMuted,
     titleEmphasis: titleEmphasis ?? this.titleEmphasis,
     titleLargeEmphasis: titleLargeEmphasis ?? this.titleLargeEmphasis,
@@ -340,10 +345,12 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
       sectionLabel: TextStyle.lerp(sectionLabel, other.sectionLabel, t)!,
       bodyMuted: TextStyle.lerp(bodyMuted, other.bodyMuted, t)!,
       bodyLargeMuted: TextStyle.lerp(bodyLargeMuted, other.bodyLargeMuted, t)!,
-      bodyOnSurface: TextStyle.lerp(bodyOnSurface, other.bodyOnSurface, t)!,
+      bodyLarge: TextStyle.lerp(bodyLarge, other.bodyLarge, t)!,
+      body: TextStyle.lerp(body, other.body, t)!,
       bodySmallMuted: TextStyle.lerp(bodySmallMuted, other.bodySmallMuted, t)!,
       labelSmallMuted: TextStyle.lerp(labelSmallMuted, other.labelSmallMuted, t)!,
       labelMuted: TextStyle.lerp(labelMuted, other.labelMuted, t)!,
+      labelEmphasis: TextStyle.lerp(labelEmphasis, other.labelEmphasis, t)!,
       titleMuted: TextStyle.lerp(titleMuted, other.titleMuted, t)!,
       titleEmphasis: TextStyle.lerp(titleEmphasis, other.titleEmphasis, t)!,
       titleLargeEmphasis: TextStyle.lerp(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/features/entry/presentation/pages/entry_page.dart';
 import 'package:mobile/features/profile/domain/profile_page_data.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
 
 class AchievementBadgeItem extends StatelessWidget {
   const AchievementBadgeItem({
@@ -42,9 +43,10 @@ class AchievementBadgeItem extends StatelessWidget {
   Widget build(BuildContext context) {
     const size = 72.0;
     const ringStrokeWidth = 4.0;
-    final theme = Theme.of(context);
-    final primary = theme.colorScheme.primary;
-    final primaryContainer = theme.colorScheme.primaryContainer;
+    final colorScheme = Theme.of(context).colorScheme;
+    final appTextStyles = AppTextStyles.of(context);
+    final primary = colorScheme.primary;
+    final primaryContainer = colorScheme.primaryContainer;
 
     Widget badgeIcon = SizedBox(
       width: size,
@@ -65,7 +67,7 @@ class AchievementBadgeItem extends StatelessWidget {
                     value: value,
                     strokeWidth: ringStrokeWidth,
                     strokeCap: StrokeCap.round,
-                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                    backgroundColor: colorScheme.surfaceContainerHighest,
                     valueColor: AlwaysStoppedAnimation<Color>(
                       primary.withValues(alpha: 0.5),
                     ),
@@ -114,7 +116,7 @@ class AchievementBadgeItem extends StatelessWidget {
                 size: 32,
                 color: item.isUnlocked
                     ? primary
-                    : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                    : colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
               ),
             ),
           ),
@@ -134,10 +136,9 @@ class AchievementBadgeItem extends StatelessWidget {
           width: 80,
           child: Text(
             item.name,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurface,
-              fontWeight: item.isUnlocked ? FontWeight.w600 : null,
-            ),
+            style: item.isUnlocked
+                ? appTextStyles.labelEmphasis
+                : appTextStyles.labelMuted,
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -150,14 +151,11 @@ class AchievementBadgeItem extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
-                color: theme.colorScheme.surfaceContainerHighest,
+                color: colorScheme.surfaceContainerHighest,
               ),
               child: Text(
                 '${item.current}/${item.target}',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontSize: 10,
-                ),
+                style: appTextStyles.labelSmallMuted,
               ),
             ),
           ),
@@ -177,11 +175,8 @@ class AchievementBadgeItem extends StatelessWidget {
               if (added == true) onEntryAdded?.call();
             },
             child: Text(
-              '立即記下第一筆帳！',
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w600,
-              ),
+              '立即開始記帳！',
+              style: appTextStyles.labelEmphasis.copyWith(color: colorScheme.primary),
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -195,7 +190,7 @@ class AchievementBadgeItem extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         decoration: BoxDecoration(
-          border: Border.all(color: theme.colorScheme.primary, width: 1.5),
+          border: Border.all(color: colorScheme.primary, width: 1.5),
           borderRadius: BorderRadius.circular(12),
         ),
         child: content,
