@@ -19,6 +19,7 @@ import 'package:mobile/features/entry/presentation/widgets/sticky_date_header.da
     show buildDateHeaderSection;
 import 'package:mobile/features/entry/presentation/widgets/transaction_row.dart';
 import 'package:mobile/shared/constants/refresh_trigger.dart';
+import 'package:mobile/shared/utils/refresh_snap_back.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
 import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
@@ -35,11 +36,18 @@ class AccountDetailPage extends StatefulWidget {
 class _AccountDetailPageState extends State<AccountDetailPage> {
   bool _privacyMode = false;
   late Future<_DetailData> _future;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _future = _loadData();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<_DetailData> _loadData() async {
@@ -306,20 +314,43 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
 
           final grouped = groupEntriesByDate(data.entries);
           if (data.entries.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.receipt_long_outlined,
-                    size: 64,
-                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
+            return HapticRefreshWrapper(
+              child: CustomScrollView(
+                controller: _scrollController,
+                physics: const BouncingScrollPhysics(
+                  parent: AlwaysScrollableScrollPhysics(),
+                ),
+                slivers: [
+                  CupertinoSliverRefreshControl(
+                    refreshTriggerPullDistance: kRefreshTriggerPullDistance,
+                    onRefresh: () =>
+                        runRefreshWithSnapBack(_scrollController, () async {
+                          _onRefresh();
+                          await _future;
+                        }),
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    '此帳戶尚無交易紀錄',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.receipt_long_outlined,
+                            size: 64,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.outline.withValues(alpha: 0.5),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            '此帳戶尚無交易紀錄',
+                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -329,13 +360,17 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
 
           return HapticRefreshWrapper(
             child: CustomScrollView(
+              controller: _scrollController,
+              physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics(),
+              ),
               slivers: [
                 CupertinoSliverRefreshControl(
                   refreshTriggerPullDistance: kRefreshTriggerPullDistance,
-                  onRefresh: () async {
+                  onRefresh: () => runRefreshWithSnapBack(_scrollController, () async {
                     _onRefresh();
                     await _future;
-                  },
+                  }),
                 ),
                 for (final e in grouped.entries) ...[
                   SliverToBoxAdapter(

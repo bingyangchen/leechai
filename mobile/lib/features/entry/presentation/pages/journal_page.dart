@@ -19,7 +19,7 @@ import 'package:mobile/features/entry/presentation/widgets/sticky_date_header.da
 import 'package:mobile/features/entry/presentation/widgets/sync_indicator.dart';
 import 'package:mobile/features/entry/presentation/widgets/transaction_row.dart';
 import 'package:mobile/shared/constants/refresh_trigger.dart';
-import 'package:mobile/shared/theme/app_theme.dart';
+import 'package:mobile/shared/utils/refresh_snap_back.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
 
@@ -112,6 +112,7 @@ class _JournalPageState extends State<JournalPage> {
   }
 
   Future<_JournalData> _loadData() async {
+    await Future.delayed(const Duration(seconds: 1)); // TODO: remove this
     final rawEntries = await EntryRepository.getByMonth(_selectedMonth);
     final entries = rawEntries.where((e) {
       final typeStr = e['type'] as String? ?? 'expense';
@@ -149,13 +150,14 @@ class _JournalPageState extends State<JournalPage> {
   }
 
   Future<void> _onRefresh() async {
-    setState(() {
-      _syncStatus = SyncStatus.syncing;
-      // TODO: sync data from remote server
-      _future = _loadData();
+    await runRefreshWithSnapBack(_scrollController, () async {
+      setState(() {
+        _syncStatus = SyncStatus.syncing;
+        _future = _loadData();
+      });
+      await _future;
+      if (mounted) setState(() => _syncStatus = SyncStatus.idle);
     });
-    await _future;
-    if (mounted) setState(() => _syncStatus = SyncStatus.idle);
   }
 
   void _onRefreshTrigger() {
@@ -166,8 +168,6 @@ class _JournalPageState extends State<JournalPage> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final appTextStyles = AppTextStyles.of(context);
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -185,17 +185,6 @@ class _JournalPageState extends State<JournalPage> {
               privacyMode: _privacyMode,
               onPrivacyModeToggle: () => setState(() => _privacyMode = !_privacyMode),
             ),
-            if (_syncStatus == SyncStatus.syncing)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                color: colorScheme.surfaceContainerHighest,
-                child: Text(
-                  '正在與雲端同步資料...',
-                  textAlign: TextAlign.center,
-                  style: appTextStyles.bodySmallMuted,
-                ),
-              ),
             Expanded(
               child: Stack(
                 children: [

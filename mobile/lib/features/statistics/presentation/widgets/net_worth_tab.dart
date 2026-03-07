@@ -7,6 +7,7 @@ import 'package:mobile/features/statistics/domain/net_worth_snapshot.dart';
 import 'package:mobile/features/statistics/presentation/widgets/net_worth_line_chart.dart';
 import 'package:mobile/shared/constants/refresh_trigger.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
+import 'package:mobile/shared/utils/refresh_snap_back.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
 
@@ -28,6 +29,7 @@ class NetWorthTab extends StatefulWidget {
 
 class _NetWorthTabState extends State<NetWorthTab> {
   late Future<List<NetWorthSnapshot>> _future;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -53,6 +55,7 @@ class _NetWorthTabState extends State<NetWorthTab> {
   @override
   void dispose() {
     widget.refreshTrigger?.removeListener(_onRefresh);
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -71,14 +74,15 @@ class _NetWorthTabState extends State<NetWorthTab> {
   Widget build(BuildContext context) {
     return HapticRefreshWrapper(
       child: CustomScrollView(
+        controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           CupertinoSliverRefreshControl(
             refreshTriggerPullDistance: kRefreshTriggerPullDistance,
-            onRefresh: () async {
+            onRefresh: () => runRefreshWithSnapBack(_scrollController, () async {
               _onRefresh();
               await _future;
-            },
+            }),
           ),
           SliverToBoxAdapter(
             child: Padding(

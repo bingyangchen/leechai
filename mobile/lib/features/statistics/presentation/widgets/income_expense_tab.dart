@@ -11,6 +11,7 @@ import 'package:mobile/features/statistics/presentation/pages/category_detail_pa
 import 'package:mobile/features/statistics/presentation/widgets/category_donut_chart.dart';
 import 'package:mobile/features/statistics/presentation/widgets/category_ranking_tile.dart';
 import 'package:mobile/shared/constants/refresh_trigger.dart';
+import 'package:mobile/shared/utils/refresh_snap_back.dart';
 import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
 
 class IncomeExpenseTab extends StatefulWidget {
@@ -39,6 +40,7 @@ class _IncomeExpenseTabState extends State<IncomeExpenseTab> {
   bool _isExpense = true;
   int? _touchedIndex;
   late Future<_TabData> _future;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -64,6 +66,7 @@ class _IncomeExpenseTabState extends State<IncomeExpenseTab> {
   @override
   void dispose() {
     widget.refreshTrigger?.removeListener(_onRefresh);
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -103,14 +106,15 @@ class _IncomeExpenseTabState extends State<IncomeExpenseTab> {
   Widget build(BuildContext context) {
     return HapticRefreshWrapper(
       child: CustomScrollView(
+        controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           CupertinoSliverRefreshControl(
             refreshTriggerPullDistance: kRefreshTriggerPullDistance,
-            onRefresh: () async {
+            onRefresh: () => runRefreshWithSnapBack(_scrollController, () async {
               _onRefresh();
               await _future;
-            },
+            }),
           ),
           SliverToBoxAdapter(
             child: Padding(

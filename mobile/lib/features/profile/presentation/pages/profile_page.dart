@@ -10,6 +10,7 @@ import 'package:mobile/features/profile/presentation/widgets/profile_skeleton.da
 import 'package:mobile/features/profile/presentation/widgets/user_profile_header.dart';
 import 'package:mobile/features/profile/presentation/widgets/user_stats_card.dart';
 import 'package:mobile/shared/constants/refresh_trigger.dart';
+import 'package:mobile/shared/utils/refresh_snap_back.dart';
 import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -25,6 +26,7 @@ class _ProfilePageState extends State<ProfilePage> {
   late Future<ProfilePageData> _future;
   ProfilePageData? _lastData;
   final ValueNotifier<bool> _cardInteracting = ValueNotifier<bool>(false);
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -45,6 +47,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void dispose() {
     widget.refreshTrigger?.removeListener(_onRefresh);
+    _scrollController.dispose();
     _cardInteracting.dispose();
     super.dispose();
   }
@@ -113,16 +116,18 @@ class _ProfilePageState extends State<ProfilePage> {
               child: ValueListenableBuilder<bool>(
                 valueListenable: _cardInteracting,
                 builder: (context, isCardInteracting, child) => CustomScrollView(
+                  controller: _scrollController,
                   physics: isCardInteracting
                       ? const NeverScrollableScrollPhysics()
                       : const AlwaysScrollableScrollPhysics(),
                   slivers: [
                     CupertinoSliverRefreshControl(
                       refreshTriggerPullDistance: kRefreshTriggerPullDistance,
-                      onRefresh: () async {
-                        _onRefresh();
-                        await _future;
-                      },
+                      onRefresh: () =>
+                          runRefreshWithSnapBack(_scrollController, () async {
+                            _onRefresh();
+                            await _future;
+                          }),
                     ),
                     SliverToBoxAdapter(
                       child: Padding(
