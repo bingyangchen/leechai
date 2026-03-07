@@ -15,6 +15,7 @@ When writing or editing code that involves **style** (colors, typography, spacin
   - **Typography**: `textTheme` is built from `Typography.material2021(colorScheme)` (Material 2021 type scale). Light theme uses `.black`, dark uses `.white`; colors come from `colorScheme`. To add a brand font later, derive `textTheme` with `.apply(fontFamily: '...')` in `_textTheme`.
   - **Semantic text styles**: `AppTextStyles.of(context)` — use these instead of repeating `textTheme.xxx.copyWith(...)`:
     - `sectionLabel` — section/card label (titleSmall, onSurfaceVariant)
+    - `bodyOnSurface` — body text on surface, e.g. chip label (bodyMedium, onSurface)
     - `bodyMuted` / `bodySmallMuted` / `labelMuted` — secondary text (onSurfaceVariant)
     - `titleEmphasis` / `titleLargeEmphasis` / `titleSmallEmphasis` — title + semibold
     - `headlineEmphasis` / `headlineLargeEmphasis` — headline + bold

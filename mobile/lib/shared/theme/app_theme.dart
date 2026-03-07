@@ -134,36 +134,47 @@ class AppTheme {
     );
   }
 
+  static const double _sectionLabelSize = 14;
+  static const double _bodyMutedSize = 14;
+  static const double _bodyOnSurfaceSize = 14;
+  static const double _bodySmallMutedSize = 12;
+  static const double _labelMutedSize = 11;
+  static const double _titleEmphasisSize = 16;
+  static const double _titleLargeEmphasisSize = 22;
+  static const double _titleSmallEmphasisSize = 14;
+  static const double _headlineEmphasisSize = 28;
+  static const double _headlineLargeEmphasisSize = 32;
+
   static AppTextStyles _appTextStyles(TextTheme textTheme, ColorScheme colorScheme) {
+    const w400 = FontWeight.w400;
+    const w500 = FontWeight.w500;
+    const w600 = FontWeight.w600;
+    const bold = FontWeight.bold;
     final onSurfaceVariant = colorScheme.onSurfaceVariant;
+    final onSurface = colorScheme.onSurface;
+    TextStyle merge(TextStyle? base, double size, FontWeight weight, Color color) =>
+        (base ?? TextStyle()).copyWith(fontSize: size, fontWeight: weight, color: color);
     return AppTextStyles(
-      sectionLabel:
-          textTheme.titleSmall?.copyWith(color: onSurfaceVariant) ??
-          TextStyle(color: onSurfaceVariant),
-      bodyMuted:
-          textTheme.bodyMedium?.copyWith(color: onSurfaceVariant) ??
-          TextStyle(color: onSurfaceVariant),
-      bodySmallMuted:
-          textTheme.bodySmall?.copyWith(color: onSurfaceVariant) ??
-          TextStyle(color: onSurfaceVariant),
-      labelMuted:
-          textTheme.labelSmall?.copyWith(color: onSurfaceVariant) ??
-          TextStyle(color: onSurfaceVariant),
-      titleEmphasis:
-          textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600) ??
-          TextStyle(fontWeight: FontWeight.w600),
-      titleLargeEmphasis:
-          textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600) ??
-          TextStyle(fontWeight: FontWeight.w600),
-      titleSmallEmphasis:
-          textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600) ??
-          TextStyle(fontWeight: FontWeight.w600),
-      headlineEmphasis:
-          textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold) ??
-          TextStyle(fontWeight: FontWeight.bold),
-      headlineLargeEmphasis:
-          textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.bold) ??
-          TextStyle(fontWeight: FontWeight.bold),
+      sectionLabel: merge(
+        textTheme.titleSmall, _sectionLabelSize, w500, onSurfaceVariant),
+      bodyMuted: merge(
+        textTheme.bodyMedium, _bodyMutedSize, w400, onSurfaceVariant),
+      bodyOnSurface: merge(
+        textTheme.bodyMedium, _bodyOnSurfaceSize, w400, onSurface),
+      bodySmallMuted: merge(
+        textTheme.bodySmall, _bodySmallMutedSize, w400, onSurfaceVariant),
+      labelMuted: merge(
+        textTheme.labelSmall, _labelMutedSize, w500, onSurfaceVariant),
+      titleEmphasis: merge(
+        textTheme.titleMedium, _titleEmphasisSize, w600, onSurface),
+      titleLargeEmphasis: merge(
+        textTheme.titleLarge, _titleLargeEmphasisSize, w600, onSurface),
+      titleSmallEmphasis: merge(
+        textTheme.titleSmall, _titleSmallEmphasisSize, w600, onSurface),
+      headlineEmphasis: merge(
+        textTheme.headlineMedium, _headlineEmphasisSize, bold, onSurface),
+      headlineLargeEmphasis: merge(
+        textTheme.headlineLarge, _headlineLargeEmphasisSize, bold, onSurface),
     );
   }
 
@@ -230,6 +241,7 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
   const AppTextStyles({
     required this.sectionLabel,
     required this.bodyMuted,
+    required this.bodyOnSurface,
     required this.bodySmallMuted,
     required this.labelMuted,
     required this.titleEmphasis,
@@ -241,6 +253,7 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
 
   final TextStyle sectionLabel;
   final TextStyle bodyMuted;
+  final TextStyle bodyOnSurface;
   final TextStyle bodySmallMuted;
   final TextStyle labelMuted;
   final TextStyle titleEmphasis;
@@ -259,6 +272,7 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
   AppTextStyles copyWith({
     TextStyle? sectionLabel,
     TextStyle? bodyMuted,
+    TextStyle? bodyOnSurface,
     TextStyle? bodySmallMuted,
     TextStyle? labelMuted,
     TextStyle? titleEmphasis,
@@ -269,6 +283,7 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
   }) => AppTextStyles(
     sectionLabel: sectionLabel ?? this.sectionLabel,
     bodyMuted: bodyMuted ?? this.bodyMuted,
+    bodyOnSurface: bodyOnSurface ?? this.bodyOnSurface,
     bodySmallMuted: bodySmallMuted ?? this.bodySmallMuted,
     labelMuted: labelMuted ?? this.labelMuted,
     titleEmphasis: titleEmphasis ?? this.titleEmphasis,
@@ -284,6 +299,7 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
     return AppTextStyles(
       sectionLabel: TextStyle.lerp(sectionLabel, other.sectionLabel, t)!,
       bodyMuted: TextStyle.lerp(bodyMuted, other.bodyMuted, t)!,
+      bodyOnSurface: TextStyle.lerp(bodyOnSurface, other.bodyOnSurface, t)!,
       bodySmallMuted: TextStyle.lerp(bodySmallMuted, other.bodySmallMuted, t)!,
       labelMuted: TextStyle.lerp(labelMuted, other.labelMuted, t)!,
       titleEmphasis: TextStyle.lerp(titleEmphasis, other.titleEmphasis, t)!,
