@@ -1,0 +1,29 @@
+---
+description: When writing style-related code, follow the project design system
+alwaysApply: false
+globs: mobile/**/*.dart
+---
+
+# Design System for Style
+
+When writing or editing code that involves **style** (colors, typography, spacing, theming), follow this project's design system.
+
+## Source of truth
+
+- **Flutter (mobile)**: `mobile/lib/shared/theme/app_theme.dart`
+  - `AppTheme.light` / `AppTheme.dark` define `ThemeData` with `ColorScheme` and theme extensions.
+
+## Do
+
+- **Colors**: Use `Theme.of(context).colorScheme` (e.g. `primary`, `onSurface`, `surfaceContainerHighest`, `onSurfaceVariant`, `outline`, `error`, `onError`). For accounting/chart/hero-card semantics, use the theme extensions:
+  - `AccountingColors.of(context)` → `income`, `expense`, `transfer`, `borrow`, `repay`, `liability`, `neutral`
+  - `ChartPalette.of(context)` → `palette` for charts
+  - `HeroCardColors.of(context)` → `content`, `contentMuted`, `shadowSubtle`
+- **Typography**: Use `Theme.of(context).textTheme` (e.g. `bodySmall`, `titleMedium`, `headlineMedium`). Adjust only when needed via `copyWith(color: ...)` using theme colors.
+- **Opacity**: Prefer `colorScheme.onSurfaceVariant.withValues(alpha: 0.5)` (or similar) over hardcoded transparent colors.
+- **New tokens**: Add new colors or semantic tokens in `app_theme.dart` (and to the right extension or `ColorScheme`), then reference them via theme in UI code.
+
+## Don't
+
+- Don't hardcode `Color(0xFF...)` or `Colors.xxx` in UI widgets; use theme/context so light/dark and semantics stay consistent.
+- Don't define parallel color or text-style constants in feature code; keep a single source in `app_theme.dart`.
