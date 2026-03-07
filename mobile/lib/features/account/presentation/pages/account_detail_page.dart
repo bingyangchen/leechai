@@ -340,7 +340,6 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
                 for (final e in grouped.entries) ...[
                   SliverToBoxAdapter(
                     child: buildDateHeaderSection(
-                      context: context,
                       date: e.key,
                       dayExpense: dayExpense(e.value),
                       dayIncome: dayIncome(e.value),

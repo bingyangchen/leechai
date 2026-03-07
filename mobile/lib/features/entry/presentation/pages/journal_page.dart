@@ -15,7 +15,7 @@ import 'package:mobile/features/entry/presentation/widgets/journal_empty_state.d
 import 'package:mobile/features/entry/presentation/widgets/journal_top_bar.dart';
 import 'package:mobile/features/entry/presentation/widgets/month_summary_card.dart';
 import 'package:mobile/features/entry/presentation/widgets/sticky_date_header.dart'
-    show buildDateHeaderSection, dateHeaderContent;
+    show buildDateHeaderSection, DateHeaderContent;
 import 'package:mobile/features/entry/presentation/widgets/sync_indicator.dart';
 import 'package:mobile/features/entry/presentation/widgets/transaction_row.dart';
 import 'package:mobile/shared/constants/refresh_trigger.dart';
@@ -274,7 +274,6 @@ class _JournalPageState extends State<JournalPage> {
                                   SliverToBoxAdapter(
                                     child: buildDateHeaderSection(
                                       key: _headerKeys[e.key],
-                                      context: context,
                                       date: e.key,
                                       dayExpense: dayExpense(e.value),
                                       dayIncome: dayIncome(e.value),
@@ -324,8 +323,7 @@ class _JournalPageState extends State<JournalPage> {
                                 left: 0,
                                 right: 0,
                                 key: _stickyBarKey,
-                                child: dateHeaderContent(
-                                  context: context,
+                                child: DateHeaderContent(
                                   date: dateToShow,
                                   dayExpense: dateToShow == _currentStickyDate
                                       ? _currentStickyExpense
