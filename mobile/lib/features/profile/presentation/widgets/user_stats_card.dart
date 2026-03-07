@@ -284,20 +284,43 @@ class _UserStatsCardState extends State<UserStatsCard> with TickerProviderStateM
                 Positioned(
                   left: 16,
                   bottom: 12,
-                  child: Text(
-                    'Leechai',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 1.2,
-                      color: heroColors.contentMuted.withValues(alpha: 0.85),
-                    ),
-                  ),
+                  child: _BrandMark(heroColors: heroColors),
                 ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _BrandMark extends StatelessWidget {
+  const _BrandMark({required this.heroColors});
+
+  final HeroCardColors heroColors;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final baseColor = heroColors.contentMuted.withValues(alpha: 0.82);
+    final shadowColor = colorScheme.shadow.withValues(alpha: 0.22);
+    final highlightColor = heroColors.content.withValues(alpha: 0.28);
+    return Text(
+      'LEECHAI',
+      style: TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 2,
+        color: baseColor,
+        shadows: [
+          Shadow(offset: const Offset(1, 1), blurRadius: 0, color: shadowColor),
+          Shadow(
+            offset: const Offset(-0.6, -0.6),
+            blurRadius: 0,
+            color: highlightColor,
+          ),
+        ],
       ),
     );
   }

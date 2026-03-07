@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 
 class NetWorthHeader extends StatelessWidget {
@@ -21,7 +22,8 @@ class NetWorthHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    final appTextStyles = AppTextStyles.of(context);
     final netStr = privacyMode ? '****' : formatAmountForDisplay(netWorth);
     final assetsStr = privacyMode ? '****' : formatAmountForDisplay(totalAssets);
     final liabStr = privacyMode ? '****' : formatAmountForDisplay(totalLiabilities);
@@ -30,7 +32,7 @@ class NetWorthHeader extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(24),
           bottomRight: Radius.circular(24),
@@ -42,12 +44,7 @@ class NetWorthHeader extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                '總淨資產',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
+              Text('總淨資產', style: appTextStyles.sectionLabel),
               IconButton(
                 onPressed: onPrivacyToggle,
                 icon: Icon(
@@ -55,26 +52,18 @@ class NetWorthHeader extends StatelessWidget {
                       ? Icons.visibility_off_outlined
                       : Icons.visibility_outlined,
                   size: 22,
-                  color: theme.colorScheme.onSurfaceVariant,
+                  color: colorScheme.onSurfaceVariant,
                 ),
                 tooltip: privacyMode ? '顯示金額' : '隱藏金額',
               ),
             ],
           ),
           const SizedBox(height: 4),
-          Text(
-            '\$$netStr',
-            style: theme.textTheme.headlineLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              letterSpacing: -0.5,
-            ),
-          ),
+          Text('\$$netStr', style: appTextStyles.headlineLargeEmphasis),
           const SizedBox(height: 8),
           Text(
             '總資產 \$$assetsStr - 總負債 \$$liabStr',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+            style: appTextStyles.bodySmallMuted,
           ),
           if (sparklinePoints.isNotEmpty) ...[
             const SizedBox(height: 16),
@@ -84,7 +73,7 @@ class NetWorthHeader extends StatelessWidget {
               child: CustomPaint(
                 painter: _SparklinePainter(
                   points: sparklinePoints,
-                  color: theme.colorScheme.primary.withValues(alpha: 0.6),
+                  color: colorScheme.primary.withValues(alpha: 0.6),
                   fill: true,
                 ),
               ),

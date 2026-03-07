@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
 
 typedef DateTimePickerOnConfirm = void Function(DateTime value, {bool fromDrag});
 
@@ -23,10 +25,10 @@ class DateTimePickerSheet extends StatefulWidget {
 class _DateTimePickerSheetState extends State<DateTimePickerSheet> {
   static const int _minYear = 1970;
   static const int _maxYear = 9999;
-  static const double _wheelItemHeight = 44;
-  static const double _wheelWidthYear = 50;
-  static const double _wheelWidthTwoDigit = 36;
-  static const double _wheelWidthAmPm = 40;
+  static const double _wheelItemHeight = 36;
+  static const double _wheelWidthYear = 58;
+  static const double _wheelWidthTwoDigit = 44;
+  static const double _wheelWidthAmPm = 48;
   static const double _separatorPadding = 0;
 
   bool _didConfirm = false;
@@ -278,16 +280,11 @@ class _DateTimePickerSheetState extends State<DateTimePickerSheet> {
   }
 
   Widget _wheelSeparator(String text) {
-    final theme = Theme.of(context);
+    final appTextStyles = AppTextStyles.of(context);
     return Center(
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: _separatorPadding),
-        child: Text(
-          text,
-          style: theme.textTheme.titleMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
+        child: Text(text, style: appTextStyles.bodyLargeMuted),
       ),
     );
   }
@@ -299,7 +296,7 @@ class _DateTimePickerSheetState extends State<DateTimePickerSheet> {
     required ScrollController controller,
     required ValueChanged<T> onChanged,
   }) {
-    final theme = Theme.of(context);
+    final appTextStyles = AppTextStyles.of(context);
     final index = items.indexOf(value);
     if (index < 0) return const SizedBox.shrink();
     return ListWheelScrollView.useDelegate(
@@ -308,21 +305,16 @@ class _DateTimePickerSheetState extends State<DateTimePickerSheet> {
       diameterRatio: 1.2,
       physics: const FixedExtentScrollPhysics(),
       perspective: 0.005,
-      onSelectedItemChanged: (i) => onChanged(items[i]),
+      onSelectedItemChanged: (i) {
+        HapticFeedback.selectionClick();
+        onChanged(items[i]);
+      },
+      overAndUnderCenterOpacity: 0.4,
       childDelegate: ListWheelChildBuilderDelegate(
         childCount: items.length,
         builder: (context, i) {
-          final isSelected = i == index;
           return Center(
-            child: Text(
-              format(items[i]),
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: isSelected
-                    ? theme.colorScheme.onSurface
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              ),
-            ),
+            child: Text(format(items[i]), style: appTextStyles.titleEmphasis),
           );
         },
       ),

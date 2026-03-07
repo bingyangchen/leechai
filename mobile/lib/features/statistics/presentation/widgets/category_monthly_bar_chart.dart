@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/features/statistics/domain/date_range_preset.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 
 class CategoryMonthlyBarChart extends StatelessWidget {
@@ -19,7 +20,8 @@ class CategoryMonthlyBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    final appTextStyles = AppTextStyles.of(context);
     final rawMax = monthlyTotals.isEmpty
         ? 1.0
         : monthlyTotals
@@ -40,18 +42,14 @@ class CategoryMonthlyBarChart extends StatelessWidget {
               touchTooltipData: BarTouchTooltipData(
                 direction: TooltipDirection.bottom,
                 getTooltipColor: (BarChartGroupData group) =>
-                    theme.colorScheme.surfaceContainerHighest,
+                    colorScheme.surfaceContainerHighest,
                 tooltipPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 tooltipMargin: 8,
                 getTooltipItem: (group, groupIndex, rod, rodIndex) {
                   final d = monthlyTotals[group.x.toInt()];
-                  final style =
-                      theme.textTheme.bodySmall ??
-                      theme.textTheme.bodyMedium ??
-                      const TextStyle();
                   return BarTooltipItem(
                     '${d.month.year}/${d.month.month.toString().padLeft(2, '0')}\n\$${privacyMode ? "****" : formatAmountForDisplay(d.amount)}',
-                    style,
+                    appTextStyles.bodySmallMuted,
                   );
                 },
               ),
@@ -72,9 +70,7 @@ class CategoryMonthlyBarChart extends StatelessWidget {
                       padding: const EdgeInsets.only(top: 8),
                       child: Text(
                         '${d.month}月',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
+                        style: appTextStyles.labelSmallMuted,
                         textAlign: TextAlign.center,
                       ),
                     );
@@ -90,7 +86,7 @@ class CategoryMonthlyBarChart extends StatelessWidget {
               drawVerticalLine: false,
               horizontalInterval: maxY / 4,
               getDrawingHorizontalLine: (v) => FlLine(
-                color: theme.colorScheme.outline.withValues(alpha: 0.12),
+                color: colorScheme.outline.withValues(alpha: 0.12),
                 strokeWidth: 1,
               ),
             ),

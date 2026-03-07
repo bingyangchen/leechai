@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 
 class CategoryRankingTile extends StatefulWidget {
@@ -38,7 +39,8 @@ class _CategoryRankingTileState extends State<CategoryRankingTile> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    final appTextStyles = AppTextStyles.of(context);
     final amountStr = widget.privacyMode
         ? '****'
         : formatAmountForDisplay(widget.amount);
@@ -104,24 +106,14 @@ class _CategoryRankingTileState extends State<CategoryRankingTile> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(
-                        amountStr,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        percentStr,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
+                      Text(amountStr, style: appTextStyles.titleSmallEmphasis),
+                      Text(percentStr, style: appTextStyles.bodySmallMuted),
                     ],
                   ),
                   const SizedBox(width: 4),
                   Icon(
                     Icons.chevron_right,
-                    color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
                     size: 20,
                   ),
                 ],

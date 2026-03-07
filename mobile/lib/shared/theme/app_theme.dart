@@ -71,6 +71,11 @@ class _ChartPaletteValues {
 class AppTheme {
   AppTheme._();
 
+  static TextTheme _textTheme(ColorScheme colorScheme, Brightness brightness) {
+    final typography = Typography.material2021(colorScheme: colorScheme);
+    return brightness == Brightness.light ? typography.black : typography.white;
+  }
+
   static ThemeData get light {
     const primary = _ShibaColors.primaryLight;
     final colorScheme = ColorScheme.light(
@@ -88,9 +93,11 @@ class AppTheme {
       error: const Color(0xFFBA1A1A),
       onError: Colors.white,
     );
+    final textTheme = _textTheme(colorScheme, Brightness.light);
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
+      textTheme: textTheme,
       dividerColor: const Color(0xFFE8DED5),
       inputDecorationTheme: InputDecorationTheme(
         hintStyle: TextStyle(
@@ -99,9 +106,15 @@ class AppTheme {
       ),
       appBarTheme: AppBarTheme(
         toolbarHeight: 36,
-        titleTextStyle: TextStyle(fontSize: 16, color: colorScheme.onSurface),
+        titleTextStyle:
+            textTheme.titleMedium?.copyWith(
+              fontSize: 16,
+              color: colorScheme.onSurface,
+            ) ??
+            TextStyle(fontSize: 16, color: colorScheme.onSurface),
       ),
       extensions: [
+        _appTextStyles(textTheme, colorScheme),
         AccountingColors(
           income: _AccountingColorValues.income,
           expense: _AccountingColorValues.expense,
@@ -118,6 +131,87 @@ class AppTheme {
           shadowSubtle: _HeroCardContentValues.shadowSubtle,
         ),
       ],
+    );
+  }
+
+  static const double _labelSize = 12;
+  static const double _labelSmallSize = 11;
+  static const double _sectionLabelSize = 14;
+  static const double _bodySize = 14;
+  static const double _bodySmallSize = 12;
+  static const double _bodyLargeSize = 16;
+  static const double _titleSize = 16;
+  static const double _titleSmallSize = 14;
+  static const double _headlineSmallSize = 24;
+  static const double _headlineSize = 28;
+  static const double _headlineLargeSize = 32;
+
+  static AppTextStyles _appTextStyles(TextTheme textTheme, ColorScheme colorScheme) {
+    const w400 = FontWeight.w400;
+    const w500 = FontWeight.w500;
+    const w600 = FontWeight.w600;
+    const bold = FontWeight.bold;
+    final onSurfaceVariant = colorScheme.onSurfaceVariant;
+    final onSurface = colorScheme.onSurface;
+    TextStyle merge(TextStyle? base, double? size, FontWeight? weight, Color? color) =>
+        (base ?? TextStyle()).copyWith(
+          fontSize: size ?? base?.fontSize,
+          fontWeight: weight ?? base?.fontWeight,
+          color: color ?? base?.color,
+        );
+    return AppTextStyles(
+      sectionLabel: merge(
+        textTheme.titleSmall,
+        _sectionLabelSize,
+        w500,
+        onSurfaceVariant,
+      ),
+      labelSmallMuted: merge(
+        textTheme.labelSmall,
+        _labelSmallSize,
+        null,
+        onSurfaceVariant,
+      ),
+      labelMuted: merge(textTheme.labelMedium, _labelSize, null, onSurfaceVariant),
+      labelEmphasis: merge(textTheme.labelMedium, _labelSize, w600, onSurface),
+      body: merge(textTheme.bodyMedium, _bodySize, w400, onSurface),
+      bodyMuted: merge(textTheme.bodyMedium, _bodySize, w400, onSurfaceVariant),
+      bodySmallMuted: merge(
+        textTheme.bodySmall,
+        _bodySmallSize,
+        null,
+        onSurfaceVariant,
+      ),
+      bodyLargeMuted: merge(
+        textTheme.bodyLarge,
+        _bodyLargeSize,
+        w400,
+        onSurfaceVariant,
+      ),
+      bodyLarge: merge(textTheme.bodyLarge, _bodyLargeSize, w400, onSurface),
+      title: merge(textTheme.titleMedium, _titleSize, w500, onSurface),
+      titleMuted: merge(textTheme.titleMedium, _titleSize, w500, onSurfaceVariant),
+      titleEmphasis: merge(textTheme.titleMedium, _titleSize, w600, onSurface),
+      headlineSmall: merge(
+        textTheme.headlineSmall,
+        _headlineSmallSize,
+        w400,
+        onSurface,
+      ),
+      headlineSmallEmphasis: merge(
+        textTheme.headlineSmall,
+        _headlineSmallSize,
+        bold,
+        onSurface,
+      ),
+      titleSmallEmphasis: merge(textTheme.titleSmall, _titleSmallSize, w600, onSurface),
+      headlineEmphasis: merge(textTheme.headlineMedium, _headlineSize, bold, onSurface),
+      headlineLargeEmphasis: merge(
+        textTheme.headlineLarge,
+        _headlineLargeSize,
+        bold,
+        onSurface,
+      ),
     );
   }
 
@@ -138,9 +232,11 @@ class AppTheme {
       error: const Color(0xFFFFB4AB),
       onError: const Color(0xFF690005),
     );
+    final textTheme = _textTheme(colorScheme, Brightness.dark);
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
+      textTheme: textTheme,
       dividerColor: const Color(0xFF5C5048),
       inputDecorationTheme: InputDecorationTheme(
         hintStyle: TextStyle(
@@ -149,9 +245,15 @@ class AppTheme {
       ),
       appBarTheme: AppBarTheme(
         toolbarHeight: 36,
-        titleTextStyle: TextStyle(fontSize: 16, color: colorScheme.onSurface),
+        titleTextStyle:
+            textTheme.titleMedium?.copyWith(
+              fontSize: 16,
+              color: colorScheme.onSurface,
+            ) ??
+            TextStyle(fontSize: 16, color: colorScheme.onSurface),
       ),
       extensions: [
+        _appTextStyles(textTheme, colorScheme),
         AccountingColors(
           income: _AccountingColorValues.income,
           expense: _AccountingColorValues.expense,
@@ -168,6 +270,127 @@ class AppTheme {
           shadowSubtle: _HeroCardContentValues.shadowSubtle,
         ),
       ],
+    );
+  }
+}
+
+class AppTextStyles extends ThemeExtension<AppTextStyles> {
+  const AppTextStyles({
+    required this.sectionLabel,
+    required this.bodyMuted,
+    required this.bodyLargeMuted,
+    required this.bodyLarge,
+    required this.body,
+    required this.bodySmallMuted,
+    required this.labelSmallMuted,
+    required this.labelMuted,
+    required this.labelEmphasis,
+    required this.title,
+    required this.titleMuted,
+    required this.titleEmphasis,
+    required this.headlineSmall,
+    required this.headlineSmallEmphasis,
+    required this.titleSmallEmphasis,
+    required this.headlineEmphasis,
+    required this.headlineLargeEmphasis,
+  });
+
+  final TextStyle sectionLabel;
+  final TextStyle labelMuted;
+  final TextStyle labelSmallMuted;
+  final TextStyle labelEmphasis;
+  final TextStyle body;
+  final TextStyle bodyMuted;
+  final TextStyle bodySmallMuted;
+  final TextStyle bodyLargeMuted;
+  final TextStyle bodyLarge;
+  final TextStyle title;
+  final TextStyle titleMuted;
+  final TextStyle titleEmphasis;
+  final TextStyle headlineSmall;
+  final TextStyle headlineSmallEmphasis;
+  final TextStyle titleSmallEmphasis;
+  final TextStyle headlineEmphasis;
+  final TextStyle headlineLargeEmphasis;
+
+  static AppTextStyles of(BuildContext context) {
+    final ext = Theme.of(context).extension<AppTextStyles>();
+    assert(ext != null);
+    return ext!;
+  }
+
+  @override
+  AppTextStyles copyWith({
+    TextStyle? sectionLabel,
+    TextStyle? labelSmallMuted,
+    TextStyle? labelMuted,
+    TextStyle? labelEmphasis,
+    TextStyle? body,
+    TextStyle? bodyMuted,
+    TextStyle? bodyLargeMuted,
+    TextStyle? bodyLarge,
+    TextStyle? bodySmallMuted,
+    TextStyle? title,
+    TextStyle? titleMuted,
+    TextStyle? titleEmphasis,
+    TextStyle? headlineSmall,
+    TextStyle? headlineSmallEmphasis,
+    TextStyle? titleSmallEmphasis,
+    TextStyle? headlineEmphasis,
+    TextStyle? headlineLargeEmphasis,
+  }) => AppTextStyles(
+    sectionLabel: sectionLabel ?? this.sectionLabel,
+    labelSmallMuted: labelSmallMuted ?? this.labelSmallMuted,
+    labelMuted: labelMuted ?? this.labelMuted,
+    labelEmphasis: labelEmphasis ?? this.labelEmphasis,
+    body: body ?? this.body,
+    bodyMuted: bodyMuted ?? this.bodyMuted,
+    bodyLargeMuted: bodyLargeMuted ?? this.bodyLargeMuted,
+    bodyLarge: bodyLarge ?? this.bodyLarge,
+    bodySmallMuted: bodySmallMuted ?? this.bodySmallMuted,
+    title: title ?? this.title,
+    titleMuted: titleMuted ?? this.titleMuted,
+    titleEmphasis: titleEmphasis ?? this.titleEmphasis,
+    headlineSmall: headlineSmall ?? this.headlineSmall,
+    headlineSmallEmphasis: headlineSmallEmphasis ?? this.headlineSmallEmphasis,
+    titleSmallEmphasis: titleSmallEmphasis ?? this.titleSmallEmphasis,
+    headlineEmphasis: headlineEmphasis ?? this.headlineEmphasis,
+    headlineLargeEmphasis: headlineLargeEmphasis ?? this.headlineLargeEmphasis,
+  );
+
+  @override
+  AppTextStyles lerp(ThemeExtension<AppTextStyles>? other, double t) {
+    if (other is! AppTextStyles) return this;
+    return AppTextStyles(
+      sectionLabel: TextStyle.lerp(sectionLabel, other.sectionLabel, t)!,
+      bodyMuted: TextStyle.lerp(bodyMuted, other.bodyMuted, t)!,
+      bodyLargeMuted: TextStyle.lerp(bodyLargeMuted, other.bodyLargeMuted, t)!,
+      bodyLarge: TextStyle.lerp(bodyLarge, other.bodyLarge, t)!,
+      body: TextStyle.lerp(body, other.body, t)!,
+      bodySmallMuted: TextStyle.lerp(bodySmallMuted, other.bodySmallMuted, t)!,
+      labelSmallMuted: TextStyle.lerp(labelSmallMuted, other.labelSmallMuted, t)!,
+      labelMuted: TextStyle.lerp(labelMuted, other.labelMuted, t)!,
+      labelEmphasis: TextStyle.lerp(labelEmphasis, other.labelEmphasis, t)!,
+      title: TextStyle.lerp(title, other.title, t)!,
+      titleMuted: TextStyle.lerp(titleMuted, other.titleMuted, t)!,
+      titleEmphasis: TextStyle.lerp(titleEmphasis, other.titleEmphasis, t)!,
+      headlineSmall: TextStyle.lerp(headlineSmall, other.headlineSmall, t)!,
+      headlineSmallEmphasis: TextStyle.lerp(
+        headlineSmallEmphasis,
+        other.headlineSmallEmphasis,
+        t,
+      )!,
+      titleSmallEmphasis: TextStyle.lerp(
+        titleSmallEmphasis,
+        other.titleSmallEmphasis,
+        t,
+      )!,
+      headlineEmphasis: TextStyle.lerp(headlineEmphasis, other.headlineEmphasis, t)!,
+      headlineLargeEmphasis: TextStyle.lerp(
+        headlineLargeEmphasis,
+        other.headlineLargeEmphasis,
+        t,
+      )!,
     );
   }
 }

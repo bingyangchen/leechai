@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/features/statistics/domain/date_range_preset.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
 import 'package:mobile/shared/widgets/date_time_picker_sheet.dart';
 
@@ -129,7 +130,8 @@ class _DateRangePickerContentState extends State<_DateRangePickerContent> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final appTextStyles = AppTextStyles.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
     return SingleChildScrollView(
       controller: widget.scrollController,
       child: Padding(
@@ -147,16 +149,12 @@ class _DateRangePickerContentState extends State<_DateRangePickerContent> {
                       label: Text(p.label),
                       selected: _preset == p,
                       onSelected: (_) => _selectPreset(p),
+                      side: BorderSide(color: colorScheme.outline),
                     ),
               ],
             ),
             const SizedBox(height: 24),
-            Text(
-              '自訂區間',
-              style: theme.textTheme.titleSmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
+            Text('自訂區間', style: appTextStyles.sectionLabel),
             const SizedBox(height: 8),
             Row(
               children: [

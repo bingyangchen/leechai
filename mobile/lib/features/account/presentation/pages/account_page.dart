@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/features/account/data/repositories/account.dart'
@@ -12,8 +11,9 @@ import 'package:mobile/features/account/presentation/pages/account_detail_page.d
 import 'package:mobile/features/account/presentation/widgets/account_group_section.dart';
 import 'package:mobile/features/account/presentation/widgets/add_account_sheet.dart';
 import 'package:mobile/features/account/presentation/widgets/net_worth_header.dart';
-import 'package:mobile/shared/constants/refresh_trigger.dart';
+import 'package:mobile/shared/utils/refresh_snap_back.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
+import 'package:mobile/shared/widgets/app_refresh_indicator.dart';
 import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
 
 class AssetsPage extends StatefulWidget {
@@ -27,6 +27,7 @@ class AssetsPage extends StatefulWidget {
 class _AssetsPageState extends State<AssetsPage> {
   bool _privacyMode = false;
   late Future<_AccountPageData> _future;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -47,6 +48,7 @@ class _AssetsPageState extends State<AssetsPage> {
   @override
   void dispose() {
     widget.refreshTrigger?.removeListener(_onRefresh);
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -256,14 +258,15 @@ class _AssetsPageState extends State<AssetsPage> {
               final netWorth = data.totalAssets - data.totalLiabilities;
 
               return CustomScrollView(
+                controller: _scrollController,
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
-                  CupertinoSliverRefreshControl(
-                    refreshTriggerPullDistance: kRefreshTriggerPullDistance,
-                    onRefresh: () async {
-                      _onRefresh();
-                      await _future;
-                    },
+                  appSliverRefreshControl(
+                    onRefresh: () =>
+                        runRefreshWithSnapBack(_scrollController, () async {
+                          _onRefresh();
+                          await _future;
+                        }),
                   ),
                   SliverToBoxAdapter(
                     child: Column(

@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/features/entry/domain/entry_type.dart';
@@ -10,7 +9,9 @@ import 'package:mobile/features/statistics/presentation/constants/category_color
 import 'package:mobile/features/statistics/presentation/pages/category_detail_page.dart';
 import 'package:mobile/features/statistics/presentation/widgets/category_donut_chart.dart';
 import 'package:mobile/features/statistics/presentation/widgets/category_ranking_tile.dart';
-import 'package:mobile/shared/constants/refresh_trigger.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
+import 'package:mobile/shared/utils/refresh_snap_back.dart';
+import 'package:mobile/shared/widgets/app_refresh_indicator.dart';
 import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
 
 class IncomeExpenseTab extends StatefulWidget {
@@ -39,6 +40,7 @@ class _IncomeExpenseTabState extends State<IncomeExpenseTab> {
   bool _isExpense = true;
   int? _touchedIndex;
   late Future<_TabData> _future;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -64,6 +66,7 @@ class _IncomeExpenseTabState extends State<IncomeExpenseTab> {
   @override
   void dispose() {
     widget.refreshTrigger?.removeListener(_onRefresh);
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -103,14 +106,14 @@ class _IncomeExpenseTabState extends State<IncomeExpenseTab> {
   Widget build(BuildContext context) {
     return HapticRefreshWrapper(
       child: CustomScrollView(
+        controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
-          CupertinoSliverRefreshControl(
-            refreshTriggerPullDistance: kRefreshTriggerPullDistance,
-            onRefresh: () async {
+          appSliverRefreshControl(
+            onRefresh: () => runRefreshWithSnapBack(_scrollController, () async {
               _onRefresh();
               await _future;
-            },
+            }),
           ),
           SliverToBoxAdapter(
             child: Padding(
@@ -201,7 +204,9 @@ class _IncomeExpenseTabState extends State<IncomeExpenseTab> {
                     borderRadius: BorderRadius.circular(8),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.06),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.shadow.withValues(alpha: 0.06),
                         blurRadius: 4,
                         offset: const Offset(0, 1),
                       ),
@@ -295,6 +300,7 @@ class _SlidingSegmentOptionState extends State<_SlidingSegmentOption> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final appTextStyles = AppTextStyles.of(context);
     final color = widget.selected
         ? widget.activeColor
         : theme.colorScheme.onSurfaceVariant;
@@ -314,7 +320,7 @@ class _SlidingSegmentOptionState extends State<_SlidingSegmentOption> {
           child: AnimatedDefaultTextStyle(
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeInOut,
-            style: theme.textTheme.labelLarge!.copyWith(
+            style: appTextStyles.sectionLabel.copyWith(
               color: color,
               fontWeight: widget.selected ? FontWeight.w600 : FontWeight.normal,
             ),

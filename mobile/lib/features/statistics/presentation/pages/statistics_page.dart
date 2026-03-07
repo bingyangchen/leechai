@@ -5,6 +5,7 @@ import 'package:mobile/features/statistics/domain/net_worth_range.dart';
 import 'package:mobile/features/statistics/presentation/widgets/date_range_picker_sheet.dart';
 import 'package:mobile/features/statistics/presentation/widgets/income_expense_tab.dart';
 import 'package:mobile/features/statistics/presentation/widgets/net_worth_tab.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
 
 class StatisticsPage extends StatefulWidget {
   const StatisticsPage({super.key, this.refreshTrigger, this.isPageVisible = false});
@@ -87,6 +88,8 @@ class _StatisticsPageState extends State<StatisticsPage>
   }
 
   Widget _buildTimeSelectorForCurrentTab() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final appTextStyles = AppTextStyles.of(context);
     if (_tabController.index == 0) {
       return Align(
         key: const ValueKey('date_btn'),
@@ -96,9 +99,7 @@ class _StatisticsPageState extends State<StatisticsPage>
           icon: const Icon(Icons.calendar_month, size: 20),
           label: Text(
             _dateRange.toShortLabel(_preset),
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: appTextStyles.titleEmphasis,
           ),
         ),
       );
@@ -119,6 +120,7 @@ class _StatisticsPageState extends State<StatisticsPage>
                   setState(() => _netWorthRange = r);
                 }
               },
+              side: BorderSide(color: colorScheme.outline),
             ),
           );
         }).toList(),
@@ -128,6 +130,9 @@ class _StatisticsPageState extends State<StatisticsPage>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final appTextStyles = AppTextStyles.of(context);
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -167,19 +172,16 @@ class _StatisticsPageState extends State<StatisticsPage>
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: TabBar(
                 controller: _tabController,
-                dividerColor: Colors.transparent,
+                dividerColor: colorScheme.surface.withValues(alpha: 0),
                 indicator: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
-                  color: Theme.of(context).colorScheme.primaryContainer,
+                  color: colorScheme.primaryContainer,
                 ),
                 indicatorSize: TabBarIndicatorSize.tab,
-                labelColor: Theme.of(context).colorScheme.onPrimaryContainer,
-                unselectedLabelColor: Theme.of(context).colorScheme.onSurfaceVariant,
-                labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                unselectedLabelStyle: const TextStyle(
-                  fontWeight: FontWeight.w500,
-                  fontSize: 16,
-                ),
+                labelColor: colorScheme.onPrimaryContainer,
+                unselectedLabelColor: colorScheme.onSurfaceVariant,
+                labelStyle: appTextStyles.titleEmphasis,
+                unselectedLabelStyle: appTextStyles.title,
                 isScrollable: true,
                 tabAlignment: TabAlignment.center,
                 tabs: const [
@@ -187,7 +189,9 @@ class _StatisticsPageState extends State<StatisticsPage>
                   Tab(text: '資產趨勢'),
                 ],
                 splashFactory: NoSplash.splashFactory,
-                overlayColor: WidgetStateProperty.all(Colors.transparent),
+                overlayColor: WidgetStateProperty.all(
+                  colorScheme.surface.withValues(alpha: 0),
+                ),
               ),
             ),
             Expanded(

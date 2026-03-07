@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 
 class HapticRefreshWrapper extends StatefulWidget {
   const HapticRefreshWrapper({super.key, required this.child});
-
   final Widget child;
 
   @override

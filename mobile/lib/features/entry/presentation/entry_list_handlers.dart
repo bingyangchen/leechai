@@ -53,6 +53,7 @@ class EntryListHandlers {
       mode: AppBottomSheetMode.static,
       builder: (ctx) {
         final theme = Theme.of(ctx);
+        final appTextStyles = AppTextStyles.of(ctx);
         final amountColor = isGain
             ? AccountingColors.of(ctx).income
             : AccountingColors.of(ctx).expense;
@@ -65,10 +66,7 @@ class EntryListHandlers {
               Center(
                 child: Text(
                   amountText,
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: amountColor,
-                  ),
+                  style: appTextStyles.headlineEmphasis.copyWith(color: amountColor),
                 ),
               ),
               const SizedBox(height: 24),
@@ -84,10 +82,7 @@ class EntryListHandlers {
                   Expanded(
                     child: Text(
                       '這筆紀錄是透過「更新市值」功能自動產生的未實現損益。如需修改，請再次更新市值，或將此紀錄刪除。',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        height: 1.5,
-                      ),
+                      style: appTextStyles.bodySmallMuted.copyWith(height: 1.5),
                     ),
                   ),
                 ],

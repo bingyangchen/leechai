@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile/features/account/data/repositories/account.dart'
@@ -18,9 +17,11 @@ import 'package:mobile/features/entry/presentation/entry_list_handlers.dart';
 import 'package:mobile/features/entry/presentation/widgets/sticky_date_header.dart'
     show buildDateHeaderSection;
 import 'package:mobile/features/entry/presentation/widgets/transaction_row.dart';
-import 'package:mobile/shared/constants/refresh_trigger.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
+import 'package:mobile/shared/utils/refresh_snap_back.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
+import 'package:mobile/shared/widgets/app_refresh_indicator.dart';
 import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
 
 class AccountDetailPage extends StatefulWidget {
@@ -35,11 +36,18 @@ class AccountDetailPage extends StatefulWidget {
 class _AccountDetailPageState extends State<AccountDetailPage> {
   bool _privacyMode = false;
   late Future<_DetailData> _future;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _future = _loadData();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<_DetailData> _loadData() async {
@@ -137,6 +145,9 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
   Future<void> _onOpenSettings() async {
     final data = await _future;
     if (!mounted) return;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final appTextStyles = AppTextStyles.of(context);
     await showAppBottomSheet<void>(
       context,
       mode: AppBottomSheetMode.static,
@@ -152,13 +163,10 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
             },
           ),
           ListTile(
-            leading: Icon(
-              Icons.delete_outline,
-              color: Theme.of(context).colorScheme.error,
-            ),
+            leading: Icon(Icons.delete_outline, color: colorScheme.error),
             title: Text(
               '刪除帳戶',
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
+              style: appTextStyles.bodyLargeMuted.copyWith(color: colorScheme.error),
             ),
             onTap: () {
               Navigator.pop(ctx);
@@ -244,6 +252,9 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final appTextStyles = AppTextStyles.of(context);
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: kToolbarHeight,
@@ -306,20 +317,35 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
 
           final grouped = groupEntriesByDate(data.entries);
           if (data.entries.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.receipt_long_outlined,
-                    size: 64,
-                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
+            return HapticRefreshWrapper(
+              child: CustomScrollView(
+                controller: _scrollController,
+                physics: const BouncingScrollPhysics(
+                  parent: AlwaysScrollableScrollPhysics(),
+                ),
+                slivers: [
+                  appSliverRefreshControl(
+                    onRefresh: () =>
+                        runRefreshWithSnapBack(_scrollController, () async {
+                          _onRefresh();
+                          await _future;
+                        }),
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    '此帳戶尚無交易紀錄',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.receipt_long_outlined,
+                            size: 64,
+                            color: colorScheme.outline.withValues(alpha: 0.5),
+                          ),
+                          const SizedBox(height: 16),
+                          Text('此帳戶尚無交易紀錄', style: appTextStyles.titleMuted),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -329,18 +355,20 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
 
           return HapticRefreshWrapper(
             child: CustomScrollView(
+              controller: _scrollController,
+              physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics(),
+              ),
               slivers: [
-                CupertinoSliverRefreshControl(
-                  refreshTriggerPullDistance: kRefreshTriggerPullDistance,
-                  onRefresh: () async {
+                appSliverRefreshControl(
+                  onRefresh: () => runRefreshWithSnapBack(_scrollController, () async {
                     _onRefresh();
                     await _future;
-                  },
+                  }),
                 ),
                 for (final e in grouped.entries) ...[
                   SliverToBoxAdapter(
                     child: buildDateHeaderSection(
-                      context: context,
                       date: e.key,
                       dayExpense: dayExpense(e.value),
                       dayIncome: dayIncome(e.value),

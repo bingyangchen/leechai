@@ -1,6 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
+import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+const _appVersion = 'v1.0.0';
+const _privacyPolicyUrl = 'https://github.com/bingyangchen/leechai';
+const _termsOfServiceUrl = 'https://github.com/bingyangchen/leechai';
 
 class ProfileSettingsSection extends StatelessWidget {
   const ProfileSettingsSection({
@@ -14,9 +21,9 @@ class ProfileSettingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      color: theme.colorScheme.surfaceContainerLowest,
+      color: colorScheme.surfaceContainerLowest,
       padding: const EdgeInsets.only(top: 8, bottom: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -77,13 +84,32 @@ class ProfileSettingsSection extends StatelessWidget {
               _SettingsTile(
                 icon: Icons.info_outline,
                 title: '版本資訊',
-                onTap: () => _pushPlaceholderPage(context, '版本資訊'), // TODO
+                trailing: _appVersion,
+                onTap: () => _showAboutBottomSheet(context),
               ),
             ],
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _openInBrowser(BuildContext context, String urlString) async {
+    final uri = Uri.parse(urlString);
+    try {
+      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched && context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('無法開啟連結')));
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('無法開啟連結')));
+      }
+    }
   }
 
   void _pushPlaceholderPage(BuildContext context, String title) {
@@ -96,6 +122,98 @@ class ProfileSettingsSection extends StatelessWidget {
       ),
     );
   }
+
+  void _showAboutBottomSheet(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final appTextStyles = AppTextStyles.of(context);
+    showAppBottomSheet<void>(
+      context,
+      mode: AppBottomSheetMode.static,
+      builder: (sheetContext) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 20),
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            alignment: Alignment.center,
+            // TODO: replace with app icon
+            child: Icon(
+              Icons.account_balance_wallet_rounded,
+              size: 40,
+              color: colorScheme.onPrimaryContainer,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text('LeeChai', style: appTextStyles.headlineSmallEmphasis),
+          const SizedBox(height: 4),
+          Text(_appVersion, style: appTextStyles.bodyMuted),
+          const SizedBox(height: 24),
+          _AboutSheetTile(
+            icon: Icons.description_outlined,
+            title: '隱私權政策',
+            trailing: Icons.open_in_new,
+            onTap: () {
+              Navigator.of(sheetContext).pop();
+              _openInBrowser(context, _privacyPolicyUrl);
+            },
+          ),
+          _AboutSheetTile(
+            icon: Icons.gavel_outlined,
+            title: '服務條款',
+            trailing: Icons.open_in_new,
+            onTap: () {
+              Navigator.of(sheetContext).pop();
+              _openInBrowser(context, _termsOfServiceUrl);
+            },
+          ),
+          _AboutSheetTile(
+            icon: Icons.code_outlined,
+            title: '開源授權',
+            trailing: Icons.chevron_right,
+            onTap: () {
+              Navigator.of(sheetContext).pop();
+              _pushPlaceholderPage(context, '開源授權');
+            },
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+}
+
+class _AboutSheetTile extends StatelessWidget {
+  const _AboutSheetTile({
+    required this.icon,
+    required this.title,
+    required this.trailing,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final IconData trailing;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return ListTile(
+      leading: Icon(icon, size: 22, color: colorScheme.onSurfaceVariant),
+      title: Text(title),
+      trailing: Icon(
+        trailing,
+        size: 20,
+        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+      ),
+      onTap: onTap,
+    );
+  }
 }
 
 class _SectionHeader extends StatelessWidget {
@@ -104,14 +222,15 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    final appTextStyles = AppTextStyles.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
       child: Text(
         title,
-        style: theme.textTheme.titleSmall?.copyWith(
-          color: theme.colorScheme.onSurfaceVariant,
-          fontWeight: FontWeight.w600,
+        style: appTextStyles.labelEmphasis.copyWith(
+          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+          letterSpacing: 1.2,
         ),
       ),
     );
@@ -124,11 +243,11 @@ class _TileGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 0),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
       ),
       clipBehavior: Clip.antiAlias,
@@ -155,40 +274,41 @@ class _SettingsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    final appTextStyles = AppTextStyles.of(context);
     final trailingWidget = trailing != null
         ? Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 trailing!,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+                style: appTextStyles.bodyMuted.copyWith(
+                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                 ),
               ),
               const SizedBox(width: 4),
               Icon(
                 Icons.chevron_right,
                 size: 24,
-                color: theme.colorScheme.onSurfaceVariant,
+                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
               ),
             ],
           )
         : Icon(
             Icons.chevron_right,
             size: 24,
-            color: theme.colorScheme.onSurfaceVariant,
+            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
           );
     return ListTile(
       leading: Container(
         width: _iconBoxSize,
         height: _iconBoxSize,
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
+          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
           borderRadius: BorderRadius.circular(_iconBoxRadius),
         ),
         alignment: Alignment.center,
-        child: Icon(icon, size: 20, color: theme.colorScheme.onSurface),
+        child: Icon(icon, size: 20, color: colorScheme.onSurface),
       ),
       title: Text(title),
       trailing: trailingWidget,

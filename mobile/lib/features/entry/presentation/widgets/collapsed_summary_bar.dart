@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
 
 class CollapsedSummaryBar extends StatelessWidget {
+  static const double height = 44;
+
   const CollapsedSummaryBar({
     super.key,
     required this.future,
@@ -12,7 +15,8 @@ class CollapsedSummaryBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    final appTextStyles = AppTextStyles.of(context);
     return FutureBuilder<dynamic>(
       future: future,
       builder: (context, snapshot) {
@@ -21,13 +25,13 @@ class CollapsedSummaryBar extends StatelessWidget {
         if (text == null || text.isEmpty) return const SizedBox.shrink();
         return Container(
           width: double.infinity,
+          height: height,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          color: theme.colorScheme.surfaceContainerHighest,
+          color: colorScheme.surfaceContainerHighest,
           child: Text(
             text,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: theme.colorScheme.onSurfaceVariant,
+            style: appTextStyles.titleEmphasis.copyWith(
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
         );

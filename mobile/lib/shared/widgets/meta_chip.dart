@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
 
 class MetaChip extends StatelessWidget {
   const MetaChip({
@@ -19,8 +20,8 @@ class MetaChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
+    final appTextStyles = AppTextStyles.of(context);
     final effectiveIconColor = iconColor ?? colorScheme.onSurfaceVariant;
 
     return Material(
@@ -34,23 +35,10 @@ class MetaChip extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                icon,
-                size: 18,
-                color: effectiveIconColor,
-              ),
+              Icon(icon, size: 18, color: effectiveIconColor),
               const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: colorScheme.onSurface,
-                ),
-              ),
-              if (trailing != null) ...[
-                const SizedBox(width: 2),
-                trailing!,
-              ],
+              Text(label, style: appTextStyles.body),
+              if (trailing != null) ...[const SizedBox(width: 2), trailing!],
             ],
           ),
         ),

@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/features/account/data/repositories/account.dart'
@@ -15,11 +14,13 @@ import 'package:mobile/features/entry/presentation/widgets/journal_empty_state.d
 import 'package:mobile/features/entry/presentation/widgets/journal_top_bar.dart';
 import 'package:mobile/features/entry/presentation/widgets/month_summary_card.dart';
 import 'package:mobile/features/entry/presentation/widgets/sticky_date_header.dart'
-    show buildDateHeaderSection, dateHeaderContent;
+    show buildDateHeaderSection, DateHeaderContent;
 import 'package:mobile/features/entry/presentation/widgets/sync_indicator.dart';
 import 'package:mobile/features/entry/presentation/widgets/transaction_row.dart';
 import 'package:mobile/shared/constants/refresh_trigger.dart';
+import 'package:mobile/shared/utils/refresh_snap_back.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
+import 'package:mobile/shared/widgets/app_refresh_indicator.dart';
 import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
 
 class JournalPage extends StatefulWidget {
@@ -36,7 +37,6 @@ class _JournalPageState extends State<JournalPage> {
   SyncStatus _syncStatus = SyncStatus.idle;
   final ScrollController _scrollController = ScrollController();
   static const double _summaryCardHeight = 140;
-  static const double _kCollapsedSummaryBarHeight = 44;
   bool _showCollapsedSummary = false;
   late Future<_JournalData> _future;
   DateTime? _currentStickyDate;
@@ -149,13 +149,15 @@ class _JournalPageState extends State<JournalPage> {
   }
 
   Future<void> _onRefresh() async {
-    setState(() {
-      _syncStatus = SyncStatus.syncing;
-      // TODO: sync data from remote server
-      _future = _loadData();
+    await runRefreshWithSnapBack(_scrollController, () async {
+      setState(() {
+        _syncStatus = SyncStatus.syncing;
+        _future = _loadData();
+      });
+      await _future;
+      await Future.delayed(const Duration(seconds: 1)); // TODO: remove this
+      if (mounted) setState(() => _syncStatus = SyncStatus.idle);
     });
-    await _future;
-    if (mounted) setState(() => _syncStatus = SyncStatus.idle);
   }
 
   void _onRefreshTrigger() {
@@ -183,19 +185,6 @@ class _JournalPageState extends State<JournalPage> {
               privacyMode: _privacyMode,
               onPrivacyModeToggle: () => setState(() => _privacyMode = !_privacyMode),
             ),
-            if (_syncStatus == SyncStatus.syncing)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                child: Text(
-                  '正在與雲端同步資料...',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
             Expanded(
               child: Stack(
                 children: [
@@ -228,10 +217,7 @@ class _JournalPageState extends State<JournalPage> {
                             controller: _scrollController,
                             physics: const AlwaysScrollableScrollPhysics(),
                             slivers: [
-                              CupertinoSliverRefreshControl(
-                                refreshTriggerPullDistance: kRefreshTriggerPullDistance,
-                                onRefresh: _onRefresh,
-                              ),
+                              appSliverRefreshControl(onRefresh: _onRefresh),
                               SliverToBoxAdapter(
                                 child: MonthSummaryCard(
                                   income: summary.income,
@@ -242,7 +228,14 @@ class _JournalPageState extends State<JournalPage> {
                               ),
                               SliverFillRemaining(
                                 hasScrollBody: false,
-                                child: const JournalEmptyState(),
+                                child: Padding(
+                                  padding: EdgeInsets.only(
+                                    top: _syncStatus == SyncStatus.syncing
+                                        ? kRefreshIndicatorExtent
+                                        : 0,
+                                  ),
+                                  child: const Center(child: JournalEmptyState()),
+                                ),
                               ),
                             ],
                           );
@@ -258,11 +251,7 @@ class _JournalPageState extends State<JournalPage> {
                               controller: _scrollController,
                               physics: const AlwaysScrollableScrollPhysics(),
                               slivers: [
-                                CupertinoSliverRefreshControl(
-                                  refreshTriggerPullDistance:
-                                      kRefreshTriggerPullDistance,
-                                  onRefresh: _onRefresh,
-                                ),
+                                appSliverRefreshControl(onRefresh: _onRefresh),
                                 SliverToBoxAdapter(
                                   child: MonthSummaryCard(
                                     income: summary.income,
@@ -275,7 +264,6 @@ class _JournalPageState extends State<JournalPage> {
                                   SliverToBoxAdapter(
                                     child: buildDateHeaderSection(
                                       key: _headerKeys[e.key],
-                                      context: context,
                                       date: e.key,
                                       dayExpense: dayExpense(e.value),
                                       dayIncome: dayIncome(e.value),
@@ -320,13 +308,12 @@ class _JournalPageState extends State<JournalPage> {
                             if (showStickyBar)
                               Positioned(
                                 top: _showCollapsedSummary
-                                    ? _kCollapsedSummaryBarHeight
+                                    ? CollapsedSummaryBar.height
                                     : 0,
                                 left: 0,
                                 right: 0,
                                 key: _stickyBarKey,
-                                child: dateHeaderContent(
-                                  context: context,
+                                child: DateHeaderContent(
                                   date: dateToShow,
                                   dayExpense: dateToShow == _currentStickyDate
                                       ? _currentStickyExpense

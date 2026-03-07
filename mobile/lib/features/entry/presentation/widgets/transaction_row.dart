@@ -3,6 +3,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:mobile/features/account/domain/account.dart';
 import 'package:mobile/features/entry/domain/entry_type.dart';
 import 'package:mobile/features/entry/presentation/constants/entry_type_colors.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 
 class TransactionRow extends StatelessWidget {
@@ -29,6 +30,9 @@ class TransactionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final appTextStyles = AppTextStyles.of(context);
     final typeStr = entry['type'] as String? ?? 'expense';
     final type = EntryType.values.asNameMap()[typeStr] ?? EntryType.expense;
     final amount = (entry['amount'] as num?)?.toDouble() ?? 0.0;
@@ -75,8 +79,8 @@ class TransactionRow extends StatelessWidget {
         children: [
           SlidableAction(
             onPressed: (_) => onDelete(),
-            backgroundColor: Theme.of(context).colorScheme.error,
-            foregroundColor: Theme.of(context).colorScheme.onError,
+            backgroundColor: colorScheme.error,
+            foregroundColor: colorScheme.onError,
             icon: Icons.delete_outline,
             label: '刪除',
           ),
@@ -89,8 +93,8 @@ class TransactionRow extends StatelessWidget {
               children: [
                 SlidableAction(
                   onPressed: (_) => onCopy(),
-                  backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                  foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+                  backgroundColor: colorScheme.primaryContainer,
+                  foregroundColor: colorScheme.onPrimaryContainer,
                   icon: Icons.copy,
                   label: '複製',
                 ),
@@ -115,7 +119,7 @@ class TransactionRow extends StatelessWidget {
         ),
         title: Text(
           title,
-          style: const TextStyle(fontWeight: FontWeight.w500),
+          style: appTextStyles.title,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -132,25 +136,16 @@ class TransactionRow extends StatelessWidget {
                         accountLabel,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                        style: appTextStyles.bodySmallMuted,
                       ),
                     ...tagTitles.map(
                       (t) => Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                          color: colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(4),
                         ),
-                        child: Text(
-                          '#$t',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                        ),
+                        child: Text('#$t', style: appTextStyles.labelSmallMuted),
                       ),
                     ),
                   ],
@@ -159,7 +154,7 @@ class TransactionRow extends StatelessWidget {
             : null,
         trailing: Text(
           amountText,
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: color),
+          style: appTextStyles.titleEmphasis.copyWith(color: color),
         ),
       ),
     );
