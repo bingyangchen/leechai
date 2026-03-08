@@ -5,7 +5,86 @@ class TagRepository {
   TagRepository._();
 
   static const String _table = 'tag';
+  static const String _entryTagTable = 'entry_tag';
   static final _uuid = Uuid();
+
+  static Future<List<Map<String, Object?>>> getAllOrderByCreatedAt() async {
+    final db = await AppDatabase.database;
+    return db.query(
+      _table,
+      columns: ['id', 'title', 'created_at'],
+      where: 'deleted_at IS NULL',
+      orderBy: 'created_at ASC',
+    );
+  }
+
+  static Future<int> getUsageCount(String tagId) async {
+    final db = await AppDatabase.database;
+    final rows = await db.query(
+      _entryTagTable,
+      columns: ['COUNT(*) AS c'],
+      where: 'tag_id = ? AND deleted_at IS NULL',
+      whereArgs: [tagId],
+    );
+    return (rows.single['c'] as int?) ?? 0;
+  }
+
+  static Future<Map<String, int>> getUsageCountsForTagIds(List<String> tagIds) async {
+    if (tagIds.isEmpty) return {};
+    final db = await AppDatabase.database;
+    final placeholders = List.filled(tagIds.length, '?').join(', ');
+    final rows = await db.rawQuery(
+      'SELECT tag_id, COUNT(*) AS c FROM $_entryTagTable '
+      'WHERE tag_id IN ($placeholders) AND deleted_at IS NULL '
+      'GROUP BY tag_id',
+      tagIds,
+    );
+    return {for (final r in rows) r['tag_id'] as String: r['c'] as int};
+  }
+
+  static Future<bool> existsByTitle(String title, {String? excludeId}) async {
+    final db = await AppDatabase.database;
+    final trimmed = title.trim();
+    final where = excludeId == null
+        ? 'title = ? AND deleted_at IS NULL'
+        : 'title = ? AND deleted_at IS NULL AND id != ?';
+    final whereArgs = excludeId == null ? [trimmed] : [trimmed, excludeId];
+    final rows = await db.query(
+      _table,
+      columns: ['id'],
+      where: where,
+      whereArgs: whereArgs,
+    );
+    return rows.isNotEmpty;
+  }
+
+  static Future<void> updateTitle(String id, String title) async {
+    final db = await AppDatabase.database;
+    final now = DateTime.now().toUtc().toIso8601String();
+    await db.update(
+      _table,
+      {'title': title.trim(), 'updated_at': now, 'synced': 0},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  static Future<void> softDelete(String id) async {
+    final db = await AppDatabase.database;
+    final now = DateTime.now().toUtc().toIso8601String();
+    await db.update(
+      _table,
+      {'deleted_at': now, 'updated_at': now, 'synced': 0},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    await db.update(
+      _entryTagTable,
+      {'deleted_at': now, 'synced': 0},
+      where: 'tag_id = ?',
+      whereArgs: [id],
+    );
+  }
 
   static Future<String> getOrCreateByTitle(String title) async {
     final db = await AppDatabase.database;
