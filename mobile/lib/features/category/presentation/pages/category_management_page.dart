@@ -64,6 +64,7 @@ class _CategoryManagementPageState extends State<CategoryManagementPage>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('分類管理'),
@@ -76,6 +77,7 @@ class _CategoryManagementPageState extends State<CategoryManagementPage>
         ],
         bottom: TabBar(
           controller: _tabController,
+          dividerColor: theme.colorScheme.outline.withValues(alpha: 0.2),
           tabs: const [
             Tab(text: '支出'),
             Tab(text: '收入'),
@@ -145,7 +147,7 @@ class _CategoryList extends StatelessWidget {
                 title: Text(name),
                 trailing: Icon(
                   Icons.chevron_right,
-                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
                 ),
                 onTap: () => onTap(category),
               ),
