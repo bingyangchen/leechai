@@ -146,6 +146,7 @@ class _TagFormSheetState extends State<_TagFormSheet> {
                   key: _formKey,
                   child: TextFormField(
                     controller: _titleController,
+                    autofocus: true,
                     decoration: InputDecoration(
                       labelText: '標籤名稱',
                       hintText: '請輸入標籤名稱',

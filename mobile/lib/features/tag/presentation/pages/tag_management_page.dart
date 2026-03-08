@@ -135,15 +135,15 @@ class _TagList extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primaryContainer.withValues(
-                          alpha: 0.5,
+                        color: theme.colorScheme.surfaceContainerHighest.withValues(
+                          alpha: 0.6,
                         ),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         '$count 筆紀錄',
-                        style: theme.textStyles.labelEmphasis.copyWith(
-                          color: theme.colorScheme.onPrimaryContainer,
+                        style: theme.textStyles.labelSmallMuted.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ),
