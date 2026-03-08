@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/features/category/presentation/pages/category_management_page.dart';
+import 'package:mobile/features/tag/presentation/pages/tag_management_page.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
@@ -53,7 +54,11 @@ class ProfileSettingsSection extends StatelessWidget {
               _SettingsTile(
                 icon: Icons.label_outline,
                 title: '標籤管理',
-                onTap: () => _pushPlaceholderPage(context, '標籤管理'), // TODO
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => TagManagementPage(refreshTrigger: refreshTrigger),
+                  ),
+                ),
               ),
             ],
           ),

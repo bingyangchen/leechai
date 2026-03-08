@@ -129,6 +129,7 @@ class _CategoryList extends StatelessWidget {
             return Material(
               color: theme.colorScheme.surface,
               borderRadius: BorderRadius.circular(12),
+              clipBehavior: Clip.antiAlias,
               child: ListTile(
                 leading: Container(
                   width: _iconSize,
