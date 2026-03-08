@@ -4,6 +4,7 @@ import 'package:mobile/features/entry/presentation/pages/entry_page.dart';
 import 'package:mobile/features/entry/presentation/pages/journal_page.dart';
 import 'package:mobile/features/profile/presentation/pages/profile_page.dart';
 import 'package:mobile/features/statistics/presentation/pages/statistics_page.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
 
 class Shell extends StatefulWidget {
   const Shell({super.key, required this.refreshTrigger});
@@ -34,7 +35,7 @@ class _ShellState extends State<Shell> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final navLabelStyle = theme.textTheme.bodySmall;
+    final navLabelStyle = theme.textStyles.bodySmallMuted;
     return Scaffold(
       body: IndexedStack(index: _currentIndex, children: _buildPages()),
       floatingActionButton: _currentIndex < 3

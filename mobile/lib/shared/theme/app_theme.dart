@@ -94,11 +94,12 @@ class AppTheme {
       onError: Colors.white,
     );
     final textTheme = _textTheme(colorScheme, Brightness.light);
+
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
       textTheme: textTheme,
-      dividerColor: const Color(0xFFE8DED5),
+      dividerColor: colorScheme.outline.withValues(alpha: 0.2),
       inputDecorationTheme: InputDecorationTheme(
         hintStyle: TextStyle(
           color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
@@ -153,64 +154,117 @@ class AppTheme {
     const bold = FontWeight.bold;
     final onSurfaceVariant = colorScheme.onSurfaceVariant;
     final onSurface = colorScheme.onSurface;
-    TextStyle merge(TextStyle? base, double? size, FontWeight? weight, Color? color) =>
-        (base ?? TextStyle()).copyWith(
-          fontSize: size ?? base?.fontSize,
-          fontWeight: weight ?? base?.fontWeight,
-          color: color ?? base?.color,
-        );
+
+    TextStyle merge(
+      TextStyle? base, {
+      double? size,
+      FontWeight? weight,
+      Color? color,
+    }) => (base ?? TextStyle()).copyWith(
+      fontSize: size,
+      fontWeight: weight,
+      color: color,
+    );
+
     return AppTextStyles(
       sectionLabel: merge(
         textTheme.titleSmall,
-        _sectionLabelSize,
-        w500,
-        onSurfaceVariant,
+        size: _sectionLabelSize,
+        weight: w500,
+        color: onSurfaceVariant,
       ),
       labelSmallMuted: merge(
         textTheme.labelSmall,
-        _labelSmallSize,
-        null,
-        onSurfaceVariant,
+        size: _labelSmallSize,
+        color: onSurfaceVariant,
       ),
-      labelMuted: merge(textTheme.labelMedium, _labelSize, null, onSurfaceVariant),
-      labelEmphasis: merge(textTheme.labelMedium, _labelSize, w600, onSurface),
-      body: merge(textTheme.bodyMedium, _bodySize, w400, onSurface),
-      bodyMuted: merge(textTheme.bodyMedium, _bodySize, w400, onSurfaceVariant),
+      labelMuted: merge(
+        textTheme.labelMedium,
+        size: _labelSize,
+        color: onSurfaceVariant,
+      ),
+      labelEmphasis: merge(
+        textTheme.labelMedium,
+        size: _labelSize,
+        weight: w600,
+        color: onSurface,
+      ),
+      body: merge(
+        textTheme.bodyMedium,
+        size: _bodySize,
+        weight: w400,
+        color: onSurface,
+      ),
+      bodyMuted: merge(
+        textTheme.bodyMedium,
+        size: _bodySize,
+        weight: w400,
+        color: onSurfaceVariant,
+      ),
       bodySmallMuted: merge(
         textTheme.bodySmall,
-        _bodySmallSize,
-        null,
-        onSurfaceVariant,
+        size: _bodySmallSize,
+        color: onSurfaceVariant,
       ),
       bodyLargeMuted: merge(
         textTheme.bodyLarge,
-        _bodyLargeSize,
-        w400,
-        onSurfaceVariant,
+        size: _bodyLargeSize,
+        weight: w400,
+        color: onSurfaceVariant,
       ),
-      bodyLarge: merge(textTheme.bodyLarge, _bodyLargeSize, w400, onSurface),
-      title: merge(textTheme.titleMedium, _titleSize, w500, onSurface),
-      titleMuted: merge(textTheme.titleMedium, _titleSize, w500, onSurfaceVariant),
-      titleEmphasis: merge(textTheme.titleMedium, _titleSize, w600, onSurface),
+      bodyLarge: merge(
+        textTheme.bodyLarge,
+        size: _bodyLargeSize,
+        weight: w400,
+        color: onSurface,
+      ),
+      title: merge(
+        textTheme.titleMedium,
+        size: _titleSize,
+        weight: w500,
+        color: onSurface,
+      ),
+      titleMuted: merge(
+        textTheme.titleMedium,
+        size: _titleSize,
+        weight: w500,
+        color: onSurfaceVariant,
+      ),
+      titleEmphasis: merge(
+        textTheme.titleMedium,
+        size: _titleSize,
+        weight: w600,
+        color: onSurface,
+      ),
       headlineSmall: merge(
         textTheme.headlineSmall,
-        _headlineSmallSize,
-        w400,
-        onSurface,
+        size: _headlineSmallSize,
+        weight: w400,
+        color: onSurface,
       ),
       headlineSmallEmphasis: merge(
         textTheme.headlineSmall,
-        _headlineSmallSize,
-        bold,
-        onSurface,
+        size: _headlineSmallSize,
+        weight: bold,
+        color: onSurface,
       ),
-      titleSmallEmphasis: merge(textTheme.titleSmall, _titleSmallSize, w600, onSurface),
-      headlineEmphasis: merge(textTheme.headlineMedium, _headlineSize, bold, onSurface),
+      titleSmallEmphasis: merge(
+        textTheme.titleSmall,
+        size: _titleSmallSize,
+        weight: w600,
+        color: onSurface,
+      ),
+      headlineEmphasis: merge(
+        textTheme.headlineMedium,
+        size: _headlineSize,
+        weight: bold,
+        color: onSurface,
+      ),
       headlineLargeEmphasis: merge(
         textTheme.headlineLarge,
-        _headlineLargeSize,
-        bold,
-        onSurface,
+        size: _headlineLargeSize,
+        weight: bold,
+        color: onSurface,
       ),
     );
   }
@@ -233,11 +287,12 @@ class AppTheme {
       onError: const Color(0xFF690005),
     );
     final textTheme = _textTheme(colorScheme, Brightness.dark);
+
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
       textTheme: textTheme,
-      dividerColor: const Color(0xFF5C5048),
+      dividerColor: colorScheme.onSurface.withValues(alpha: 0.2),
       inputDecorationTheme: InputDecorationTheme(
         hintStyle: TextStyle(
           color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
@@ -271,6 +326,14 @@ class AppTheme {
         ),
       ],
     );
+  }
+}
+
+extension ThemeDataTextStyles on ThemeData {
+  AppTextStyles get textStyles {
+    final ext = extension<AppTextStyles>();
+    assert(ext != null);
+    return ext!;
   }
 }
 
