@@ -22,6 +22,7 @@ import 'package:mobile/shared/utils/refresh_snap_back.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
 import 'package:mobile/shared/widgets/app_refresh_indicator.dart';
+import 'package:mobile/shared/widgets/confirm_delete_dialog.dart';
 import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
 
 class AccountDetailPage extends StatefulWidget {
@@ -210,26 +211,9 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
             LiabilityTypeX.fromName(data.account.subType)?.label ??
             data.account.subType);
 
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('確認刪除'),
-        content: Text('確定要刪除 $accountName 嗎？'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(ctx).colorScheme.error,
-              foregroundColor: Theme.of(ctx).colorScheme.onError,
-            ),
-            child: const Text('刪除'),
-          ),
-        ],
-      ),
+    final confirm = await ConfirmDeleteDialog.show(
+      context,
+      content: '確定要刪除 $accountName 嗎？',
     );
     if (confirm != true || !mounted) return;
 

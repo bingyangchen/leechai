@@ -8,6 +8,7 @@ import 'package:mobile/features/entry/data/repositories/entry.dart'
     show EntryRepository;
 import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
+import 'package:mobile/shared/widgets/confirm_delete_dialog.dart';
 
 Future<bool?> showCategoryFormSheet(
   BuildContext context, {
@@ -84,34 +85,20 @@ class _CategoryFormSheetState extends State<_CategoryFormSheet> {
           title: const Text('無法刪除'),
           content: const Text('此分類已有交易紀錄，為確保帳務正確，請先刪除相關紀錄。'),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(c), child: const Text('確定')),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(c);
+                widget.onSuccess();
+              },
+              child: const Text('確定'),
+            ),
           ],
         ),
       );
       return;
     }
     final name = account.name ?? account.subType;
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('確認刪除'),
-        content: Text('確定要刪除 $name 嗎？'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(ctx).colorScheme.error,
-              foregroundColor: Theme.of(ctx).colorScheme.onError,
-            ),
-            child: const Text('刪除'),
-          ),
-        ],
-      ),
-    );
+    final confirm = await ConfirmDeleteDialog.show(context, content: '確定要刪除 $name 嗎？');
     if (confirm != true || !mounted) return;
     final deleted = await AccountRepository.delete(account.id);
     if (!mounted) return;

@@ -100,7 +100,7 @@ class EntryListHandlers {
     void Function() onDeleted,
   ) async {
     final entryId = entry['id'] as String;
-    final confirmed = await ConfirmDeleteDialog.show(context);
+    final confirmed = await ConfirmDeleteDialog.show(context, content: '確定要刪除這筆紀錄嗎？');
     if (confirmed != true || !context.mounted) return;
     await EntryRepository.softDelete(entryId);
     if (context.mounted) {

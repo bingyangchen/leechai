@@ -198,7 +198,7 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
 
   Future<void> _requestDelete() async {
     if (_isSubmitting || !_isEditMode || widget.entryId == null) return;
-    final confirmed = await ConfirmDeleteDialog.show(context);
+    final confirmed = await ConfirmDeleteDialog.show(context, content: '確定要刪除這筆紀錄嗎？');
     if (confirmed != true || !mounted) return;
     setState(() => _isSubmitting = true);
     try {
