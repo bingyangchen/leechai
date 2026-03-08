@@ -159,11 +159,11 @@ class ProfileSettingsSection extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
             ),
             alignment: Alignment.center,
-            // TODO: replace with app icon
-            child: Icon(
-              Icons.account_balance_wallet_rounded,
-              size: 40,
-              color: theme.colorScheme.onPrimaryContainer,
+            child: Image.asset(
+              'assets/icon/app_icon.png',
+              width: 72,
+              height: 72,
+              fit: BoxFit.cover,
             ),
           ),
           const SizedBox(height: 16),
