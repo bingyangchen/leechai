@@ -85,18 +85,21 @@ class AccountRepository {
     required String name,
     required double initialBalance,
     IconData? icon,
+    String? subType,
   }) async {
     final db = await AppDatabase.database;
     final now = DateTime.now().toUtc().toIso8601String();
+    final data = <String, Object?>{
+      'name': name,
+      'initial_balance': initialBalance,
+      'icon': icon != null ? iconToCodePoint(icon) : null,
+      'updated_at': now,
+      'synced': 0,
+    };
+    if (subType != null) data['sub_type'] = subType;
     await db.update(
       _table,
-      {
-        'name': name,
-        'initial_balance': initialBalance,
-        'icon': icon != null ? iconToCodePoint(icon) : null,
-        'updated_at': now,
-        'synced': 0,
-      },
+      data,
       where: 'id = ? AND deleted_at IS NULL',
       whereArgs: [id],
     );
