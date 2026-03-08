@@ -21,9 +21,9 @@ class ProfileSettingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
     return Container(
-      color: colorScheme.surfaceContainerLowest,
+      color: theme.colorScheme.surfaceContainerLowest,
       padding: const EdgeInsets.only(top: 8, bottom: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -124,8 +124,7 @@ class ProfileSettingsSection extends StatelessWidget {
   }
 
   void _showAboutBottomSheet(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final appTextStyles = AppTextStyles.of(context);
+    final theme = Theme.of(context);
     showAppBottomSheet<void>(
       context,
       mode: AppBottomSheetMode.static,
@@ -137,7 +136,7 @@ class ProfileSettingsSection extends StatelessWidget {
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-              color: colorScheme.primaryContainer,
+              color: theme.colorScheme.primaryContainer,
               borderRadius: BorderRadius.circular(20),
             ),
             alignment: Alignment.center,
@@ -145,13 +144,13 @@ class ProfileSettingsSection extends StatelessWidget {
             child: Icon(
               Icons.account_balance_wallet_rounded,
               size: 40,
-              color: colorScheme.onPrimaryContainer,
+              color: theme.colorScheme.onPrimaryContainer,
             ),
           ),
           const SizedBox(height: 16),
-          Text('LeeChai', style: appTextStyles.headlineSmallEmphasis),
+          Text('LeeChai', style: theme.textStyles.headlineSmallEmphasis),
           const SizedBox(height: 4),
-          Text(_appVersion, style: appTextStyles.bodyMuted),
+          Text(_appVersion, style: theme.textStyles.bodyMuted),
           const SizedBox(height: 24),
           _AboutSheetTile(
             icon: Icons.description_outlined,
@@ -202,14 +201,14 @@ class _AboutSheetTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
     return ListTile(
-      leading: Icon(icon, size: 22, color: colorScheme.onSurfaceVariant),
+      leading: Icon(icon, size: 22, color: theme.colorScheme.onSurfaceVariant),
       title: Text(title),
       trailing: Icon(
         trailing,
         size: 20,
-        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
       ),
       onTap: onTap,
     );
@@ -222,14 +221,13 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final appTextStyles = AppTextStyles.of(context);
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
       child: Text(
         title,
-        style: appTextStyles.labelEmphasis.copyWith(
-          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+        style: theme.textStyles.labelEmphasis.copyWith(
+          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
           letterSpacing: 1.2,
         ),
       ),
@@ -243,11 +241,11 @@ class _TileGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 0),
       decoration: BoxDecoration(
-        color: colorScheme.surface,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
       ),
       clipBehavior: Clip.antiAlias,
@@ -274,41 +272,40 @@ class _SettingsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final appTextStyles = AppTextStyles.of(context);
+    final theme = Theme.of(context);
     final trailingWidget = trailing != null
         ? Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 trailing!,
-                style: appTextStyles.bodyMuted.copyWith(
-                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                style: theme.textStyles.bodyMuted.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                 ),
               ),
               const SizedBox(width: 4),
               Icon(
                 Icons.chevron_right,
                 size: 24,
-                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
               ),
             ],
           )
         : Icon(
             Icons.chevron_right,
             size: 24,
-            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
           );
     return ListTile(
       leading: Container(
         width: _iconBoxSize,
         height: _iconBoxSize,
         decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
+          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
           borderRadius: BorderRadius.circular(_iconBoxRadius),
         ),
         alignment: Alignment.center,
-        child: Icon(icon, size: 20, color: colorScheme.onSurface),
+        child: Icon(icon, size: 20, color: theme.colorScheme.onSurface),
       ),
       title: Text(title),
       trailing: trailingWidget,

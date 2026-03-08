@@ -12,12 +12,11 @@ class NetWorthLineChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final appTextStyles = AppTextStyles.of(context);
-    final primary = colorScheme.primary;
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
 
     if (data.isEmpty || data.length == 1) {
-      return Center(child: Text('資料不足', style: appTextStyles.bodyMuted));
+      return Center(child: Text('資料不足', style: theme.textStyles.bodyMuted));
     }
 
     final spots = data.asMap().entries.map((e) {
@@ -66,7 +65,7 @@ class NetWorthLineChart extends StatelessWidget {
           drawVerticalLine: false,
           horizontalInterval: range / 4,
           getDrawingHorizontalLine: (v) => FlLine(
-            color: colorScheme.outline.withValues(alpha: 0.15),
+            color: theme.colorScheme.outline.withValues(alpha: 0.15),
             strokeWidth: 1,
           ),
         ),
@@ -82,7 +81,7 @@ class NetWorthLineChart extends StatelessWidget {
                 if (nearBottom || nearTop) return const SizedBox.shrink();
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
-                  child: Text(formatY(v), style: appTextStyles.labelSmallMuted),
+                  child: Text(formatY(v), style: theme.textStyles.labelSmallMuted),
                 );
               },
             ),
@@ -102,7 +101,7 @@ class NetWorthLineChart extends StatelessWidget {
                 if (label.isEmpty) return const SizedBox.shrink();
                 return Padding(
                   padding: const EdgeInsets.only(top: 8),
-                  child: Text(label, style: appTextStyles.labelSmallMuted),
+                  child: Text(label, style: theme.textStyles.labelSmallMuted),
                 );
               },
             ),
@@ -118,7 +117,7 @@ class NetWorthLineChart extends StatelessWidget {
             return spotIndexes.map((index) {
               return TouchedSpotIndicatorData(
                 FlLine(
-                  color: colorScheme.outline.withValues(alpha: 0.3),
+                  color: theme.colorScheme.outline.withValues(alpha: 0.3),
                   strokeWidth: 1,
                   dashArray: const [4, 4],
                 ),
@@ -128,14 +127,14 @@ class NetWorthLineChart extends StatelessWidget {
                     radius: 4,
                     color: primary,
                     strokeWidth: 2,
-                    strokeColor: colorScheme.surface,
+                    strokeColor: theme.colorScheme.surface,
                   ),
                 ),
               );
             }).toList();
           },
           touchTooltipData: LineTouchTooltipData(
-            getTooltipColor: (_) => colorScheme.surfaceContainerHighest,
+            getTooltipColor: (_) => theme.colorScheme.surfaceContainerHighest,
             tooltipBorderRadius: BorderRadius.circular(8),
             getTooltipItems: (spots) {
               return spots.map((s) {
@@ -149,7 +148,7 @@ class NetWorthLineChart extends StatelessWidget {
                     '${d.year}/${d.month.toString().padLeft(2, '0')}/${d.day.toString().padLeft(2, '0')}';
                 return LineTooltipItem(
                   '$dateStr\n\$$val',
-                  appTextStyles.bodySmallMuted,
+                  theme.textStyles.bodySmallMuted,
                 );
               }).toList();
             },

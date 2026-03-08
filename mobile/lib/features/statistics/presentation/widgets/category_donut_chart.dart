@@ -25,7 +25,7 @@ class CategoryDonutChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final appTextStyles = AppTextStyles.of(context);
+    final theme = Theme.of(context);
     final displayAmount = privacyMode ? '****' : formatAmountForDisplay(total);
     final touched = touchedIndex;
     final isValidTouched =
@@ -72,7 +72,7 @@ class CategoryDonutChart extends StatelessWidget {
             children: [
               Text(
                 displayLabel,
-                style: appTextStyles.bodySmallMuted,
+                style: theme.textStyles.bodySmallMuted,
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -86,7 +86,7 @@ class CategoryDonutChart extends StatelessWidget {
                             ? '****'
                             : formatAmountForDisplay(breakdown[touched].amount))
                       : displayAmount,
-                  style: appTextStyles.headlineSmallEmphasis,
+                  style: theme.textStyles.headlineSmallEmphasis,
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -103,8 +103,7 @@ class CategoryChartEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final appTextStyles = AppTextStyles.of(context);
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
       child: Column(
@@ -114,12 +113,12 @@ class CategoryChartEmptyState extends StatelessWidget {
             height: 160,
             child: CustomPaint(
               painter: _EmptyDonutPainter(
-                color: colorScheme.outline.withValues(alpha: 0.3),
+                color: theme.colorScheme.outline.withValues(alpha: 0.3),
               ),
             ),
           ),
           const SizedBox(height: 24),
-          Text('尚無紀錄', style: appTextStyles.titleMuted),
+          Text('尚無紀錄', style: theme.textStyles.titleMuted),
         ],
       ),
     );

@@ -88,8 +88,7 @@ class _StatisticsPageState extends State<StatisticsPage>
   }
 
   Widget _buildTimeSelectorForCurrentTab() {
-    final colorScheme = Theme.of(context).colorScheme;
-    final appTextStyles = AppTextStyles.of(context);
+    final theme = Theme.of(context);
     if (_tabController.index == 0) {
       return Align(
         key: const ValueKey('date_btn'),
@@ -99,7 +98,7 @@ class _StatisticsPageState extends State<StatisticsPage>
           icon: const Icon(Icons.calendar_month, size: 20),
           label: Text(
             _dateRange.toShortLabel(_preset),
-            style: appTextStyles.titleEmphasis,
+            style: theme.textStyles.titleEmphasis,
           ),
         ),
       );
@@ -120,7 +119,7 @@ class _StatisticsPageState extends State<StatisticsPage>
                   setState(() => _netWorthRange = r);
                 }
               },
-              side: BorderSide(color: colorScheme.outline),
+              side: BorderSide(color: theme.colorScheme.outline),
             ),
           );
         }).toList(),
@@ -131,8 +130,6 @@ class _StatisticsPageState extends State<StatisticsPage>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final appTextStyles = AppTextStyles.of(context);
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -172,16 +169,16 @@ class _StatisticsPageState extends State<StatisticsPage>
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: TabBar(
                 controller: _tabController,
-                dividerColor: colorScheme.surface.withValues(alpha: 0),
+                dividerColor: Colors.transparent,
                 indicator: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
-                  color: colorScheme.primaryContainer,
+                  color: theme.colorScheme.primaryContainer,
                 ),
                 indicatorSize: TabBarIndicatorSize.tab,
-                labelColor: colorScheme.onPrimaryContainer,
-                unselectedLabelColor: colorScheme.onSurfaceVariant,
-                labelStyle: appTextStyles.titleEmphasis,
-                unselectedLabelStyle: appTextStyles.title,
+                labelColor: theme.colorScheme.onPrimaryContainer,
+                unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
+                labelStyle: theme.textStyles.titleEmphasis,
+                unselectedLabelStyle: theme.textStyles.title,
                 isScrollable: true,
                 tabAlignment: TabAlignment.center,
                 tabs: const [
@@ -189,9 +186,7 @@ class _StatisticsPageState extends State<StatisticsPage>
                   Tab(text: '資產趨勢'),
                 ],
                 splashFactory: NoSplash.splashFactory,
-                overlayColor: WidgetStateProperty.all(
-                  colorScheme.surface.withValues(alpha: 0),
-                ),
+                overlayColor: WidgetStateProperty.all(Colors.transparent),
               ),
             ),
             Expanded(

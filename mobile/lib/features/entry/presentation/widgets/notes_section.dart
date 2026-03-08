@@ -9,13 +9,13 @@ class NotesSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final appTextStyles = AppTextStyles.of(context);
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('備註', style: appTextStyles.sectionLabel),
+          Text('備註', style: theme.textStyles.sectionLabel),
           const SizedBox(height: 8),
           TextFormField(
             controller: controller,

@@ -15,14 +15,13 @@ class UserProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final appTextStyles = AppTextStyles.of(context);
+    final theme = Theme.of(context);
     const radius = 16.0;
 
     return Container(
       margin: const EdgeInsets.all(8),
       child: Material(
-        color: colorScheme.surface,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(radius),
         child: InkWell(
           borderRadius: BorderRadius.circular(radius),
@@ -35,15 +34,15 @@ class UserProfileHeader extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 28,
-                  backgroundColor: colorScheme.primaryContainer,
+                  backgroundColor: theme.colorScheme.primaryContainer,
                   child: isLoggedIn && userName.isNotEmpty
                       ? Text(
                           userName[0],
-                          style: appTextStyles.headlineSmallEmphasis.copyWith(
-                            color: colorScheme.primary,
+                          style: theme.textStyles.headlineSmallEmphasis.copyWith(
+                            color: theme.colorScheme.primary,
                           ),
                         )
-                      : Icon(Icons.person_outline, color: colorScheme.primary),
+                      : Icon(Icons.person_outline, color: theme.colorScheme.primary),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -53,18 +52,18 @@ class UserProfileHeader extends StatelessWidget {
                     children: [
                       Text(
                         isLoggedIn ? userName : '尚未登入',
-                        style: appTextStyles.titleEmphasis,
+                        style: theme.textStyles.titleEmphasis,
                       ),
                       Text(
                         isLoggedIn ? userEmail : '點擊登入以啟用雲端同步',
-                        style: appTextStyles.bodyMuted,
+                        style: theme.textStyles.bodyMuted,
                       ),
                     ],
                   ),
                 ),
                 Icon(
                   Icons.chevron_right,
-                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
                 ),
               ],
             ),

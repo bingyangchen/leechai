@@ -146,8 +146,6 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
     final data = await _future;
     if (!mounted) return;
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final appTextStyles = AppTextStyles.of(context);
     await showAppBottomSheet<void>(
       context,
       mode: AppBottomSheetMode.static,
@@ -163,10 +161,12 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
             },
           ),
           ListTile(
-            leading: Icon(Icons.delete_outline, color: colorScheme.error),
+            leading: Icon(Icons.delete_outline, color: theme.colorScheme.error),
             title: Text(
               '刪除帳戶',
-              style: appTextStyles.bodyLargeMuted.copyWith(color: colorScheme.error),
+              style: theme.textStyles.bodyLargeMuted.copyWith(
+                color: theme.colorScheme.error,
+              ),
             ),
             onTap: () {
               Navigator.pop(ctx);
@@ -253,8 +253,6 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final appTextStyles = AppTextStyles.of(context);
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: kToolbarHeight,
@@ -340,10 +338,10 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
                           Icon(
                             Icons.receipt_long_outlined,
                             size: 64,
-                            color: colorScheme.outline.withValues(alpha: 0.5),
+                            color: theme.colorScheme.outline.withValues(alpha: 0.5),
                           ),
                           const SizedBox(height: 16),
-                          Text('此帳戶尚無交易紀錄', style: appTextStyles.titleMuted),
+                          Text('此帳戶尚無交易紀錄', style: theme.textStyles.titleMuted),
                         ],
                       ),
                     ),

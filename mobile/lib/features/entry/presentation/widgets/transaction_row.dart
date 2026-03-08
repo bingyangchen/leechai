@@ -31,8 +31,6 @@ class TransactionRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final appTextStyles = AppTextStyles.of(context);
     final typeStr = entry['type'] as String? ?? 'expense';
     final type = EntryType.values.asNameMap()[typeStr] ?? EntryType.expense;
     final amount = (entry['amount'] as num?)?.toDouble() ?? 0.0;
@@ -79,8 +77,8 @@ class TransactionRow extends StatelessWidget {
         children: [
           SlidableAction(
             onPressed: (_) => onDelete(),
-            backgroundColor: colorScheme.error,
-            foregroundColor: colorScheme.onError,
+            backgroundColor: theme.colorScheme.error,
+            foregroundColor: theme.colorScheme.onError,
             icon: Icons.delete_outline,
             label: '刪除',
           ),
@@ -93,8 +91,8 @@ class TransactionRow extends StatelessWidget {
               children: [
                 SlidableAction(
                   onPressed: (_) => onCopy(),
-                  backgroundColor: colorScheme.primaryContainer,
-                  foregroundColor: colorScheme.onPrimaryContainer,
+                  backgroundColor: theme.colorScheme.primaryContainer,
+                  foregroundColor: theme.colorScheme.onPrimaryContainer,
                   icon: Icons.copy,
                   label: '複製',
                 ),
@@ -119,7 +117,7 @@ class TransactionRow extends StatelessWidget {
         ),
         title: Text(
           title,
-          style: appTextStyles.title,
+          style: theme.textStyles.title,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -136,16 +134,16 @@ class TransactionRow extends StatelessWidget {
                         accountLabel,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: appTextStyles.bodySmallMuted,
+                        style: theme.textStyles.bodySmallMuted,
                       ),
                     ...tagTitles.map(
                       (t) => Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerHighest,
+                          color: theme.colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(4),
                         ),
-                        child: Text('#$t', style: appTextStyles.labelSmallMuted),
+                        child: Text('#$t', style: theme.textStyles.labelSmallMuted),
                       ),
                     ),
                   ],
@@ -154,7 +152,7 @@ class TransactionRow extends StatelessWidget {
             : null,
         trailing: Text(
           amountText,
-          style: appTextStyles.titleEmphasis.copyWith(color: color),
+          style: theme.textStyles.titleEmphasis.copyWith(color: color),
         ),
       ),
     );

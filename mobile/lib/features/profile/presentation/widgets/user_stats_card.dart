@@ -302,9 +302,9 @@ class _BrandMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
     final baseColor = heroColors.contentMuted.withValues(alpha: 0.82);
-    final shadowColor = colorScheme.shadow.withValues(alpha: 0.22);
+    final shadowColor = theme.colorScheme.shadow.withValues(alpha: 0.22);
     final highlightColor = heroColors.content.withValues(alpha: 0.28);
     return Text(
       'LEECHAI',

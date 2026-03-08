@@ -29,8 +29,6 @@ class AccountGroupSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final appTextStyles = AppTextStyles.of(context);
     final total = accounts.fold<double>(0, (sum, a) => sum + (balances[a.id] ?? 0));
     final displayTotal = kind.isLiability ? total.abs() : total;
     final totalStr = privacyMode ? '****' : formatAmountForDisplay(displayTotal);
@@ -44,20 +42,20 @@ class AccountGroupSection extends StatelessWidget {
         children: [
           Icon(kind.sectionIcon, color: _sectionColor(context), size: 24),
           const SizedBox(width: 12),
-          Expanded(child: Text(kind.title, style: appTextStyles.titleEmphasis)),
+          Expanded(child: Text(kind.title, style: theme.textStyles.titleEmphasis)),
           if (kind == AccountGroupKind.creditCard)
             Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: Text('未繳金額', style: appTextStyles.bodySmallMuted),
+              child: Text('未繳金額', style: theme.textStyles.bodySmallMuted),
             ),
           if (kind == AccountGroupKind.investments)
             Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: Text('市值', style: appTextStyles.bodySmallMuted),
+              child: Text('市值', style: theme.textStyles.bodySmallMuted),
             ),
           Text(
             '\$$totalStr',
-            style: appTextStyles.titleEmphasis.copyWith(
+            style: theme.textStyles.titleEmphasis.copyWith(
               color: kind.isLiability ? _liabilityAmountColor(context) : null,
             ),
           ),
@@ -66,10 +64,10 @@ class AccountGroupSection extends StatelessWidget {
               padding: const EdgeInsets.only(left: 8),
               child: Text(
                 '${roiPercent! >= 0 ? '+' : ''}${roiPercent!.toStringAsFixed(1)}%',
-                style: appTextStyles.labelMuted.copyWith(
+                style: theme.textStyles.labelMuted.copyWith(
                   color: roiPercent! >= 0
                       ? AccountingColors.of(context).income
-                      : colorScheme.error,
+                      : theme.colorScheme.error,
                 ),
               ),
             ),
@@ -118,8 +116,6 @@ class _AddAccountListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final appTextStyles = AppTextStyles.of(context);
     return ListTile(
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -127,13 +123,13 @@ class _AddAccountListTile extends StatelessWidget {
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: colorScheme.surface.withValues(alpha: 0),
+          color: Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: theme.dividerColor, width: 1.5),
         ),
-        child: Icon(Icons.add, color: colorScheme.onSurfaceVariant, size: 24),
+        child: Icon(Icons.add, color: theme.colorScheme.onSurfaceVariant, size: 24),
       ),
-      title: Text(label, style: appTextStyles.bodyLargeMuted),
+      title: Text(label, style: theme.textStyles.bodyLargeMuted),
     );
   }
 }
@@ -156,8 +152,6 @@ class _AccountListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final appTextStyles = AppTextStyles.of(context);
     final displayBalance = isLiability ? balance.abs() : balance;
     final amountStr = privacyMode ? '****' : formatAmountForDisplay(displayBalance);
     final icon = _iconForAccount(account);
@@ -169,15 +163,15 @@ class _AccountListTile extends StatelessWidget {
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest,
+          color: theme.colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(icon, color: colorScheme.primary, size: 24),
+        child: Icon(icon, color: theme.colorScheme.primary, size: 24),
       ),
-      title: Text(account.name ?? _defaultName(account), style: appTextStyles.title),
+      title: Text(account.name ?? _defaultName(account), style: theme.textStyles.title),
       trailing: Text(
         '\$$amountStr',
-        style: appTextStyles.titleSmallEmphasis.copyWith(
+        style: theme.textStyles.titleSmallEmphasis.copyWith(
           color: isLiability ? AccountingColors.of(context).liability : null,
         ),
       ),

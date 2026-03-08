@@ -8,17 +8,16 @@ class MonthPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final appTextStyles = AppTextStyles.of(context);
+    final theme = Theme.of(context);
     final yearMonth = '${month.year} 年 ${month.month.toString()} 月';
     return TextButton(
       onPressed: onTap,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(yearMonth, style: appTextStyles.titleEmphasis),
+          Text(yearMonth, style: theme.textStyles.titleEmphasis),
           const SizedBox(width: 4),
-          Icon(Icons.arrow_drop_down, color: colorScheme.onSurface),
+          Icon(Icons.arrow_drop_down, color: theme.colorScheme.onSurface),
         ],
       ),
     );

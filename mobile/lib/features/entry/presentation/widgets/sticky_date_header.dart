@@ -22,31 +22,30 @@ class DateHeaderContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final appTextStyles = AppTextStyles.of(context);
+    final theme = Theme.of(context);
     final dateStr =
         '${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}';
     final weekday = _weekdays[date.weekday - 1];
     final expenseStr = privacyMode ? '****' : formatAmountForDisplay(dayExpense);
     final incomeStr = privacyMode ? '****' : formatAmountForDisplay(dayIncome);
     return Container(
-      color: colorScheme.surface,
+      color: theme.colorScheme.surface,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       alignment: Alignment.centerLeft,
       child: Row(
         children: [
-          Text('$dateStr ($weekday)', style: appTextStyles.titleSmallEmphasis),
+          Text('$dateStr ($weekday)', style: theme.textStyles.titleSmallEmphasis),
           const SizedBox(width: 12),
           Text(
             '支出 \$$expenseStr',
-            style: appTextStyles.bodySmallMuted.copyWith(
+            style: theme.textStyles.bodySmallMuted.copyWith(
               color: EntryTypeColors.forType(context, EntryType.expense),
             ),
           ),
           const SizedBox(width: 12),
           Text(
             '收入 \$$incomeStr',
-            style: appTextStyles.bodySmallMuted.copyWith(
+            style: theme.textStyles.bodySmallMuted.copyWith(
               color: EntryTypeColors.forType(context, EntryType.income),
             ),
           ),

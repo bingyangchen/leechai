@@ -254,6 +254,12 @@ class AppTheme {
         weight: w600,
         color: onSurface,
       ),
+      headline: merge(
+        textTheme.headlineMedium,
+        size: _headlineSize,
+        // weight: w400,
+        color: onSurface,
+      ),
       headlineEmphasis: merge(
         textTheme.headlineMedium,
         size: _headlineSize,
@@ -354,6 +360,7 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
     required this.headlineSmall,
     required this.headlineSmallEmphasis,
     required this.titleSmallEmphasis,
+    required this.headline,
     required this.headlineEmphasis,
     required this.headlineLargeEmphasis,
   });
@@ -373,6 +380,7 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
   final TextStyle headlineSmall;
   final TextStyle headlineSmallEmphasis;
   final TextStyle titleSmallEmphasis;
+  final TextStyle headline;
   final TextStyle headlineEmphasis;
   final TextStyle headlineLargeEmphasis;
 
@@ -399,6 +407,7 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
     TextStyle? headlineSmall,
     TextStyle? headlineSmallEmphasis,
     TextStyle? titleSmallEmphasis,
+    TextStyle? headline,
     TextStyle? headlineEmphasis,
     TextStyle? headlineLargeEmphasis,
   }) => AppTextStyles(
@@ -417,6 +426,7 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
     headlineSmall: headlineSmall ?? this.headlineSmall,
     headlineSmallEmphasis: headlineSmallEmphasis ?? this.headlineSmallEmphasis,
     titleSmallEmphasis: titleSmallEmphasis ?? this.titleSmallEmphasis,
+    headline: headline ?? this.headline,
     headlineEmphasis: headlineEmphasis ?? this.headlineEmphasis,
     headlineLargeEmphasis: headlineLargeEmphasis ?? this.headlineLargeEmphasis,
   );
@@ -448,6 +458,7 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
         other.titleSmallEmphasis,
         t,
       )!,
+      headline: TextStyle.lerp(headline, other.headline, t)!,
       headlineEmphasis: TextStyle.lerp(headlineEmphasis, other.headlineEmphasis, t)!,
       headlineLargeEmphasis: TextStyle.lerp(
         headlineLargeEmphasis,

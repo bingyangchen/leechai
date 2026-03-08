@@ -130,8 +130,7 @@ class _DateRangePickerContentState extends State<_DateRangePickerContent> {
 
   @override
   Widget build(BuildContext context) {
-    final appTextStyles = AppTextStyles.of(context);
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
     return SingleChildScrollView(
       controller: widget.scrollController,
       child: Padding(
@@ -149,12 +148,12 @@ class _DateRangePickerContentState extends State<_DateRangePickerContent> {
                       label: Text(p.label),
                       selected: _preset == p,
                       onSelected: (_) => _selectPreset(p),
-                      side: BorderSide(color: colorScheme.outline),
+                      side: BorderSide(color: theme.colorScheme.outline),
                     ),
               ],
             ),
             const SizedBox(height: 24),
-            Text('自訂區間', style: appTextStyles.sectionLabel),
+            Text('自訂區間', style: theme.textStyles.sectionLabel),
             const SizedBox(height: 8),
             Row(
               children: [

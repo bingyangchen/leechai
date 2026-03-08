@@ -11,21 +11,21 @@ Future<void> showAchievementDetailSheet(BuildContext context, AchievementItem it
     titleAlignment: AppBottomSheetTitleAlignment.left,
     mode: AppBottomSheetMode.scrollable,
     scrollableBuilder: (context, scrollController) {
-      final appTextStyles = AppTextStyles.of(context);
+      final theme = Theme.of(context);
       return ListView(
         controller: scrollController,
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
         children: [
-          Text(item.description, style: appTextStyles.bodyLarge),
+          Text(item.description, style: theme.textStyles.bodyLarge),
           const SizedBox(height: 16),
-          Text('取得條件', style: appTextStyles.sectionLabel),
+          Text('取得條件', style: theme.textStyles.sectionLabel),
           const SizedBox(height: 4),
-          Text(item.conditionText, style: appTextStyles.body),
+          Text(item.conditionText, style: theme.textStyles.body),
           if (item.isUnlocked && item.unlockedAt != null) ...[
             const SizedBox(height: 16),
             Text(
               '解鎖於 ${formatDate(item.unlockedAt!)}',
-              style: appTextStyles.bodySmallMuted.copyWith(
+              style: theme.textStyles.bodySmallMuted.copyWith(
                 color: Theme.of(context).colorScheme.primary,
               ),
             ),

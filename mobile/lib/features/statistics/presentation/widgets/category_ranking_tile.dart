@@ -39,8 +39,7 @@ class _CategoryRankingTileState extends State<CategoryRankingTile> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final appTextStyles = AppTextStyles.of(context);
+    final theme = Theme.of(context);
     final amountStr = widget.privacyMode
         ? '****'
         : formatAmountForDisplay(widget.amount);
@@ -106,14 +105,14 @@ class _CategoryRankingTileState extends State<CategoryRankingTile> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(amountStr, style: appTextStyles.titleSmallEmphasis),
-                      Text(percentStr, style: appTextStyles.bodySmallMuted),
+                      Text(amountStr, style: theme.textStyles.titleSmallEmphasis),
+                      Text(percentStr, style: theme.textStyles.bodySmallMuted),
                     ],
                   ),
                   const SizedBox(width: 4),
                   Icon(
                     Icons.chevron_right,
-                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                    color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
                     size: 20,
                   ),
                 ],

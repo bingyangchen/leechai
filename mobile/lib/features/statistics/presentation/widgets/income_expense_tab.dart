@@ -300,7 +300,6 @@ class _SlidingSegmentOptionState extends State<_SlidingSegmentOption> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final appTextStyles = AppTextStyles.of(context);
     final color = widget.selected
         ? widget.activeColor
         : theme.colorScheme.onSurfaceVariant;
@@ -320,7 +319,7 @@ class _SlidingSegmentOptionState extends State<_SlidingSegmentOption> {
           child: AnimatedDefaultTextStyle(
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeInOut,
-            style: appTextStyles.sectionLabel.copyWith(
+            style: theme.textStyles.sectionLabel.copyWith(
               color: color,
               fontWeight: widget.selected ? FontWeight.w600 : FontWeight.normal,
             ),

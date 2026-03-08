@@ -111,7 +111,7 @@ class _AppBottomSheetHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final appTextStyles = AppTextStyles.of(context);
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Row(
@@ -122,7 +122,7 @@ class _AppBottomSheetHeader extends StatelessWidget {
                 alignment: titleAlignment == AppBottomSheetTitleAlignment.center
                     ? Alignment.center
                     : Alignment.centerLeft,
-                child: Text(title!, style: appTextStyles.headlineSmall),
+                child: Text(title!, style: theme.textStyles.headlineSmall),
               ),
             )
           else
