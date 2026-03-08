@@ -103,12 +103,9 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
     if (type == EntryType.adjustment) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('系統調整紀錄無法編輯'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('系統調整紀錄無法編輯')));
         Navigator.of(context).pop();
       });
       return;
@@ -377,12 +374,9 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
     final accounts = _getDebitCreditAccountIds();
     if (accounts == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('請選擇帳戶與分類'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('請選擇帳戶與分類')));
       }
       return;
     }

@@ -114,6 +114,18 @@ class AppTheme {
             ) ??
             TextStyle(fontSize: 16, color: colorScheme.onSurface),
       ),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: colorScheme.surfaceContainerHighest,
+        contentTextStyle: textTheme.bodyMedium?.copyWith(
+          color: colorScheme.onSurface,
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+        elevation: 2,
+      ),
       extensions: [
         _appTextStyles(textTheme, colorScheme),
         AccountingColors(
@@ -312,6 +324,18 @@ class AppTheme {
               color: colorScheme.onSurface,
             ) ??
             TextStyle(fontSize: 16, color: colorScheme.onSurface),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: colorScheme.surfaceContainerHighest,
+        contentTextStyle: textTheme.bodyMedium?.copyWith(
+          color: colorScheme.onSurface,
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+        elevation: 2,
       ),
       extensions: [
         _appTextStyles(textTheme, colorScheme),

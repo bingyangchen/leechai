@@ -120,15 +120,15 @@ class EntryListHandlers {
       if (context.mounted) {
         onCopied();
         DataRefreshScope.notify(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('已複製一筆紀錄'), behavior: SnackBarBehavior.floating),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('已複製一筆紀錄')));
       }
     } catch (_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('複製失敗'), behavior: SnackBarBehavior.floating),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('複製失敗')));
       }
     }
   }

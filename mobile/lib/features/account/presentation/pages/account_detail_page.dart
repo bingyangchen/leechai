@@ -137,7 +137,6 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
                 ? '已記錄未實現損益 +${formatAmountForDisplay(diff)}'
                 : '已記錄未實現損益 ${formatAmountForDisplay(diff)}',
           ),
-          behavior: SnackBarBehavior.floating,
         ),
       );
     }
@@ -221,16 +220,13 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
     if (!mounted) return;
     if (deleted) {
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('帳戶已刪除'), behavior: SnackBarBehavior.floating),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('帳戶已刪除')));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('此帳戶已有交易紀錄，無法刪除'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('此帳戶已有交易紀錄，無法刪除')));
     }
   }
 
