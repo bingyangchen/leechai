@@ -11,9 +11,9 @@ When writing or editing code that involves **style** (colors, typography, spacin
 ## Source of truth
 
 - **Flutter (mobile)**: `mobile/lib/shared/theme/app_theme.dart`
-  - `AppTheme.light` / `AppTheme.dark` define `ThemeData` with `ColorScheme`, `textTheme`, and theme extensions.
-  - **Typography**: `textTheme` is built from `Typography.material2021(colorScheme)` (Material 2021 type scale). Light theme uses `.black`, dark uses `.white`; colors come from `colorScheme`. To add a brand font later, derive `textTheme` with `.apply(fontFamily: '...')` in `_textTheme`.
-  - **Semantic text styles**: `AppTextStyles.of(context)` — use these instead of repeating `textTheme.xxx.copyWith(...)`.
+  - `AppTheme.light` / `AppTheme.dark` define `ThemeData` with `ColorScheme`, `textStyles`, and theme extensions.
+  - **Typography**: `textTheme` is built from `Typography.material2021(colorScheme)` (Material 2021 type scale). Light theme uses `.black`, dark uses `.white`; colors come from `colorScheme`.
+  - **Semantic text styles**: `Theme.of(context).textStyles` — use these instead of repeating `textTheme`.
 
 ## Do
 
@@ -28,5 +28,5 @@ When writing or editing code that involves **style** (colors, typography, spacin
 ## Don't
 
 - Don't hardcode `Color(0xFF...)` or `Colors.xxx` in UI widgets; use theme/context so light/dark and semantics stay consistent.
-- Don't hardcode font family or ad-hoc `TextStyle(fontSize: ..., fontWeight: ...)` in UI; use `AppTextStyles.of(context)` or `textTheme`, and override only when needed (e.g. `copyWith(color: ...)` for semantic color).
+- Don't hardcode font family or ad-hoc `TextStyle(fontSize: ..., fontWeight: ...)` in UI; use `Theme.of(context).textStyles`, and override only when needed (e.g. `copyWith(color: ...)` for semantic color).
 - Don't define parallel color or text-style constants in feature code; keep a single source in `app_theme.dart`.
