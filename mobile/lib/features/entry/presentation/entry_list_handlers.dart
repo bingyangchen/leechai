@@ -126,9 +126,13 @@ class EntryListHandlers {
       }
     } catch (_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('複製失敗')));
+        final theme = Theme.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('複製失敗', style: TextStyle(color: theme.colorScheme.onError)),
+            backgroundColor: theme.colorScheme.error,
+          ),
+        );
       }
     }
   }

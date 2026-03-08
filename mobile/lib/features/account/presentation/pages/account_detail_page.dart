@@ -224,9 +224,16 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
         context,
       ).showSnackBar(const SnackBar(content: Text('帳戶已刪除')));
     } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('此帳戶已有交易紀錄，無法刪除')));
+      final theme = Theme.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '此帳戶已有交易紀錄，無法刪除',
+            style: TextStyle(color: theme.colorScheme.onError),
+          ),
+          backgroundColor: theme.colorScheme.error,
+        ),
+      );
     }
   }
 

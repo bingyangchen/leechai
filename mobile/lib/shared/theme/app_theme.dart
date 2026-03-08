@@ -116,14 +116,16 @@ class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: colorScheme.surfaceContainerHighest,
+        backgroundColor: colorScheme.onSurface,
         contentTextStyle: textTheme.bodyMedium?.copyWith(
-          color: colorScheme.onSurface,
+          color: colorScheme.surface,
           fontSize: 14,
           fontWeight: FontWeight.w400,
+          height: 1.4,
         ),
+        actionTextColor: colorScheme.primaryContainer,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+        insetPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         elevation: 2,
       ),
       extensions: [
@@ -327,14 +329,16 @@ class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: colorScheme.surfaceContainerHighest,
+        backgroundColor: colorScheme.onSurface,
         contentTextStyle: textTheme.bodyMedium?.copyWith(
-          color: colorScheme.onSurface,
+          color: colorScheme.surface,
           fontSize: 14,
           fontWeight: FontWeight.w400,
+          height: 1.4,
         ),
+        actionTextColor: colorScheme.primaryContainer,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+        insetPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         elevation: 2,
       ),
       extensions: [

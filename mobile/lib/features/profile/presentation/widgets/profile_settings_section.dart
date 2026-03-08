@@ -110,15 +110,23 @@ class ProfileSettingsSection extends StatelessWidget {
     try {
       final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
       if (!launched && context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('無法開啟連結')));
+        final theme = Theme.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('無法開啟連結', style: TextStyle(color: theme.colorScheme.onError)),
+            backgroundColor: theme.colorScheme.error,
+          ),
+        );
       }
     } catch (_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('無法開啟連結')));
+        final theme = Theme.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('無法開啟連結', style: TextStyle(color: theme.colorScheme.onError)),
+            backgroundColor: theme.colorScheme.error,
+          ),
+        );
       }
     }
   }
