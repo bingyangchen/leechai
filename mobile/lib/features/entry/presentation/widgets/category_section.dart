@@ -18,15 +18,13 @@ class CategorySection extends StatelessWidget {
     if (categories.isEmpty) return const SizedBox.shrink();
 
     final theme = Theme.of(context);
-    final appTextStyles = AppTextStyles.of(context);
-    final colorScheme = theme.colorScheme;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('類別', style: appTextStyles.sectionLabel),
+          Text('類別', style: theme.textStyles.sectionLabel),
           const SizedBox(height: 8),
           SizedBox(
             height: 56,
@@ -39,11 +37,11 @@ class CategorySection extends StatelessWidget {
                 final selected = index == selectedIndex;
                 final icon = cat.icon ?? Icons.more_horiz;
                 final backgroundColor = selected
-                    ? colorScheme.primary.withValues(alpha: 0.22)
-                    : colorScheme.surfaceContainerHighest;
+                    ? theme.colorScheme.primary.withValues(alpha: 0.22)
+                    : theme.colorScheme.surfaceContainerHighest;
                 final contentColor = selected
-                    ? colorScheme.primary
-                    : colorScheme.onSurfaceVariant;
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurfaceVariant;
                 return Material(
                   color: backgroundColor,
                   borderRadius: BorderRadius.circular(12),
@@ -59,7 +57,7 @@ class CategorySection extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             cat.name,
-                            style: appTextStyles.bodySmallMuted.copyWith(
+                            style: theme.textStyles.bodySmallMuted.copyWith(
                               color: contentColor,
                             ),
                           ),

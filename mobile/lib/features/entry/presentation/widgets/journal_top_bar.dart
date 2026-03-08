@@ -22,7 +22,7 @@ class JournalTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Row(
@@ -52,7 +52,7 @@ class JournalTopBar extends StatelessWidget {
           IconButton(
             icon: Icon(
               privacyMode ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-              color: colorScheme.onSurface,
+              color: theme.colorScheme.onSurface,
             ),
             onPressed: onPrivacyModeToggle,
             tooltip: privacyMode ? '關閉隱私模式' : '隱私模式',

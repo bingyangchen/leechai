@@ -25,8 +25,7 @@ class MonthSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final appTextStyles = AppTextStyles.of(context);
+    final theme = Theme.of(context);
     final incomeStr = privacyMode ? '****' : formatAmountForDisplay(income);
     final expenseStr = privacyMode ? '****' : formatAmountForDisplay(expense);
     final balanceStr = privacyMode ? '****' : _formatBalance(balance);
@@ -35,26 +34,26 @@ class MonthSummaryCard extends StatelessWidget {
       child: Card(
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        color: colorScheme.surfaceContainerHighest,
+        color: theme.colorScheme.surfaceContainerHighest,
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('本月結餘', style: appTextStyles.sectionLabel),
+              Text('本月結餘', style: theme.textStyles.sectionLabel),
               const SizedBox(height: 4),
-              Text(balanceStr, style: appTextStyles.headlineEmphasis),
+              Text(balanceStr, style: theme.textStyles.headlineEmphasis),
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   Column(
                     children: [
-                      Text('本月支出', style: appTextStyles.bodySmallMuted),
+                      Text('本月支出', style: theme.textStyles.bodySmallMuted),
                       const SizedBox(height: 2),
                       Text(
                         expenseStr,
-                        style: appTextStyles.titleEmphasis.copyWith(
+                        style: theme.textStyles.titleEmphasis.copyWith(
                           color: EntryTypeColors.forType(context, EntryType.expense),
                         ),
                       ),
@@ -62,11 +61,11 @@ class MonthSummaryCard extends StatelessWidget {
                   ),
                   Column(
                     children: [
-                      Text('本月收入', style: appTextStyles.bodySmallMuted),
+                      Text('本月收入', style: theme.textStyles.bodySmallMuted),
                       const SizedBox(height: 2),
                       Text(
                         incomeStr,
-                        style: appTextStyles.titleEmphasis.copyWith(
+                        style: theme.textStyles.titleEmphasis.copyWith(
                           color: EntryTypeColors.forType(context, EntryType.income),
                         ),
                       ),

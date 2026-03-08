@@ -20,8 +20,7 @@ class CategoryMonthlyBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final appTextStyles = AppTextStyles.of(context);
+    final theme = Theme.of(context);
     final rawMax = monthlyTotals.isEmpty
         ? 1.0
         : monthlyTotals
@@ -42,14 +41,14 @@ class CategoryMonthlyBarChart extends StatelessWidget {
               touchTooltipData: BarTouchTooltipData(
                 direction: TooltipDirection.bottom,
                 getTooltipColor: (BarChartGroupData group) =>
-                    colorScheme.surfaceContainerHighest,
+                    theme.colorScheme.surfaceContainerHighest,
                 tooltipPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 tooltipMargin: 8,
                 getTooltipItem: (group, groupIndex, rod, rodIndex) {
                   final d = monthlyTotals[group.x.toInt()];
                   return BarTooltipItem(
                     '${d.month.year}/${d.month.month.toString().padLeft(2, '0')}\n\$${privacyMode ? "****" : formatAmountForDisplay(d.amount)}',
-                    appTextStyles.bodySmallMuted,
+                    theme.textStyles.bodySmallMuted,
                   );
                 },
               ),
@@ -70,7 +69,7 @@ class CategoryMonthlyBarChart extends StatelessWidget {
                       padding: const EdgeInsets.only(top: 8),
                       child: Text(
                         '${d.month}月',
-                        style: appTextStyles.labelSmallMuted,
+                        style: theme.textStyles.labelSmallMuted,
                         textAlign: TextAlign.center,
                       ),
                     );
@@ -86,7 +85,7 @@ class CategoryMonthlyBarChart extends StatelessWidget {
               drawVerticalLine: false,
               horizontalInterval: maxY / 4,
               getDrawingHorizontalLine: (v) => FlLine(
-                color: colorScheme.outline.withValues(alpha: 0.12),
+                color: theme.colorScheme.outline.withValues(alpha: 0.12),
                 strokeWidth: 1,
               ),
             ),

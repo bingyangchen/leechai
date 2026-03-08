@@ -4,6 +4,7 @@ import 'package:mobile/features/entry/presentation/pages/entry_page.dart';
 import 'package:mobile/features/entry/presentation/pages/journal_page.dart';
 import 'package:mobile/features/profile/presentation/pages/profile_page.dart';
 import 'package:mobile/features/statistics/presentation/pages/statistics_page.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
 
 class Shell extends StatefulWidget {
   const Shell({super.key, required this.refreshTrigger});
@@ -33,8 +34,7 @@ class _ShellState extends State<Shell> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final navLabelStyle = theme.textTheme.bodySmall;
+    final navLabelStyle = theme.textStyles.bodySmallMuted;
     return Scaffold(
       body: IndexedStack(index: _currentIndex, children: _buildPages()),
       floatingActionButton: _currentIndex < 3
@@ -61,11 +61,11 @@ class _ShellState extends State<Shell> {
         height: _bottomNavBarHeight,
         child: Container(
           decoration: BoxDecoration(
-            color: colorScheme.surface,
+            color: theme.colorScheme.surface,
             border: Border(top: BorderSide(color: theme.dividerColor)),
           ),
           child: BottomNavigationBar(
-            backgroundColor: colorScheme.surface.withValues(alpha: 0),
+            backgroundColor: Colors.transparent,
             elevation: 0,
             currentIndex: _currentIndex,
             onTap: (index) => setState(() => _currentIndex = index),

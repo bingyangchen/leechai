@@ -121,6 +121,7 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: kToolbarHeight,
@@ -159,20 +160,19 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> {
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                   child: Builder(
                     builder: (context) {
-                      final appTextStyles = AppTextStyles.of(context);
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             '選定區間 (${widget.dateRange.toRangeLabel()})',
-                            style: appTextStyles.bodySmallMuted,
+                            style: theme.textStyles.bodySmallMuted,
                           ),
                           const SizedBox(height: 8),
                           Text(
                             widget.privacyMode
                                 ? '****'
                                 : '\$${formatAmountForDisplay(data.total)}',
-                            style: appTextStyles.headlineEmphasis,
+                            style: theme.textStyles.headlineEmphasis,
                           ),
                         ],
                       );
@@ -190,12 +190,12 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> {
                         Icon(
                           Icons.inbox_outlined,
                           size: 64,
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                          color: theme.colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.5,
+                          ),
                         ),
                         const SizedBox(height: 16),
-                        Text('此區間尚無紀錄', style: AppTextStyles.of(context).titleMuted),
+                        Text('此區間尚無紀錄', style: theme.textStyles.titleMuted),
                       ],
                     ),
                   ),

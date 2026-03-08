@@ -15,8 +15,7 @@ class CollapsedSummaryBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final appTextStyles = AppTextStyles.of(context);
+    final theme = Theme.of(context);
     return FutureBuilder<dynamic>(
       future: future,
       builder: (context, snapshot) {
@@ -27,11 +26,11 @@ class CollapsedSummaryBar extends StatelessWidget {
           width: double.infinity,
           height: height,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          color: colorScheme.surfaceContainerHighest,
+          color: theme.colorScheme.surfaceContainerHighest,
           child: Text(
             text,
-            style: appTextStyles.titleEmphasis.copyWith(
-              color: colorScheme.onSurfaceVariant,
+            style: theme.textStyles.titleEmphasis.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
         );

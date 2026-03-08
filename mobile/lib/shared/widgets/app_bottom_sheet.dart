@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
 
 enum AppBottomSheetMode { static, scrollable }
@@ -42,21 +43,13 @@ Future<T?> showAppBottomSheet<T>(
           : null;
 
       if (mode == AppBottomSheetMode.scrollable) {
-        return DraggableScrollableSheet(
+        return _ScrollableSheetWithResize(
           initialChildSize: initialChildSize,
           minChildSize: minChildSize,
           maxChildSize: maxChildSize,
-          expand: false,
-          builder: (_, scrollController) => SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const _DragHandle(),
-                if (header case _?) header,
-                Expanded(child: scrollableBuilder!(ctx, scrollController)),
-              ],
-            ),
-          ),
+          header: header,
+          scrollableBuilder: scrollableBuilder!,
+          sheetContext: ctx,
         );
       }
       return SafeArea(
@@ -73,12 +66,134 @@ Future<T?> showAppBottomSheet<T>(
   );
 }
 
-class _DragHandle extends StatelessWidget {
-  const _DragHandle();
+class _ScrollableSheetWithResize extends StatefulWidget {
+  const _ScrollableSheetWithResize({
+    required this.initialChildSize,
+    required this.minChildSize,
+    required this.maxChildSize,
+    required this.header,
+    required this.scrollableBuilder,
+    required this.sheetContext,
+  });
+
+  final double initialChildSize;
+  final double minChildSize;
+  final double maxChildSize;
+  final Widget? header;
+  final AppBottomSheetScrollableBuilder scrollableBuilder;
+  final BuildContext sheetContext;
+
+  @override
+  State<_ScrollableSheetWithResize> createState() => _ScrollableSheetWithResizeState();
+}
+
+class _ScrollableSheetWithResizeState extends State<_ScrollableSheetWithResize>
+    with SingleTickerProviderStateMixin {
+  late final DraggableScrollableController _controller;
+  late final ValueNotifier<double> _currentSize;
+  late final AnimationController _flingAnimation;
+  bool _hasExpandedForKeyboard = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = DraggableScrollableController();
+    _currentSize = ValueNotifier(widget.initialChildSize);
+    _flingAnimation = AnimationController.unbounded(vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _flingAnimation.dispose();
+    _controller.dispose();
+    _currentSize.dispose();
+    super.dispose();
+  }
+
+  void _onHandleFling(double velocityPixelsPerSecond) {
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final sizeVelocity = -velocityPixelsPerSecond / screenHeight;
+    const drag = 0.0001;
+    final simulation = FrictionSimulation(drag, _currentSize.value, sizeVelocity);
+    void listener() {
+      _controller.jumpTo(
+        _flingAnimation.value.clamp(widget.minChildSize, widget.maxChildSize),
+      );
+    }
+
+    _flingAnimation.addListener(listener);
+    _flingAnimation.animateWith(simulation).whenComplete(() {
+      _flingAnimation.removeListener(listener);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    final viewInsetsBottom = MediaQuery.of(context).viewInsets.bottom;
+    if (viewInsetsBottom > 0 && !_hasExpandedForKeyboard) {
+      _hasExpandedForKeyboard = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _controller.jumpTo(widget.maxChildSize);
+      });
+    } else if (viewInsetsBottom == 0) {
+      _hasExpandedForKeyboard = false;
+    }
+    return DraggableScrollableSheet(
+      controller: _controller,
+      initialChildSize: widget.initialChildSize,
+      minChildSize: widget.minChildSize,
+      maxChildSize: widget.maxChildSize,
+      expand: false,
+      builder: (_, scrollController) =>
+          NotificationListener<DraggableScrollableNotification>(
+            onNotification: (notification) {
+              _currentSize.value = notification.extent;
+              return false;
+            },
+            child: SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _DragHandle(
+                    resizeController: _controller,
+                    currentSize: _currentSize,
+                    minChildSize: widget.minChildSize,
+                    maxChildSize: widget.maxChildSize,
+                    onFling: _onHandleFling,
+                  ),
+                  if (widget.header case _?) widget.header!,
+                  Expanded(
+                    child: widget.scrollableBuilder(
+                      widget.sheetContext,
+                      scrollController,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+    );
+  }
+}
+
+class _DragHandle extends StatelessWidget {
+  const _DragHandle({
+    this.resizeController,
+    this.currentSize,
+    this.minChildSize,
+    this.maxChildSize,
+    this.onFling,
+  });
+
+  final DraggableScrollableController? resizeController;
+  final ValueNotifier<double>? currentSize;
+  final double? minChildSize;
+  final double? maxChildSize;
+  final void Function(double velocityPixelsPerSecond)? onFling;
+
+  @override
+  Widget build(BuildContext context) {
+    final content = Padding(
       padding: const EdgeInsets.only(top: 12, bottom: 8),
       child: Center(
         child: Container(
@@ -93,6 +208,31 @@ class _DragHandle extends StatelessWidget {
         ),
       ),
     );
+
+    if (resizeController != null &&
+        currentSize != null &&
+        minChildSize != null &&
+        maxChildSize != null) {
+      final controller = resizeController!;
+      final sizeNotifier = currentSize!;
+      final min = minChildSize!;
+      final max = maxChildSize!;
+      final screenHeight = MediaQuery.sizeOf(context).height;
+      return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onVerticalDragUpdate: (details) {
+          final deltaFraction = -details.delta.dy / screenHeight;
+          final next = (sizeNotifier.value + deltaFraction).clamp(min, max);
+          controller.jumpTo(next);
+        },
+        onVerticalDragEnd: onFling != null
+            ? (details) => onFling!(details.velocity.pixelsPerSecond.dy)
+            : null,
+        child: content,
+      );
+    }
+
+    return content;
   }
 }
 
@@ -111,7 +251,7 @@ class _AppBottomSheetHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final appTextStyles = AppTextStyles.of(context);
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Row(
@@ -122,7 +262,7 @@ class _AppBottomSheetHeader extends StatelessWidget {
                 alignment: titleAlignment == AppBottomSheetTitleAlignment.center
                     ? Alignment.center
                     : Alignment.centerLeft,
-                child: Text(title!, style: appTextStyles.headlineSmall),
+                child: Text(title!, style: theme.textStyles.headlineSmall),
               ),
             )
           else

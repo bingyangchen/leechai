@@ -51,12 +51,11 @@ class EntryListHandlers {
       context,
       title: '資產市值更新',
       mode: AppBottomSheetMode.static,
-      builder: (ctx) {
-        final theme = Theme.of(ctx);
-        final appTextStyles = AppTextStyles.of(ctx);
+      builder: (context) {
+        final theme = Theme.of(context);
         final amountColor = isGain
-            ? AccountingColors.of(ctx).income
-            : AccountingColors.of(ctx).expense;
+            ? AccountingColors.of(context).income
+            : AccountingColors.of(context).expense;
         return Padding(
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
           child: Column(
@@ -66,7 +65,7 @@ class EntryListHandlers {
               Center(
                 child: Text(
                   amountText,
-                  style: appTextStyles.headlineEmphasis.copyWith(color: amountColor),
+                  style: theme.textStyles.headlineEmphasis.copyWith(color: amountColor),
                 ),
               ),
               const SizedBox(height: 24),
@@ -82,7 +81,7 @@ class EntryListHandlers {
                   Expanded(
                     child: Text(
                       '這筆紀錄是透過「更新市值」功能自動產生的未實現損益。如需修改，請再次更新市值，或將此紀錄刪除。',
-                      style: appTextStyles.bodySmallMuted.copyWith(height: 1.5),
+                      style: theme.textStyles.bodySmallMuted.copyWith(height: 1.5),
                     ),
                   ),
                 ],
@@ -101,7 +100,7 @@ class EntryListHandlers {
     void Function() onDeleted,
   ) async {
     final entryId = entry['id'] as String;
-    final confirmed = await ConfirmDeleteDialog.show(context);
+    final confirmed = await ConfirmDeleteDialog.show(context, content: '確定要刪除這筆紀錄嗎？');
     if (confirmed != true || !context.mounted) return;
     await EntryRepository.softDelete(entryId);
     if (context.mounted) {

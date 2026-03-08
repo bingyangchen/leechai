@@ -280,11 +280,11 @@ class _DateTimePickerSheetState extends State<DateTimePickerSheet> {
   }
 
   Widget _wheelSeparator(String text) {
-    final appTextStyles = AppTextStyles.of(context);
+    final theme = Theme.of(context);
     return Center(
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: _separatorPadding),
-        child: Text(text, style: appTextStyles.bodyLargeMuted),
+        child: Text(text, style: theme.textStyles.bodyLargeMuted),
       ),
     );
   }
@@ -296,7 +296,7 @@ class _DateTimePickerSheetState extends State<DateTimePickerSheet> {
     required ScrollController controller,
     required ValueChanged<T> onChanged,
   }) {
-    final appTextStyles = AppTextStyles.of(context);
+    final theme = Theme.of(context);
     final index = items.indexOf(value);
     if (index < 0) return const SizedBox.shrink();
     return ListWheelScrollView.useDelegate(
@@ -314,7 +314,7 @@ class _DateTimePickerSheetState extends State<DateTimePickerSheet> {
         childCount: items.length,
         builder: (context, i) {
           return Center(
-            child: Text(format(items[i]), style: appTextStyles.titleEmphasis),
+            child: Text(format(items[i]), style: theme.textStyles.titleEmphasis),
           );
         },
       ),

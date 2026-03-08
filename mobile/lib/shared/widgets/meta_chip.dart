@@ -20,12 +20,11 @@ class MetaChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final appTextStyles = AppTextStyles.of(context);
-    final effectiveIconColor = iconColor ?? colorScheme.onSurfaceVariant;
+    final theme = Theme.of(context);
+    final effectiveIconColor = iconColor ?? theme.colorScheme.onSurfaceVariant;
 
     return Material(
-      color: colorScheme.surfaceContainerHighest,
+      color: theme.colorScheme.surfaceContainerHighest,
       borderRadius: BorderRadius.circular(20),
       child: InkWell(
         onTap: onTap,
@@ -37,7 +36,7 @@ class MetaChip extends StatelessWidget {
             children: [
               Icon(icon, size: 18, color: effectiveIconColor),
               const SizedBox(width: 6),
-              Text(label, style: appTextStyles.body),
+              Text(label, style: theme.textStyles.body),
               if (trailing != null) ...[const SizedBox(width: 2), trailing!],
             ],
           ),

@@ -43,10 +43,9 @@ class AchievementBadgeItem extends StatelessWidget {
   Widget build(BuildContext context) {
     const size = 72.0;
     const ringStrokeWidth = 4.0;
-    final colorScheme = Theme.of(context).colorScheme;
-    final appTextStyles = AppTextStyles.of(context);
-    final primary = colorScheme.primary;
-    final primaryContainer = colorScheme.primaryContainer;
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    final primaryContainer = theme.colorScheme.primaryContainer;
 
     Widget badgeIcon = SizedBox(
       width: size,
@@ -67,7 +66,7 @@ class AchievementBadgeItem extends StatelessWidget {
                     value: value,
                     strokeWidth: ringStrokeWidth,
                     strokeCap: StrokeCap.round,
-                    backgroundColor: colorScheme.surfaceContainerHighest,
+                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
                     valueColor: AlwaysStoppedAnimation<Color>(
                       primary.withValues(alpha: 0.5),
                     ),
@@ -116,7 +115,7 @@ class AchievementBadgeItem extends StatelessWidget {
                 size: 32,
                 color: item.isUnlocked
                     ? primary
-                    : colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                    : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
               ),
             ),
           ),
@@ -137,8 +136,8 @@ class AchievementBadgeItem extends StatelessWidget {
           child: Text(
             item.name,
             style: item.isUnlocked
-                ? appTextStyles.labelEmphasis
-                : appTextStyles.labelMuted,
+                ? theme.textStyles.labelEmphasis
+                : theme.textStyles.labelMuted,
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -151,11 +150,11 @@ class AchievementBadgeItem extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
-                color: colorScheme.surfaceContainerHighest,
+                color: theme.colorScheme.surfaceContainerHighest,
               ),
               child: Text(
                 '${item.current}/${item.target}',
-                style: appTextStyles.labelSmallMuted,
+                style: theme.textStyles.labelSmallMuted,
               ),
             ),
           ),
@@ -176,7 +175,9 @@ class AchievementBadgeItem extends StatelessWidget {
             },
             child: Text(
               '立即開始記帳！',
-              style: appTextStyles.labelEmphasis.copyWith(color: colorScheme.primary),
+              style: theme.textStyles.labelEmphasis.copyWith(
+                color: theme.colorScheme.primary,
+              ),
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -190,7 +191,7 @@ class AchievementBadgeItem extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         decoration: BoxDecoration(
-          border: Border.all(color: colorScheme.primary, width: 1.5),
+          border: Border.all(color: theme.colorScheme.primary, width: 1.5),
           borderRadius: BorderRadius.circular(12),
         ),
         child: content,
