@@ -45,7 +45,8 @@ class ProfileSettingsSection extends StatelessWidget {
                 title: '分類管理',
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
-                    builder: (_) => const CategoryManagementPage(),
+                    builder: (_) =>
+                        CategoryManagementPage(refreshTrigger: refreshTrigger),
                   ),
                 ),
               ),
