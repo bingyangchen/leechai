@@ -19,8 +19,8 @@ class _AccountingColorValues {
 
   static const Color income = Color(0xFF4CAF50);
   static const Color expense = Color(0xFFE53935);
-  static const Color transfer = Color(0xFF2196F3);
-  static const Color borrow = Color(0xFFFF9800);
+  static const Color transfer = Color(0xFF59A5D8);
+  static const Color borrow = Color(0xFFF29555);
   static const Color repay = Color(0xFF9C27B0);
   static const Color liability = Color(0xFFE65100);
   static const Color neutral = Color(0xFF616161);
