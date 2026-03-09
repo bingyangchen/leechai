@@ -125,6 +125,17 @@ class AccountRepository {
     return true;
   }
 
+  static Future<void> restore(String accountId) async {
+    final db = await AppDatabase.database;
+    final now = DateTime.now().toUtc().toIso8601String();
+    await db.update(
+      _table,
+      {'deleted_at': null, 'updated_at': now, 'synced': 0},
+      where: 'id = ?',
+      whereArgs: [accountId],
+    );
+  }
+
   static Account _rowToAccount(Map<String, Object?> row) {
     return Account(
       id: row['id'] as String,
