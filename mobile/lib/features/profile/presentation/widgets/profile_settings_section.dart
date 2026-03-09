@@ -3,9 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:mobile/features/category/presentation/pages/category_management_page.dart';
 import 'package:mobile/features/tag/presentation/pages/tag_management_page.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
+import 'package:mobile/shared/theme/theme_mode_scope.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+String _themeModeLabel(ThemeMode mode) {
+  switch (mode) {
+    case ThemeMode.system:
+      return '跟隨系統';
+    case ThemeMode.light:
+      return '淺色';
+    case ThemeMode.dark:
+      return '深色';
+  }
+}
 
 const _appVersion = 'v1.0.0';
 const _privacyPolicyUrl = 'https://github.com/bingyangchen/leechai';
@@ -68,8 +80,10 @@ class ProfileSettingsSection extends StatelessWidget {
             children: [
               _SettingsTile(
                 icon: Icons.dark_mode_outlined,
-                title: '外觀設定',
-                onTap: () => _pushPlaceholderPage(context, '外觀設定'), // TODO
+                title: '主題模式',
+                trailing: _themeModeLabel(ThemeModeScope.of(context).themeMode),
+                showTrailingArrow: false,
+                onTap: () => _showThemeModeBottomSheet(context),
               ),
               _SettingsTile(
                 icon: Icons.notifications_outlined,
@@ -96,6 +110,7 @@ class ProfileSettingsSection extends StatelessWidget {
                 icon: Icons.info_outline,
                 title: '版本資訊',
                 trailing: _appVersion,
+                showTrailingArrow: false,
                 onTap: () => _showAboutBottomSheet(context),
               ),
             ],
@@ -139,6 +154,117 @@ class ProfileSettingsSection extends StatelessWidget {
           body: const Center(child: Text('敬請期待')),
         ),
       ),
+    );
+  }
+
+  void _showThemeModeBottomSheet(BuildContext context) {
+    final scope = ThemeModeScope.of(context);
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    final onSurface = theme.colorScheme.onSurface;
+    showAppBottomSheet<void>(
+      context,
+      mode: AppBottomSheetMode.static,
+      builder: (sheetContext) {
+        final current = ThemeModeScope.of(sheetContext).themeMode;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: ListTile(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                leading: Icon(
+                  Icons.brightness_auto_outlined,
+                  color: current == ThemeMode.system ? primary : onSurface,
+                ),
+                title: Text(
+                  '跟隨系統',
+                  style: theme.textStyles.body.copyWith(
+                    color: current == ThemeMode.system ? primary : onSurface,
+                    fontWeight: current == ThemeMode.system
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
+                ),
+                trailing: current == ThemeMode.system
+                    ? Icon(Icons.check, color: primary)
+                    : null,
+                onTap: () {
+                  scope.setThemeMode(ThemeMode.system);
+                  Future.delayed(const Duration(milliseconds: 150), () {
+                    if (sheetContext.mounted) {
+                      Navigator.of(sheetContext).pop();
+                    }
+                  });
+                },
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: ListTile(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                leading: Icon(
+                  Icons.light_mode_outlined,
+                  color: current == ThemeMode.light ? primary : onSurface,
+                ),
+                title: Text(
+                  '淺色',
+                  style: theme.textStyles.body.copyWith(
+                    color: current == ThemeMode.light ? primary : onSurface,
+                    fontWeight: current == ThemeMode.light
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
+                ),
+                trailing: current == ThemeMode.light
+                    ? Icon(Icons.check, color: primary)
+                    : null,
+                onTap: () {
+                  scope.setThemeMode(ThemeMode.light);
+                  Future.delayed(const Duration(milliseconds: 150), () {
+                    if (sheetContext.mounted) {
+                      Navigator.of(sheetContext).pop();
+                    }
+                  });
+                },
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: ListTile(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                leading: Icon(
+                  Icons.dark_mode_outlined,
+                  color: current == ThemeMode.dark ? primary : onSurface,
+                ),
+                title: Text(
+                  '深色',
+                  style: theme.textStyles.body.copyWith(
+                    color: current == ThemeMode.dark ? primary : onSurface,
+                    fontWeight: current == ThemeMode.dark
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
+                ),
+                trailing: current == ThemeMode.dark
+                    ? Icon(Icons.check, color: primary)
+                    : null,
+                onTap: () {
+                  scope.setThemeMode(ThemeMode.dark);
+                  Future.delayed(const Duration(milliseconds: 150), () {
+                    if (sheetContext.mounted) {
+                      Navigator.of(sheetContext).pop();
+                    }
+                  });
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        );
+      },
     );
   }
 
@@ -278,12 +404,14 @@ class _SettingsTile extends StatelessWidget {
     required this.icon,
     required this.title,
     this.trailing,
+    this.showTrailingArrow = true,
     required this.onTap,
   });
 
   final IconData icon;
   final String title;
   final String? trailing;
+  final bool showTrailingArrow;
   final VoidCallback onTap;
 
   static const double _iconBoxSize = 32;
@@ -292,29 +420,37 @@ class _SettingsTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final trailingWidget = trailing != null
-        ? Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                trailing!,
-                style: theme.textStyles.bodyMuted.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-                ),
-              ),
-              const SizedBox(width: 4),
-              Icon(
-                Icons.chevron_right,
-                size: 24,
-                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-              ),
-            ],
-          )
-        : Icon(
-            Icons.chevron_right,
-            size: 24,
-            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-          );
+    final showArrow = showTrailingArrow;
+    Widget trailingWidget;
+    if (trailing != null && trailing!.isNotEmpty) {
+      trailingWidget = Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            trailing!,
+            style: theme.textStyles.bodyMuted.copyWith(
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+            ),
+          ),
+          if (showArrow) ...[
+            const SizedBox(width: 4),
+            Icon(
+              Icons.chevron_right,
+              size: 24,
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+            ),
+          ],
+        ],
+      );
+    } else {
+      trailingWidget = showArrow
+          ? Icon(
+              Icons.chevron_right,
+              size: 24,
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+            )
+          : const SizedBox.shrink();
+    }
     return ListTile(
       leading: Container(
         width: _iconBoxSize,
