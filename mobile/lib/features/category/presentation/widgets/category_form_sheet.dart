@@ -14,6 +14,7 @@ Future<bool?> showCategoryFormSheet(
   BuildContext context, {
   required AccountType categoryType,
   Account? existingCategory,
+  VoidCallback? onRestore,
 }) {
   final isEdit = existingCategory != null;
   return showAppBottomSheet<bool>(
@@ -24,11 +25,12 @@ Future<bool?> showCategoryFormSheet(
     initialChildSize: 0.8,
     minChildSize: 0.5,
     maxChildSize: 0.95,
-    scrollableBuilder: (ctx, scrollController) => _CategoryFormSheet(
+    scrollableBuilder: (_, scrollController) => _CategoryFormSheet(
       categoryType: categoryType,
       existingCategory: existingCategory,
       scrollController: scrollController,
-      onSuccess: () => Navigator.of(ctx).pop(true),
+      onSuccess: () => Navigator.of(context).pop(true),
+      onRestore: onRestore,
     ),
   );
 }
@@ -39,12 +41,14 @@ class _CategoryFormSheet extends StatefulWidget {
     this.existingCategory,
     required this.scrollController,
     required this.onSuccess,
+    this.onRestore,
   });
 
   final AccountType categoryType;
   final Account? existingCategory;
   final ScrollController scrollController;
   final VoidCallback onSuccess;
+  final VoidCallback? onRestore;
 
   @override
   State<_CategoryFormSheet> createState() => _CategoryFormSheetState();
@@ -103,10 +107,25 @@ class _CategoryFormSheetState extends State<_CategoryFormSheet> {
     final deleted = await AccountRepository.delete(account.id);
     if (!mounted) return;
     if (deleted) {
+      final accountId = account.id;
+      final messenger = ScaffoldMessenger.of(context);
       widget.onSuccess();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('分類已刪除')));
+      messenger.showSnackBar(
+        SnackBar(
+          content: const Text('分類已刪除'),
+          duration: const Duration(seconds: 4),
+          persist: false,
+          action: SnackBarAction(
+            label: '復原',
+            onPressed: () async {
+              await AccountRepository.restore(accountId);
+              widget.onRestore?.call();
+              messenger.hideCurrentSnackBar();
+              messenger.showSnackBar(const SnackBar(content: Text('已復原')));
+            },
+          ),
+        ),
+      );
     }
   }
 

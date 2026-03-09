@@ -7,6 +7,7 @@ import 'package:mobile/shared/widgets/confirm_delete_dialog.dart';
 Future<bool?> showTagFormSheet(
   BuildContext context, {
   Map<String, String>? existingTag,
+  VoidCallback? onRestore,
 }) {
   final isEdit = existingTag != null;
   return showAppBottomSheet<bool>(
@@ -17,10 +18,11 @@ Future<bool?> showTagFormSheet(
     initialChildSize: 0.35,
     minChildSize: 0.25,
     maxChildSize: 0.75,
-    scrollableBuilder: (ctx, scrollController) => _TagFormSheet(
+    scrollableBuilder: (_, scrollController) => _TagFormSheet(
       existingTag: existingTag,
       scrollController: scrollController,
-      onSuccess: () => Navigator.of(ctx).pop(true),
+      onSuccess: () => Navigator.of(context).pop(true),
+      onRestore: onRestore,
     ),
   );
 }
@@ -30,11 +32,13 @@ class _TagFormSheet extends StatefulWidget {
     this.existingTag,
     required this.scrollController,
     required this.onSuccess,
+    this.onRestore,
   });
 
   final Map<String, String>? existingTag;
   final ScrollController scrollController;
   final VoidCallback onSuccess;
+  final VoidCallback? onRestore;
 
   @override
   State<_TagFormSheet> createState() => _TagFormSheetState();
@@ -73,8 +77,24 @@ class _TagFormSheetState extends State<_TagFormSheet> {
     if (confirm != true || !mounted) return;
     await TagRepository.softDelete(id);
     if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
     widget.onSuccess();
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('標籤已刪除')));
+    messenger.showSnackBar(
+      SnackBar(
+        content: const Text('標籤已刪除'),
+        duration: const Duration(seconds: 4),
+        persist: false,
+        action: SnackBarAction(
+          label: '復原',
+          onPressed: () async {
+            await TagRepository.restore(id);
+            widget.onRestore?.call();
+            messenger.hideCurrentSnackBar();
+            messenger.showSnackBar(const SnackBar(content: Text('已復原')));
+          },
+        ),
+      ),
+    );
   }
 
   Future<void> _onSave() async {

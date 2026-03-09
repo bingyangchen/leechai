@@ -205,7 +205,7 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
     try {
       await EntryRepository.softDelete(widget.entryId!);
       if (!mounted) return;
-      Navigator.of(context).pop(true);
+      Navigator.of(context).pop(<String, String>{'deleted': widget.entryId!});
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
