@@ -120,16 +120,22 @@ class EntryListHandlers {
       if (context.mounted) {
         onCopied();
         DataRefreshScope.notify(context);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('已複製一筆紀錄')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('複製成功！'),
+            duration: Duration(milliseconds: 1500),
+          ),
+        );
       }
     } catch (_) {
       if (context.mounted) {
         final theme = Theme.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('複製失敗', style: TextStyle(color: theme.colorScheme.onError)),
+            content: Text(
+              '複製時發生錯誤，請再試一次',
+              style: TextStyle(color: theme.colorScheme.onError),
+            ),
             backgroundColor: theme.colorScheme.error,
           ),
         );

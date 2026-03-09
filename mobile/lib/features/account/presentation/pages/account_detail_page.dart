@@ -132,11 +132,8 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
       _onRefresh();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            diff > 0
-                ? '已記錄未實現損益 +${formatAmountForDisplay(diff)}'
-                : '已記錄未實現損益 ${formatAmountForDisplay(diff)}',
-          ),
+          content: Text('已記錄未實現損益 \$${formatAmountForDisplay(diff)}'),
+          duration: Duration(milliseconds: 1500),
         ),
       );
     }

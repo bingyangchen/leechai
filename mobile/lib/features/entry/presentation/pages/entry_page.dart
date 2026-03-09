@@ -106,7 +106,7 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
         final theme = Theme.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('系統調整紀錄無法編輯'),
+            content: Text('這是系統自動調整的紀錄，無法編輯唷！'),
             backgroundColor: theme.colorScheme.error,
           ),
         );
@@ -380,7 +380,10 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
       if (mounted) {
         final theme = Theme.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('請選擇帳戶與分類'), backgroundColor: theme.colorScheme.error),
+          SnackBar(
+            content: Text('記得選擇帳戶與分類唷！'),
+            backgroundColor: theme.colorScheme.error,
+          ),
         );
       }
       return;

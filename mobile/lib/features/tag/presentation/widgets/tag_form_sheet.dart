@@ -116,9 +116,12 @@ class _TagFormSheetState extends State<_TagFormSheet> {
     HapticFeedback.mediumImpact();
     widget.onSuccess();
     if (!context.mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(_isEdit ? '標籤已更新' : '標籤已新增')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(_isEdit ? '標籤更新成功！' : '標籤建立成功！'),
+        duration: Duration(milliseconds: 1500),
+      ),
+    );
   }
 
   @override

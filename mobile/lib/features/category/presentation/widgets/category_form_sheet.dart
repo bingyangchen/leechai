@@ -145,9 +145,12 @@ class _CategoryFormSheetState extends State<_CategoryFormSheet> {
     if (!_isEdit) HapticFeedback.mediumImpact();
     widget.onSuccess();
     if (!context.mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(_isEdit ? '分類已更新' : '分類已新增')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(_isEdit ? '分類更新成功！' : '分類建立成功！'),
+        duration: Duration(milliseconds: 1500),
+      ),
+    );
   }
 
   @override
