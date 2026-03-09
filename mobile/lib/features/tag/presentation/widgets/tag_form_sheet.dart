@@ -74,9 +74,7 @@ class _TagFormSheetState extends State<_TagFormSheet> {
     await TagRepository.softDelete(id);
     if (!mounted) return;
     widget.onSuccess();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('標籤已刪除'), behavior: SnackBarBehavior.floating),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('標籤已刪除')));
   }
 
   Future<void> _onSave() async {
@@ -118,12 +116,9 @@ class _TagFormSheetState extends State<_TagFormSheet> {
     HapticFeedback.mediumImpact();
     widget.onSuccess();
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(_isEdit ? '標籤已更新' : '標籤已新增'),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(_isEdit ? '標籤已更新' : '標籤已新增')));
   }
 
   @override

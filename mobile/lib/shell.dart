@@ -46,12 +46,9 @@ class _ShellState extends State<Shell> {
                 if (!context.mounted) return;
                 if (added == true) {
                   widget.refreshTrigger.value++;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('紀錄已新增'),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(const SnackBar(content: Text('紀錄已新增')));
                 }
               },
               child: const Icon(Icons.add),

@@ -104,9 +104,9 @@ class _CategoryFormSheetState extends State<_CategoryFormSheet> {
     if (!mounted) return;
     if (deleted) {
       widget.onSuccess();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('分類已刪除'), behavior: SnackBarBehavior.floating),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('分類已刪除')));
     }
   }
 
@@ -145,12 +145,9 @@ class _CategoryFormSheetState extends State<_CategoryFormSheet> {
     if (!_isEdit) HapticFeedback.mediumImpact();
     widget.onSuccess();
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(_isEdit ? '分類已更新' : '分類已新增'),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(_isEdit ? '分類已更新' : '分類已新增')));
   }
 
   @override
