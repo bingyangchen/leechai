@@ -4,7 +4,6 @@ import 'package:mobile/features/category/presentation/pages/category_management_
 import 'package:mobile/features/tag/presentation/pages/tag_management_page.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/theme/theme_mode_scope.dart';
-import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -42,17 +41,19 @@ class ProfileSettingsSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SectionHeader(title: '財務管理'),
+          _SectionHeader(title: '記帳設定'),
+          // _SectionHeader(title: '財務管理'),
           _TileGroup(
             children: [
-              _SettingsTile(
-                icon: Icons.account_balance_wallet_outlined,
-                title: '預算設定',
-                trailing: totalBudgetSummary != null
-                    ? '\$${formatAmountForDisplay(totalBudgetSummary!)}'
-                    : null,
-                onTap: () => _pushPlaceholderPage(context, '預算設定'), // TODO
-              ),
+              // TODO: Implement budget setting
+              // _SettingsTile(
+              //   icon: Icons.account_balance_wallet_outlined,
+              //   title: '預算設定',
+              //   trailing: totalBudgetSummary != null
+              //       ? '\$${formatAmountForDisplay(totalBudgetSummary!)}'
+              //       : null,
+              //   onTap: () => _pushPlaceholderPage(context, '預算設定'),
+              // ),
               _SettingsTile(
                 icon: Icons.category_outlined,
                 title: '分類管理',
