@@ -52,13 +52,48 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
   int _selectedExpenseCategoryIndex = 0;
   int _selectedIncomeCategoryIndex = 0;
 
+  String? _originalAmountDisplay;
+  DateTime? _originalDate;
+  String? _originalAccountId;
+  String? _originalAccountFromId;
+  String? _originalAccountToId;
+  int? _originalExpenseCategoryIndex;
+  int? _originalIncomeCategoryIndex;
+  List<String>? _originalTags;
+  String? _originalNotes;
+  EntryType? _originalEntryType;
+
   bool get _isEditMode => widget.entryId != null;
 
-  bool get _hasUnsavedChanges =>
-      _amountController.text.trim().isNotEmpty ||
-      _tags.isNotEmpty ||
-      _tagInputController.text.trim().isNotEmpty ||
-      _notesController.text.trim().isNotEmpty;
+  bool get _hasUnsavedChanges {
+    if (_isEditMode) {
+      if (_originalEntryType == null) return false;
+      if (_entryType != _originalEntryType) return true;
+      if (_amountController.text.trim() != (_originalAmountDisplay ?? '')) return true;
+      if (_selectedDate != _originalDate) return true;
+      if (_selectedAccountId != _originalAccountId) return true;
+      if (_selectedAccountFromId != _originalAccountFromId) return true;
+      if (_selectedAccountToId != _originalAccountToId) return true;
+      if (_selectedExpenseCategoryIndex != (_originalExpenseCategoryIndex ?? 0)) {
+        return true;
+      }
+      if (_selectedIncomeCategoryIndex != (_originalIncomeCategoryIndex ?? 0)) {
+        return true;
+      }
+      if (_notesController.text.trim() != (_originalNotes ?? '')) return true;
+      final orig = _originalTags ?? [];
+      if (_tags.length != orig.length) return true;
+      for (var i = 0; i < _tags.length; i++) {
+        if (_tags[i] != orig[i]) return true;
+      }
+      if (_tagInputController.text.trim().isNotEmpty) return true;
+      return false;
+    }
+    return _amountController.text.trim().isNotEmpty ||
+        _tags.isNotEmpty ||
+        _tagInputController.text.trim().isNotEmpty ||
+        _notesController.text.trim().isNotEmpty;
+  }
 
   @override
   void initState() {
@@ -106,7 +141,7 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
         final theme = Theme.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('系統調整紀錄無法編輯'),
+            content: Text('這是系統自動調整的紀錄，無法編輯唷！'),
             backgroundColor: theme.colorScheme.error,
           ),
         );
@@ -159,6 +194,16 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
           _selectedAccountToId = debitId;
           break;
       }
+      _originalEntryType = type;
+      _originalAmountDisplay = _amountController.text.trim();
+      _originalDate = _selectedDate;
+      _originalAccountId = _selectedAccountId;
+      _originalAccountFromId = _selectedAccountFromId;
+      _originalAccountToId = _selectedAccountToId;
+      _originalExpenseCategoryIndex = _selectedExpenseCategoryIndex;
+      _originalIncomeCategoryIndex = _selectedIncomeCategoryIndex;
+      _originalTags = List<String>.from(_tags);
+      _originalNotes = _notesController.text.trim();
     });
     _tabController.animateTo(typeIndex);
     _pageController.jumpToPage(typeIndex);
@@ -201,11 +246,12 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
     if (_isSubmitting || !_isEditMode || widget.entryId == null) return;
     final confirmed = await ConfirmDeleteDialog.show(context, content: '確定要刪除這筆紀錄嗎？');
     if (confirmed != true || !mounted) return;
+    HapticFeedback.mediumImpact();
     setState(() => _isSubmitting = true);
     try {
       await EntryRepository.softDelete(widget.entryId!);
       if (!mounted) return;
-      Navigator.of(context).pop(true);
+      Navigator.of(context).pop(<String, String>{'deleted': widget.entryId!});
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -380,7 +426,10 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
       if (mounted) {
         final theme = Theme.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('請選擇帳戶與分類'), backgroundColor: theme.colorScheme.error),
+          SnackBar(
+            content: Text('記得選擇帳戶與分類唷！'),
+            backgroundColor: theme.colorScheme.error,
+          ),
         );
       }
       return;

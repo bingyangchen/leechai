@@ -86,6 +86,23 @@ class TagRepository {
     );
   }
 
+  static Future<void> restore(String id) async {
+    final db = await AppDatabase.database;
+    final now = DateTime.now().toUtc().toIso8601String();
+    await db.update(
+      _table,
+      {'deleted_at': null, 'updated_at': now, 'synced': 0},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    await db.update(
+      _entryTagTable,
+      {'deleted_at': null, 'synced': 0},
+      where: 'tag_id = ?',
+      whereArgs: [id],
+    );
+  }
+
   static Future<String> getOrCreateByTitle(String title) async {
     final db = await AppDatabase.database;
     final trimmed = title.trim();

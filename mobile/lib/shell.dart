@@ -46,12 +46,15 @@ class _ShellState extends State<Shell> {
                 if (!context.mounted) return;
                 if (added == true) {
                   widget.refreshTrigger.value++;
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(const SnackBar(content: Text('紀錄已新增')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('紀錄新增成功！'),
+                      duration: Duration(milliseconds: 1500),
+                    ),
+                  );
                 }
               },
-              child: const Icon(Icons.add),
+              child: const Icon(Icons.add_rounded),
             )
           : null,
       bottomNavigationBar: SizedBox(
@@ -72,22 +75,22 @@ class _ShellState extends State<Shell> {
             items: const [
               BottomNavigationBarItem(
                 icon: Icon(Icons.list_alt_outlined),
-                activeIcon: Icon(Icons.list_alt),
+                activeIcon: Icon(Icons.list_alt_rounded),
                 label: '明細',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.pie_chart_outline),
-                activeIcon: Icon(Icons.pie_chart),
+                icon: Icon(Icons.bar_chart_outlined),
+                activeIcon: Icon(Icons.bar_chart_rounded),
                 label: '統計',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.account_balance_wallet_outlined),
-                activeIcon: Icon(Icons.account_balance_wallet),
+                activeIcon: Icon(Icons.account_balance_wallet_rounded),
                 label: '資產',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.person_outline),
-                activeIcon: Icon(Icons.person),
+                icon: Icon(Icons.person_outline_rounded),
+                activeIcon: Icon(Icons.person_rounded),
                 label: '個人',
               ),
             ],

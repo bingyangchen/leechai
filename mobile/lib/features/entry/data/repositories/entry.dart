@@ -100,6 +100,17 @@ class EntryRepository {
     );
   }
 
+  static Future<void> restore(String id) async {
+    final db = await AppDatabase.database;
+    final now = DateTime.now().toUtc().toIso8601String();
+    await db.update(
+      _table,
+      {'deleted_at': null, 'updated_at': now, 'synced': 0},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
   static Future<String> duplicate(String entryId, DateTime occurredAt) async {
     final db = await AppDatabase.database;
     final rows = await db.query(

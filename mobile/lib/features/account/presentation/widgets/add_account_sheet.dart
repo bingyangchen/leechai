@@ -217,9 +217,12 @@ class _AddAccountFormState extends State<_AddAccountForm> {
     if (!_isEdit) HapticFeedback.mediumImpact();
     widget.onSuccess();
     if (!context.mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(_isEdit ? '帳戶已更新' : '帳戶建立成功')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(_isEdit ? '帳戶更新成功！' : '帳戶建立成功！'),
+        duration: Duration(milliseconds: 1500),
+      ),
+    );
   }
 
   IconData? _iconForSubType() {

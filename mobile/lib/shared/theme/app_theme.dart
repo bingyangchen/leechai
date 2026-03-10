@@ -128,6 +128,14 @@ class AppTheme {
         insetPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         elevation: 2,
       ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
+        elevation: 2,
+        focusElevation: 2,
+        hoverElevation: 3,
+        highlightElevation: 4,
+      ),
       extensions: [
         _appTextStyles(textTheme, colorScheme),
         AccountingColors(
@@ -340,6 +348,14 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         insetPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         elevation: 2,
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
+        elevation: 2,
+        focusElevation: 2,
+        hoverElevation: 3,
+        highlightElevation: 4,
       ),
       extensions: [
         _appTextStyles(textTheme, colorScheme),

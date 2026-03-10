@@ -128,7 +128,10 @@ class ProfileSettingsSection extends StatelessWidget {
         final theme = Theme.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('無法開啟連結', style: TextStyle(color: theme.colorScheme.onError)),
+            content: Text(
+              '目前無法開啟連結，請稍後再試',
+              style: TextStyle(color: theme.colorScheme.onError),
+            ),
             backgroundColor: theme.colorScheme.error,
           ),
         );
@@ -138,7 +141,10 @@ class ProfileSettingsSection extends StatelessWidget {
         final theme = Theme.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('無法開啟連結', style: TextStyle(color: theme.colorScheme.onError)),
+            content: Text(
+              '目前無法開啟連結，請稍後再試',
+              style: TextStyle(color: theme.colorScheme.onError),
+            ),
             backgroundColor: theme.colorScheme.error,
           ),
         );

@@ -24,7 +24,7 @@ class AchievementItem {
 
 class ProfilePageData {
   const ProfilePageData({
-    required this.weeklyStreak,
+    required this.consecutiveActiveDays,
     required this.totalEntries,
     required this.totalDays,
     required this.entriesThisMonth,
@@ -33,7 +33,7 @@ class ProfilePageData {
     this.totalBudgetSummary,
   });
 
-  final int weeklyStreak;
+  final int consecutiveActiveDays;
   final int totalEntries;
   final int totalDays;
   final int entriesThisMonth;

@@ -28,12 +28,13 @@ class _TagManagementPageState extends State<TagManagementPage> {
   }
 
   void _onTagChanged() {
+    if (!mounted) return;
     _loadTags();
     (widget.refreshTrigger as ValueNotifier<int>?)?.value++;
   }
 
   Future<void> _onAddTag() async {
-    final updated = await showTagFormSheet(context);
+    final updated = await showTagFormSheet(context, onRestore: _onTagChanged);
     if (updated == true && mounted) _onTagChanged();
   }
 
@@ -44,6 +45,7 @@ class _TagManagementPageState extends State<TagManagementPage> {
     final updated = await showTagFormSheet(
       context,
       existingTag: {'id': id, 'title': title},
+      onRestore: _onTagChanged,
     );
     if (updated == true && mounted) _onTagChanged();
   }

@@ -44,12 +44,17 @@ class _CategoryManagementPageState extends State<CategoryManagementPage>
       _tabController.index == 0 ? AccountType.expense : AccountType.income;
 
   void _onCategoryChanged() {
+    if (!mounted) return;
     _loadCategories();
     (widget.refreshTrigger as ValueNotifier<int>?)?.value++;
   }
 
   Future<void> _onAddCategory() async {
-    final updated = await showCategoryFormSheet(context, categoryType: _currentType);
+    final updated = await showCategoryFormSheet(
+      context,
+      categoryType: _currentType,
+      onRestore: _onCategoryChanged,
+    );
     if (updated == true && mounted) _onCategoryChanged();
   }
 
@@ -58,6 +63,7 @@ class _CategoryManagementPageState extends State<CategoryManagementPage>
       context,
       categoryType: _currentType,
       existingCategory: category,
+      onRestore: _onCategoryChanged,
     );
     if (updated == true && mounted) _onCategoryChanged();
   }

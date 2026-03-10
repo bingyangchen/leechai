@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mobile/features/account/domain/constants.dart';
 import 'package:mobile/features/entry/data/repositories/entry.dart'
     show EntryRepository;
@@ -26,13 +27,39 @@ class EntryListHandlers {
     }
     final entryId = entry['id'] as String;
     Navigator.of(context)
-        .push<bool?>(
-          MaterialPageRoute<bool?>(builder: (_) => EntryPage(entryId: entryId)),
+        .push<Object?>(
+          MaterialPageRoute<Object?>(builder: (_) => EntryPage(entryId: entryId)),
         )
-        .then((saved) {
-          if (saved == true) {
+        .then((result) {
+          if (!context.mounted) return;
+          if (result is Map && result['deleted'] != null) {
+            final deletedEntryId = result['deleted'] as String;
             onSaved();
-            if (context.mounted) DataRefreshScope.notify(context);
+            DataRefreshScope.notify(context);
+            final messenger = ScaffoldMessenger.of(context);
+            final overlayContext = Navigator.of(context).overlay?.context;
+            messenger.showSnackBar(
+              SnackBar(
+                content: const Text('紀錄已刪除'),
+                duration: const Duration(seconds: 4),
+                persist: false,
+                action: SnackBarAction(
+                  label: '復原',
+                  onPressed: () async {
+                    await EntryRepository.restore(deletedEntryId);
+                    onSaved();
+                    if (overlayContext != null && overlayContext.mounted) {
+                      DataRefreshScope.notify(overlayContext);
+                    }
+                    messenger.hideCurrentSnackBar();
+                    messenger.showSnackBar(const SnackBar(content: Text('已復原')));
+                  },
+                ),
+              ),
+            );
+          } else if (result == true) {
+            onSaved();
+            DataRefreshScope.notify(context);
           }
         });
   }
@@ -102,10 +129,32 @@ class EntryListHandlers {
     final entryId = entry['id'] as String;
     final confirmed = await ConfirmDeleteDialog.show(context, content: '確定要刪除這筆紀錄嗎？');
     if (confirmed != true || !context.mounted) return;
+    HapticFeedback.mediumImpact();
     await EntryRepository.softDelete(entryId);
     if (context.mounted) {
       onDeleted();
       DataRefreshScope.notify(context);
+      final messenger = ScaffoldMessenger.of(context);
+      final overlayContext = Navigator.of(context).overlay?.context;
+      messenger.showSnackBar(
+        SnackBar(
+          content: const Text('紀錄已刪除'),
+          duration: const Duration(seconds: 4),
+          persist: false,
+          action: SnackBarAction(
+            label: '復原',
+            onPressed: () async {
+              await EntryRepository.restore(entryId);
+              onDeleted();
+              if (overlayContext != null && overlayContext.mounted) {
+                DataRefreshScope.notify(overlayContext);
+              }
+              messenger.hideCurrentSnackBar();
+              messenger.showSnackBar(const SnackBar(content: Text('已復原')));
+            },
+          ),
+        ),
+      );
     }
   }
 
@@ -118,18 +167,25 @@ class EntryListHandlers {
     try {
       await EntryRepository.duplicate(entryId, DateTime.now());
       if (context.mounted) {
+        HapticFeedback.mediumImpact();
         onCopied();
         DataRefreshScope.notify(context);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('已複製一筆紀錄')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('複製成功！'),
+            duration: Duration(milliseconds: 1500),
+          ),
+        );
       }
     } catch (_) {
       if (context.mounted) {
         final theme = Theme.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('複製失敗', style: TextStyle(color: theme.colorScheme.onError)),
+            content: Text(
+              '複製時發生錯誤，請再試一次',
+              style: TextStyle(color: theme.colorScheme.onError),
+            ),
             backgroundColor: theme.colorScheme.error,
           ),
         );
