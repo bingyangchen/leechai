@@ -194,8 +194,9 @@ class _UserStatsCardState extends State<UserStatsCard> with TickerProviderStateM
                       Expanded(
                         flex: 6,
                         child: _HeroStreakBlock(
-                          value: '${(widget.data.weeklyStreak * entranceT).round()}',
-                          label: '連續活躍週',
+                          value:
+                              '${(widget.data.consecutiveActiveDays * entranceT).round()}',
+                          label: '連續活躍日',
                           progressFactor: entranceT,
                           contentColor: heroColors.content,
                           contentColorMuted: heroColors.contentMuted,

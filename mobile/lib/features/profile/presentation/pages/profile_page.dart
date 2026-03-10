@@ -65,8 +65,9 @@ class _ProfilePageState extends State<ProfilePage> {
         ? now.difference(earliest.toLocal()).inDays + 1
         : 0;
     final monthEntries = await EntryRepository.getByMonth(now);
+    final consecutiveActiveDays = await _computeConsecutiveActiveDays(now);
     return ProfilePageData(
-      weeklyStreak: 0,
+      consecutiveActiveDays: consecutiveActiveDays,
       totalEntries: totalEntries,
       totalDays: totalDays,
       entriesThisMonth: monthEntries.length,
@@ -74,6 +75,28 @@ class _ProfilePageState extends State<ProfilePage> {
       achievements: buildAchievements(totalEntries),
       totalBudgetSummary: 20000,
     );
+  }
+
+  static Future<int> _computeConsecutiveActiveDays(DateTime now) async {
+    const maxDays = 999;
+    final start = now.subtract(const Duration(days: maxDays));
+    final end = now;
+    final rows = await EntryRepository.getByDateRange(start, end);
+    final activeDates = <DateTime>{};
+    for (final row in rows) {
+      final occurredAt = row['occurred_at'];
+      if (occurredAt == null) continue;
+      final date = DateTime.parse(occurredAt as String).toLocal();
+      activeDates.add(DateTime(date.year, date.month, date.day));
+    }
+    final today = DateTime(now.year, now.month, now.day);
+    var count = 0;
+    var day = today;
+    while (activeDates.contains(day)) {
+      count++;
+      day = day.subtract(const Duration(days: 1));
+    }
+    return count;
   }
 
   @override
