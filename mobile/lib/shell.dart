@@ -54,7 +54,7 @@ class _ShellState extends State<Shell> {
                   );
                 }
               },
-              child: const Icon(Icons.add),
+              child: const Icon(Icons.add_rounded),
             )
           : null,
       bottomNavigationBar: SizedBox(
