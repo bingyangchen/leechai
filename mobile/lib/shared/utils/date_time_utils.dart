@@ -2,8 +2,7 @@ String formatDate(DateTime dateTime) {
   final d = dateTime;
   final monthStr = d.month.toString().padLeft(2, '0');
   final dayStr = d.day.toString().padLeft(2, '0');
-  final now = DateTime.now();
-  return d.year != now.year ? '${d.year}/$monthStr/$dayStr' : '$monthStr/$dayStr';
+  return '${d.year}/$monthStr/$dayStr';
 }
 
 String formatDateTime(DateTime dateTime) {
