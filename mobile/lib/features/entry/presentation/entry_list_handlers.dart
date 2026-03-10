@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mobile/features/account/domain/constants.dart';
 import 'package:mobile/features/entry/data/repositories/entry.dart'
     show EntryRepository;
@@ -128,6 +129,7 @@ class EntryListHandlers {
     final entryId = entry['id'] as String;
     final confirmed = await ConfirmDeleteDialog.show(context, content: '確定要刪除這筆紀錄嗎？');
     if (confirmed != true || !context.mounted) return;
+    HapticFeedback.mediumImpact();
     await EntryRepository.softDelete(entryId);
     if (context.mounted) {
       onDeleted();
@@ -165,6 +167,7 @@ class EntryListHandlers {
     try {
       await EntryRepository.duplicate(entryId, DateTime.now());
       if (context.mounted) {
+        HapticFeedback.mediumImpact();
         onCopied();
         DataRefreshScope.notify(context);
         ScaffoldMessenger.of(context).showSnackBar(

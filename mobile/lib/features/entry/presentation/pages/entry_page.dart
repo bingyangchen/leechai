@@ -246,6 +246,7 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
     if (_isSubmitting || !_isEditMode || widget.entryId == null) return;
     final confirmed = await ConfirmDeleteDialog.show(context, content: '確定要刪除這筆紀錄嗎？');
     if (confirmed != true || !mounted) return;
+    HapticFeedback.mediumImpact();
     setState(() => _isSubmitting = true);
     try {
       await EntryRepository.softDelete(widget.entryId!);
