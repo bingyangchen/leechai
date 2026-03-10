@@ -303,7 +303,6 @@ class _AssetsPageState extends State<AssetsPage> {
                           accounts: investments,
                           balances: data.balances,
                           privacyMode: _privacyMode,
-                          roiPercent: _mockRoi(investments, data.balances),
                           onAdd: _onAddInvestments,
                           onTapAccount: _onTapAccount,
                         ),
@@ -329,12 +328,6 @@ class _AssetsPageState extends State<AssetsPage> {
   }
 
   static const _currentAssetsSubTypes = ['cash', 'bank', 'epayment', 'storedValueCard'];
-
-  double? _mockRoi(List<Account> accounts, Map<String, double> balances) {
-    // TODO: Implement real ROI calculation
-    if (accounts.isEmpty) return null;
-    return 5.2;
-  }
 }
 
 class _TypeChip extends StatelessWidget {

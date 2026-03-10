@@ -13,7 +13,6 @@ class AccountGroupSection extends StatelessWidget {
     required this.accounts,
     required this.balances,
     required this.privacyMode,
-    this.roiPercent,
     required this.onAdd,
     required this.onTapAccount,
   });
@@ -22,7 +21,6 @@ class AccountGroupSection extends StatelessWidget {
   final List<Account> accounts;
   final Map<String, double> balances;
   final bool privacyMode;
-  final double? roiPercent;
   final VoidCallback onAdd;
   final void Function(Account account) onTapAccount;
 
@@ -59,18 +57,6 @@ class AccountGroupSection extends StatelessWidget {
               color: kind.isLiability ? _liabilityAmountColor(context) : null,
             ),
           ),
-          if (roiPercent != null)
-            Padding(
-              padding: const EdgeInsets.only(left: 8),
-              child: Text(
-                '${roiPercent! >= 0 ? '+' : ''}${roiPercent!.toStringAsFixed(1)}%',
-                style: theme.textStyles.labelMuted.copyWith(
-                  color: roiPercent! >= 0
-                      ? AccountingColors.of(context).income
-                      : theme.colorScheme.error,
-                ),
-              ),
-            ),
         ],
       ),
       children: [
