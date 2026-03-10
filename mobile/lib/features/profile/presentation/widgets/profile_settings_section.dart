@@ -80,14 +80,14 @@ class ProfileSettingsSection extends StatelessWidget {
             children: [
               _SettingsTile(
                 icon: Icons.dark_mode_outlined,
-                title: '主題模式',
+                title: '主題',
                 trailing: _themeModeLabel(ThemeModeScope.of(context).themeMode),
                 showTrailingArrow: false,
                 onTap: () => _showThemeModeBottomSheet(context),
               ),
               _SettingsTile(
                 icon: Icons.notifications_outlined,
-                title: '提醒與通知',
+                title: '通知',
                 onTap: () => _pushPlaceholderPage(context, '提醒與通知'), // TODO
               ),
               _SettingsTile(
