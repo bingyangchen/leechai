@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:mobile/features/entry/presentation/pages/entry_page.dart';
 import 'package:mobile/features/profile/domain/profile_page_data.dart';
 import 'package:mobile/features/profile/presentation/widgets/achievement_badge_graphics.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
@@ -17,13 +16,13 @@ bool _hasActionArea(AchievementItem item) {
   return item.isUnlocked || _hasNavigationTarget(item);
 }
 
-Future<void> showAchievementDetailSheet(BuildContext context, AchievementItem item) {
+Future<bool?> showAchievementDetailSheet(BuildContext context, AchievementItem item) {
   final theme = Theme.of(context);
   final colorScheme = theme.colorScheme;
   final textStyles = theme.textStyles;
   final bottomPadding = 20 + MediaQuery.paddingOf(context).bottom;
 
-  return showAppBottomSheet<void>(
+  return showAppBottomSheet<bool>(
     context,
     title: null,
     titleAlignment: AppBottomSheetTitleAlignment.left,
@@ -346,12 +345,7 @@ class _ActionArea extends StatelessWidget {
     }
     if (_hasNavigationTarget(item)) {
       return FilledButton(
-        onPressed: () {
-          Navigator.of(context).pop();
-          Navigator.of(
-            context,
-          ).push<bool>(MaterialPageRoute<bool>(builder: (_) => const EntryPage()));
-        },
+        onPressed: () => Navigator.of(context).pop(true),
         child: const Text('前往完成任務'),
       );
     }

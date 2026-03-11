@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:mobile/features/entry/presentation/pages/entry_page.dart';
 import 'package:mobile/features/profile/domain/profile_page_data.dart';
 import 'package:mobile/features/profile/presentation/widgets/achievement_badge_item.dart';
 import 'package:mobile/features/profile/presentation/widgets/achievement_detail_sheet.dart';
@@ -8,15 +9,11 @@ class AchievementListPage extends StatefulWidget {
   const AchievementListPage({
     super.key,
     required this.achievements,
-    required this.totalEntries,
-    this.onEntryAdded,
     this.refreshTrigger,
     this.loadData,
   });
 
   final List<AchievementItem> achievements;
-  final int totalEntries;
-  final VoidCallback? onEntryAdded;
   final ValueListenable<int>? refreshTrigger;
   final Future<ProfilePageData> Function()? loadData;
 
@@ -26,13 +23,11 @@ class AchievementListPage extends StatefulWidget {
 
 class _AchievementListPageState extends State<AchievementListPage> {
   late List<AchievementItem> _achievements;
-  late int _totalEntries;
 
   @override
   void initState() {
     super.initState();
     _achievements = widget.achievements;
-    _totalEntries = widget.totalEntries;
     widget.refreshTrigger?.addListener(_onRefreshTriggered);
   }
 
@@ -58,7 +53,6 @@ class _AchievementListPageState extends State<AchievementListPage> {
       if (mounted) {
         setState(() {
           _achievements = data.achievements;
-          _totalEntries = data.totalEntries;
         });
       }
     });
@@ -66,11 +60,6 @@ class _AchievementListPageState extends State<AchievementListPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isFirstEntryLocked =
-        _achievements.isNotEmpty &&
-        _achievements.first.id == 'first_entry' &&
-        !_achievements.first.isUnlocked;
-
     return Scaffold(
       appBar: AppBar(title: const Text('我的成就')),
       body: ListView(
@@ -84,12 +73,18 @@ class _AchievementListPageState extends State<AchievementListPage> {
               for (var index = 0; index < _achievements.length; index++)
                 AchievementBadgeItem(
                   item: _achievements[index],
-                  highlightCta: _totalEntries == 0 && index == 0 && isFirstEntryLocked,
-                  onTap: () =>
-                      showAchievementDetailSheet(context, _achievements[index]),
-                  onEntryAdded: _totalEntries == 0 && index == 0
-                      ? widget.onEntryAdded
-                      : null,
+                  onTap: () async {
+                    final navigator = Navigator.of(context);
+                    final shouldOpenEntry = await showAchievementDetailSheet(
+                      context,
+                      _achievements[index],
+                    );
+                    if (shouldOpenEntry != true || !mounted) return;
+                    final saved = await navigator.push<bool>(
+                      MaterialPageRoute<bool>(builder: (_) => const EntryPage()),
+                    );
+                    if (saved == true && mounted) _onRefreshTriggered();
+                  },
                 ),
             ],
           ),

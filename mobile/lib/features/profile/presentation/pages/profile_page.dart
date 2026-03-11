@@ -162,10 +162,6 @@ class _ProfilePageState extends State<ProfilePage> {
                               MaterialPageRoute<void>(
                                 builder: (_) => AchievementListPage(
                                   achievements: data.achievements,
-                                  totalEntries: data.totalEntries,
-                                  onEntryAdded: () =>
-                                      (widget.refreshTrigger as ValueNotifier<int>?)
-                                          ?.value++,
                                   refreshTrigger: widget.refreshTrigger,
                                   loadData: _loadData,
                                 ),
