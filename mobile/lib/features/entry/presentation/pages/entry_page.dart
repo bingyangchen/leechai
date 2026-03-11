@@ -17,6 +17,7 @@ import 'package:mobile/features/entry/presentation/widgets/category_section.dart
 import 'package:mobile/features/entry/presentation/widgets/date_chip_row.dart';
 import 'package:mobile/features/entry/presentation/widgets/notes_section.dart';
 import 'package:mobile/features/entry/presentation/widgets/tags_section.dart';
+import 'package:mobile/features/profile/data/achievement_unlock_service.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
 import 'package:mobile/shared/widgets/confirm_delete_dialog.dart';
@@ -481,6 +482,11 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
     if (!mounted) return;
     if (!_isEditMode) HapticFeedback.mediumImpact();
     Navigator.of(context).pop(true);
+    if (!_isEditMode) {
+      Future.delayed(const Duration(milliseconds: 350), () {
+        AchievementUnlockService.instance.checkAndNotify();
+      });
+    }
   }
 
   @override
