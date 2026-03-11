@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/features/category/presentation/pages/category_management_page.dart';
+import 'package:mobile/features/profile/presentation/pages/notification_settings_page.dart';
 import 'package:mobile/features/tag/presentation/pages/tag_management_page.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/theme/theme_mode_scope.dart';
@@ -89,7 +90,11 @@ class ProfileSettingsSection extends StatelessWidget {
               _SettingsTile(
                 icon: Icons.notifications_outlined,
                 title: '通知',
-                onTap: () => _pushPlaceholderPage(context, '提醒與通知'), // TODO
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const NotificationSettingsPage(),
+                  ),
+                ),
               ),
               _SettingsTile(
                 icon: Icons.backup_outlined,

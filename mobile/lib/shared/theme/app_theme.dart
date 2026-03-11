@@ -136,6 +136,20 @@ class AppTheme {
         hoverElevation: 3,
         highlightElevation: 4,
       ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return colorScheme.onPrimary;
+          }
+          return null;
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return colorScheme.primary;
+          }
+          return null;
+        }),
+      ),
       extensions: [
         _appTextStyles(textTheme, colorScheme),
         AccountingColors(
@@ -356,6 +370,20 @@ class AppTheme {
         focusElevation: 2,
         hoverElevation: 3,
         highlightElevation: 4,
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return colorScheme.onPrimary;
+          }
+          return null;
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return colorScheme.primary;
+          }
+          return null;
+        }),
       ),
       extensions: [
         _appTextStyles(textTheme, colorScheme),
