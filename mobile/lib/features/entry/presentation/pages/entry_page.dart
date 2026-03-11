@@ -17,7 +17,7 @@ import 'package:mobile/features/entry/presentation/widgets/category_section.dart
 import 'package:mobile/features/entry/presentation/widgets/date_chip_row.dart';
 import 'package:mobile/features/entry/presentation/widgets/notes_section.dart';
 import 'package:mobile/features/entry/presentation/widgets/tags_section.dart';
-import 'package:mobile/features/profile/data/achievement_unlock_service.dart';
+import 'package:mobile/features/profile/data/services/achievement_unlock.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
 import 'package:mobile/shared/widgets/confirm_delete_dialog.dart';
