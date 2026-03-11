@@ -19,6 +19,10 @@ dependencies:
   sqflite: ^2.4.1
   url_launcher: ^6.3.0
   shared_preferences: ^2.3.3
+  permission_handler: ^11.3.1
+  flutter_local_notifications: ^17.2.3
+  timezone: ^0.9.4
+  flutter_timezone: ^2.0.1
 
 dev_dependencies:
   flutter_test:

@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:mobile/features/profile/data/achievement_unlock_service.dart';
+import 'package:mobile/features/profile/data/services/achievement_unlock.dart';
 import 'package:mobile/features/profile/domain/profile_page_data.dart';
 import 'package:mobile/features/profile/presentation/widgets/achievement_notification_banner.dart';
 

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/features/profile/data/achievement_unlock_service.dart';
+import 'package:mobile/features/profile/data/services/achievement_unlock.dart';
+import 'package:mobile/features/profile/data/services/notification_init.dart';
 import 'package:mobile/features/profile/presentation/widgets/achievement_notification_overlay.dart';
 import 'package:mobile/shared/scopes/data_refresh.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/theme/theme_mode_scope.dart';
 import 'package:mobile/shell.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initNotificationService();
   runApp(const MainApp());
 }
 

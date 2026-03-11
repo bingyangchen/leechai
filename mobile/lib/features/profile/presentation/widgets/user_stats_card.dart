@@ -30,7 +30,7 @@ class _UserStatsCardState extends State<UserStatsCard> with TickerProviderStateM
   static const double _tapSlop = 18;
   static const double _dragSensitivity = 0.003;
   static const int _springBackDurationMs = 200;
-  static const int _entranceDurationMs = 700;
+  static const int _entranceDurationMs = 1000;
 
   late AnimationController _springController;
   late AnimationController _entranceController;
