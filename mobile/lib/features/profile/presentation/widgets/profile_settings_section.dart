@@ -179,7 +179,7 @@ class ProfileSettingsSection extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 height: 48,
-                child: FilledButton(
+                child: FilledButton.icon(
                   onPressed: () {
                     Navigator.of(sheetContext).pop();
                     _requestInAppReview(context);
@@ -191,18 +191,12 @@ class ProfileSettingsSection extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.star, size: 20, color: colorScheme.onPrimary),
-                      const SizedBox(width: 8),
-                      Text(
-                        '五星好評',
-                        style: textStyles.labelLargeEmphasis.copyWith(
-                          color: colorScheme.onPrimary,
-                        ),
-                      ),
-                    ],
+                  icon: const Icon(Icons.star, size: 20),
+                  label: Text(
+                    '五星好評',
+                    style: textStyles.labelLargeEmphasis.copyWith(
+                      color: colorScheme.onPrimary,
+                    ),
                   ),
                 ),
               ),
@@ -210,7 +204,7 @@ class ProfileSettingsSection extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 height: 48,
-                child: OutlinedButton(
+                child: OutlinedButton.icon(
                   onPressed: () {
                     Navigator.of(sheetContext).pop();
                     _openFeedbackEmail(context);
@@ -222,22 +216,12 @@ class ProfileSettingsSection extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.bug_report_outlined,
-                        size: 20,
-                        color: colorScheme.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '問題回報',
-                        style: textStyles.labelLargeEmphasis.copyWith(
-                          color: colorScheme.primary,
-                        ),
-                      ),
-                    ],
+                  icon: const Icon(Icons.bug_report_outlined, size: 20),
+                  label: Text(
+                    '問題回報',
+                    style: textStyles.labelLargeEmphasis.copyWith(
+                      color: colorScheme.primary,
+                    ),
                   ),
                 ),
               ),
@@ -290,11 +274,13 @@ class ProfileSettingsSection extends StatelessWidget {
     }
     final packageInfo = await PackageInfo.fromPlatform();
     return '''
+（請在此描述您遇到的問題）
+
+---
+設備資訊（請勿刪除）：
 App 版本：${packageInfo.version} (${packageInfo.buildNumber})
 設備型號：$deviceModel
 作業系統：$osVersion
-
-（請在此描述您遇到的問題）
 ''';
   }
 
@@ -311,29 +297,15 @@ App 版本：${packageInfo.version} (${packageInfo.buildNumber})
       );
       final launched = await launchUrl(uri);
       if (!launched && context.mounted) {
-        final theme = Theme.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '目前無法開啟郵件，請稍後再試',
-              style: theme.textStyles.body.copyWith(color: theme.colorScheme.onError),
-            ),
-            backgroundColor: theme.colorScheme.error,
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('目前無法開啟郵件，請稍後再試')));
       }
     } catch (_) {
       if (context.mounted) {
-        final theme = Theme.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '目前無法開啟郵件，請稍後再試',
-              style: theme.textStyles.body.copyWith(color: theme.colorScheme.onError),
-            ),
-            backgroundColor: theme.colorScheme.error,
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('目前無法開啟郵件，請稍後再試')));
       }
     }
   }
