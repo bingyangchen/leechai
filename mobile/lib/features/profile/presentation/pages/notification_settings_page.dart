@@ -201,31 +201,27 @@ class _PermissionBanner extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Material(
-      color: colorScheme.outline,
+      color: colorScheme.surfaceContainerHighest,
       child: InkWell(
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             children: [
-              Icon(
-                Icons.info_outline,
-                size: 20,
-                color: colorScheme.onSecondaryContainer,
-              ),
+              Icon(Icons.info_outline, size: 20, color: colorScheme.onSurfaceVariant),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   '請至系統設定開啟通知權限，以接收提醒。',
                   style: theme.textStyles.body.copyWith(
-                    color: colorScheme.onSecondaryContainer,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),
               Text(
                 '前往設定',
                 style: theme.textStyles.labelEmphasis.copyWith(
-                  color: colorScheme.onSecondaryContainer,
+                  color: colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
