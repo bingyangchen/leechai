@@ -1,4 +1,7 @@
+import 'dart:io' show Platform;
+
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:in_app_review/in_app_review.dart';
@@ -8,6 +11,7 @@ import 'package:mobile/features/tag/presentation/pages/tag_management_page.dart'
 import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/theme/theme_mode_scope.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 String _themeModeLabel(ThemeMode mode) {
@@ -24,7 +28,7 @@ String _themeModeLabel(ThemeMode mode) {
 const _appVersion = 'v1.0.0';
 const _privacyPolicyUrl = 'https://github.com/bingyangchen/leechai';
 const _termsOfServiceUrl = 'https://github.com/bingyangchen/leechai';
-const _githubIssuesUrl = 'https://github.com/bingyangchen/leechai/issues/new';
+const _feedbackEmail = 'leechai.app@gmail.com';
 
 class ProfileSettingsSection extends StatelessWidget {
   const ProfileSettingsSection({
@@ -209,7 +213,7 @@ class ProfileSettingsSection extends StatelessWidget {
                 child: OutlinedButton(
                   onPressed: () {
                     Navigator.of(sheetContext).pop();
-                    _openInBrowser(context, _githubIssuesUrl);
+                    _openFeedbackEmail(context);
                   },
                   style: OutlinedButton.styleFrom(
                     foregroundColor: colorScheme.primary,
@@ -268,6 +272,69 @@ class ProfileSettingsSection extends StatelessWidget {
     } else {
       if (!context.mounted) return;
       await inAppReview.openStoreListing();
+    }
+  }
+
+  Future<String> _buildFeedbackEmailBody() async {
+    final deviceInfo = DeviceInfoPlugin();
+    String osVersion = '';
+    String deviceModel = '';
+    if (Platform.isAndroid) {
+      final android = await deviceInfo.androidInfo;
+      osVersion = 'Android ${android.version.release}';
+      deviceModel = android.model;
+    } else if (Platform.isIOS) {
+      final ios = await deviceInfo.iosInfo;
+      osVersion = 'iOS ${ios.systemVersion}';
+      deviceModel = ios.utsname.machine;
+    }
+    final packageInfo = await PackageInfo.fromPlatform();
+    return '''
+App 版本：${packageInfo.version} (${packageInfo.buildNumber})
+設備型號：$deviceModel
+作業系統：$osVersion
+
+（請在此描述您遇到的問題）
+''';
+  }
+
+  Future<void> _openFeedbackEmail(BuildContext context) async {
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      final subject = '[問題回報] ${packageInfo.appName} v${packageInfo.version}';
+      final body = await _buildFeedbackEmailBody();
+      final uri = Uri(
+        scheme: 'mailto',
+        path: _feedbackEmail,
+        query:
+            'subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}',
+      );
+      final launched = await launchUrl(uri);
+      if (!launched && context.mounted) {
+        final theme = Theme.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '目前無法開啟郵件，請稍後再試',
+              style: theme.textStyles.body.copyWith(color: theme.colorScheme.onError),
+            ),
+            backgroundColor: theme.colorScheme.error,
+          ),
+        );
+      }
+    } catch (_) {
+      if (context.mounted) {
+        final theme = Theme.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '目前無法開啟郵件，請稍後再試',
+              style: theme.textStyles.body.copyWith(color: theme.colorScheme.onError),
+            ),
+            backgroundColor: theme.colorScheme.error,
+          ),
+        );
+      }
     }
   }
 
