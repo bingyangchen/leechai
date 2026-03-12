@@ -4,7 +4,6 @@ import 'package:mobile/features/profile/domain/achievement_definitions.dart';
 import 'package:mobile/features/profile/domain/profile_page_data.dart';
 import 'package:mobile/features/profile/presentation/widgets/achievement_badge_graphics.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
-import 'package:mobile/shared/utils/date_time_utils.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
 
 final _integerFormat = NumberFormat('#,##0');
@@ -157,7 +156,7 @@ class _HeroSectionState extends State<_HeroSection>
               alignment: Alignment.center,
               child: Text(
                 widget.item.isUnlocked && widget.item.unlockedAt != null
-                    ? '解鎖於 ${formatDate(widget.item.unlockedAt!)}'
+                    ? '解鎖於 ${DateFormat('y/MM/dd').format(widget.item.unlockedAt!)}'
                     : '尚未解鎖',
                 style: textStyles.labelSmallMuted.copyWith(
                   color: widget.item.isUnlocked
