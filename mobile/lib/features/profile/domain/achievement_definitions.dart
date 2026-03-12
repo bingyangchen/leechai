@@ -69,7 +69,7 @@ extension AchievementIdX on AchievementId {
         return const AchievementDefinition(
           achievementId: AchievementId.firstEntry,
           name: '初來乍到',
-          description: '完成你的第一筆記帳，開啟理財習慣養成之路。',
+          description: '完成你的第一筆記帳，開啟理財習慣養成之路吧！',
           conditionText: '記錄第一筆帳',
           target: 1,
         );
@@ -85,7 +85,7 @@ extension AchievementIdX on AchievementId {
         return const AchievementDefinition(
           achievementId: AchievementId.streak7Days,
           name: '連續一週',
-          description: '連續 7 天都有記帳，習慣正在養成。',
+          description: '連續 7 天都有記帳，習慣正在養成了呢！',
           conditionText: '連續 7 天記帳',
           target: 7,
         );
@@ -93,7 +93,7 @@ extension AchievementIdX on AchievementId {
         return const AchievementDefinition(
           achievementId: AchievementId.streak30Days,
           name: '連續一月',
-          description: '連續 30 天記帳不斷更，你已把記帳融入生活。',
+          description: '連續 30 天記帳不斷更，看來你已經把記帳融入生活囉～',
           conditionText: '連續 30 天記帳',
           target: 30,
         );
@@ -101,7 +101,7 @@ extension AchievementIdX on AchievementId {
         return const AchievementDefinition(
           achievementId: AchievementId.streak100Days,
           name: '連續百日',
-          description: '連續 100 天記帳不斷更，毅力驚人。',
+          description: '連續 100 天！你的表現令我刮目相看！',
           conditionText: '連續 100 天記帳',
           target: 100,
         );
@@ -109,7 +109,7 @@ extension AchievementIdX on AchievementId {
         return const AchievementDefinition(
           achievementId: AchievementId.monthlyPerfect,
           name: '全勤模範',
-          description: '單月每一天都有記帳紀錄。',
+          description: '整個月一天都沒漏記，全勤達人就是你！',
           conditionText: '單月每天都有記帳',
           target: 31,
           repeatType: AchievementRepeatType.perPeriod,
@@ -118,7 +118,7 @@ extension AchievementIdX on AchievementId {
         return const AchievementDefinition(
           achievementId: AchievementId.fourWeekendsStreak,
           name: '週末不打烊',
-          description: '連續 4 個週末都有新增紀錄。',
+          description: '連續 4 個週末都有記帳，連假日也不放過～',
           conditionText: '連續 4 個週末都有記帳',
           target: 4,
         );
@@ -126,7 +126,7 @@ extension AchievementIdX on AchievementId {
         return const AchievementDefinition(
           achievementId: AchievementId.backfillStreak3,
           name: '補登達人',
-          description: '連續 3 次在事後補登昨天的帳務。',
+          description: '連續 3 次事後補登昨天的帳，不忘記任何一筆！',
           conditionText: '連續 3 次補登昨日帳務',
           target: 3,
         );
@@ -134,7 +134,7 @@ extension AchievementIdX on AchievementId {
         return const AchievementDefinition(
           achievementId: AchievementId.secondAccount,
           name: '資產總管',
-          description: '建立第二個帳戶，從記帳走向資產管理。',
+          description: '建立第二個帳戶，從記帳邁向資產管理囉～',
           conditionText: '建立第二個帳戶',
           target: 2,
         );
@@ -142,7 +142,7 @@ extension AchievementIdX on AchievementId {
         return const AchievementDefinition(
           achievementId: AchievementId.firstBudget,
           name: '精打細算',
-          description: '首次設定並啟用預算功能。',
+          description: '首次設定並啟用預算，理財更上一層樓！',
           conditionText: '設定並啟用預算',
           target: 1,
         );
@@ -150,7 +150,7 @@ extension AchievementIdX on AchievementId {
         return const AchievementDefinition(
           achievementId: AchievementId.firstCustomTag,
           name: '分類強迫症',
-          description: '首次建立並使用自訂分類或標籤。',
+          description: '建立並用上自訂分類或標籤，帳目一目了然～',
           conditionText: '建立並使用自訂標籤',
           target: 1,
         );
@@ -158,7 +158,7 @@ extension AchievementIdX on AchievementId {
         return const AchievementDefinition(
           achievementId: AchievementId.budgetGuardian,
           name: '預算守門員',
-          description: '單月結算時，總支出未超過設定預算。',
+          description: '單月支出沒爆預算，守得好！',
           conditionText: '單月支出未超過預算',
           target: 1,
         );
@@ -166,7 +166,7 @@ extension AchievementIdX on AchievementId {
         return const AchievementDefinition(
           achievementId: AchievementId.positiveCashflow,
           name: '開源節流',
-          description: '單月總收入大於總支出，達成正現金流。',
+          description: '單月收入大於支出，正現金流達成，厲害！',
           conditionText: '單月收入大於支出',
           target: 1,
           repeatType: AchievementRepeatType.perPeriod,
@@ -175,7 +175,7 @@ extension AchievementIdX on AchievementId {
         return const AchievementDefinition(
           achievementId: AchievementId.hundredEntries,
           name: '百筆達成',
-          description: '累積記帳滿 100 筆，你已經養成持續記錄的好習慣。',
+          description: '累積記帳滿 100 筆，持續記錄的習慣已經養成囉～',
           conditionText: '累積記帳 100 筆',
           target: 100,
         );
@@ -183,7 +183,7 @@ extension AchievementIdX on AchievementId {
         return const AchievementDefinition(
           achievementId: AchievementId.thousandEntries,
           name: '記帳大師',
-          description: '累積記帳滿 1,000 筆，理財習慣已深植日常。',
+          description: '累積記帳滿 1,000 筆，我願稱你為記帳大師！',
           conditionText: '累積記帳 1,000 筆',
           target: 1000,
         );
@@ -191,7 +191,7 @@ extension AchievementIdX on AchievementId {
         return const AchievementDefinition(
           achievementId: AchievementId.oneYear,
           name: '歲月如梭',
-          description: '使用 App 滿一週年。',
+          description: '使用滿一週年，感謝你一路相伴～',
           conditionText: '使用滿一週年',
           target: 1,
         );
@@ -199,7 +199,7 @@ extension AchievementIdX on AchievementId {
         return const AchievementDefinition(
           achievementId: AchievementId.nightOwl,
           name: '夜貓子',
-          description: '在凌晨 2～4 點記了一筆帳，你是真正的夜貓族。',
+          description: '凌晨 2～4 點還在記帳，夜貓認證！',
           conditionText: '在凌晨 2～4 點記帳',
           target: 1,
           isSecret: true,
