@@ -42,6 +42,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/icon/app_icon.png
+    - assets/icon/cool.png
 
 names_launcher:
   name: "Leechai"
