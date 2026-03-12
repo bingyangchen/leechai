@@ -1,9 +1,13 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:barcode_widget/barcode_widget.dart';
+import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
+import 'package:mobile/features/profile/data/repositories/invoice_carrier.dart';
 import 'package:mobile/features/profile/domain/profile_page_data.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
+import 'package:screen_brightness/screen_brightness.dart';
 
 class UserStatsCard extends StatefulWidget {
   const UserStatsCard({
@@ -22,7 +26,10 @@ class UserStatsCard extends StatefulWidget {
   State<UserStatsCard> createState() => _UserStatsCardState();
 }
 
-class _UserStatsCardState extends State<UserStatsCard> with TickerProviderStateMixin {
+enum _BackViewState { display, empty, edit }
+
+class _UserStatsCardState extends State<UserStatsCard>
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   double _tiltX = 0;
   double _tiltY = 0;
   Offset? _lastPosition;
@@ -38,6 +45,8 @@ class _UserStatsCardState extends State<UserStatsCard> with TickerProviderStateM
   static const int _entranceDurationMs = 1000;
   static const int _flipDurationMs = 320;
 
+  static final RegExp _carrierRegex = RegExp(r'^/[A-Z0-9+\-.]{7}$');
+
   late AnimationController _springController;
   late AnimationController _entranceController;
   late AnimationController _flipController;
@@ -45,6 +54,14 @@ class _UserStatsCardState extends State<UserStatsCard> with TickerProviderStateM
   double _tiltXBeforeSpring = 0;
   double _tiltYBeforeSpring = 0;
   bool _wasPageVisible = false;
+
+  final InvoiceCarrierRepository _carrierRepository = InvoiceCarrierRepository();
+  final TextEditingController _editController = TextEditingController();
+  String? _carrier;
+  _BackViewState _backViewState = _BackViewState.empty;
+  String _editText = '';
+  double? _savedBrightness;
+  bool _carrierLoaded = false;
 
   void _runEntranceAnimation() {
     if (!mounted) return;
@@ -55,6 +72,7 @@ class _UserStatsCardState extends State<UserStatsCard> with TickerProviderStateM
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _springController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: _springBackDurationMs),
@@ -71,10 +89,69 @@ class _UserStatsCardState extends State<UserStatsCard> with TickerProviderStateM
     );
     _flipAnimation = CurvedAnimation(parent: _flipController, curve: Curves.easeInOut);
     _flipController.addListener(() => setState(() {}));
+    _flipController.addStatusListener(_onFlipStatusChanged);
     _wasPageVisible = widget.isPageVisible;
     if (widget.isPageVisible) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _runEntranceAnimation());
     }
+    _loadCarrier();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) {
+      _restoreBrightness();
+    }
+  }
+
+  Future<void> _loadCarrier() async {
+    final value = await _carrierRepository.load();
+    if (mounted) {
+      setState(() {
+        _carrier = value;
+        _carrierLoaded = true;
+        _backViewState = (value != null && value.isNotEmpty)
+            ? _BackViewState.display
+            : _BackViewState.empty;
+      });
+    }
+  }
+
+  void _onFlipStatusChanged(AnimationStatus status) {
+    if (status == AnimationStatus.completed && _flipController.value >= 0.99) {
+      if (_backViewState == _BackViewState.display && _carrier != null) {
+        _setBrightnessHigh();
+      }
+    } else if (status == AnimationStatus.dismissed && _flipController.value <= 0.01) {
+      _restoreBrightness();
+    }
+  }
+
+  Future<void> _setBrightnessHigh() async {
+    if (_savedBrightness != null) return;
+    try {
+      _savedBrightness = await ScreenBrightness().application;
+      await ScreenBrightness().setApplicationScreenBrightness(1.0);
+    } catch (_) {}
+  }
+
+  Future<void> _restoreBrightness() async {
+    if (_savedBrightness == null) return;
+    try {
+      await ScreenBrightness().setApplicationScreenBrightness(_savedBrightness!);
+      if (mounted) setState(() => _savedBrightness = null);
+    } catch (_) {
+      if (mounted) setState(() => _savedBrightness = null);
+    }
+  }
+
+  void _flipBackToFront() {
+    if (!_isFlipped) return;
+    _restoreBrightness();
+    setState(() {
+      _isFlipped = false;
+      _flipController.reverse();
+    });
   }
 
   @override
@@ -85,6 +162,7 @@ class _UserStatsCardState extends State<UserStatsCard> with TickerProviderStateM
       _wasPageVisible = true;
     } else if (!widget.isPageVisible) {
       _wasPageVisible = false;
+      if (_isFlipped) _flipBackToFront();
     }
   }
 
@@ -99,6 +177,10 @@ class _UserStatsCardState extends State<UserStatsCard> with TickerProviderStateM
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _flipController.removeStatusListener(_onFlipStatusChanged);
+    _editController.dispose();
+    _restoreBrightness();
     _springController.dispose();
     _entranceController.dispose();
     _flipController.dispose();
@@ -235,7 +317,6 @@ class _UserStatsCardState extends State<UserStatsCard> with TickerProviderStateM
                         child: _buildBackFace(
                           theme: theme,
                           heroColors: heroColors,
-                          gradient: gradient,
                           edgeColor: edgeColor,
                           thicknessOffset: thicknessOffset,
                         ),
@@ -409,10 +490,11 @@ class _UserStatsCardState extends State<UserStatsCard> with TickerProviderStateM
   Widget _buildBackFace({
     required ThemeData theme,
     required HeroCardColors heroColors,
-    required Gradient gradient,
     required Color edgeColor,
     required Offset thicknessOffset,
   }) {
+    const borderRadius = 20.0;
+    final surfaceBg = theme.colorScheme.surfaceContainerHighest;
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -421,7 +503,7 @@ class _UserStatsCardState extends State<UserStatsCard> with TickerProviderStateM
             offset: thicknessOffset,
             child: Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(borderRadius),
                 color: edgeColor,
               ),
             ),
@@ -429,8 +511,8 @@ class _UserStatsCardState extends State<UserStatsCard> with TickerProviderStateM
         ),
         Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: gradient,
+            borderRadius: BorderRadius.circular(borderRadius),
+            color: surfaceBg,
             boxShadow: [
               BoxShadow(
                 color: theme.colorScheme.primary.withValues(alpha: 0.35),
@@ -447,30 +529,223 @@ class _UserStatsCardState extends State<UserStatsCard> with TickerProviderStateM
             ],
           ),
           clipBehavior: Clip.antiAlias,
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'LEECHAI',
+          child: Column(
+            children: [
+              Expanded(
+                child: _carrierLoaded
+                    ? AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        switchInCurve: Curves.easeOut,
+                        switchOutCurve: Curves.easeIn,
+                        child: _backViewState == _BackViewState.display
+                            ? KeyedSubtree(
+                                key: const ValueKey('back_display'),
+                                child: _buildBackDisplay(theme, heroColors),
+                              )
+                            : _backViewState == _BackViewState.empty
+                            ? KeyedSubtree(
+                                key: const ValueKey('back_empty'),
+                                child: _buildBackEmpty(theme, heroColors),
+                              )
+                            : KeyedSubtree(
+                                key: const ValueKey('back_edit'),
+                                child: _buildBackEdit(theme, heroColors),
+                              ),
+                      )
+                    : const Center(child: CircularProgressIndicator()),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Text(
+                  '向上拖曳翻回',
                   style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 3,
-                    color: heroColors.content.withValues(alpha: 0.9),
+                    fontSize: 11,
+                    color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  '向上拖曳翻回',
-                  style: TextStyle(fontSize: 13, color: heroColors.contentMuted),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ],
     );
+  }
+
+  Widget _buildBackDisplay(ThemeData theme, HeroCardColors heroColors) {
+    final carrier = _carrier ?? '';
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Align(
+            alignment: Alignment.centerRight,
+            child: IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: () {
+                _restoreBrightness();
+                setState(() {
+                  _backViewState = _BackViewState.edit;
+                  _editText = carrier;
+                  _editController.text = carrier;
+                  _editController.selection = TextSelection.collapsed(
+                    offset: carrier.length,
+                  );
+                });
+              },
+              style: IconButton.styleFrom(
+                foregroundColor: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFFFFF),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: BarcodeWidget(
+              barcode: Barcode.code39(),
+              data: carrier,
+              width: double.infinity,
+              height: 85,
+              margin: const EdgeInsets.all(20),
+              drawText: false,
+              color: const Color(0xFF000000),
+              backgroundColor: const Color(0xFFFFFFFF),
+              errorBuilder: (_, context) => const SizedBox(height: 56),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            carrier,
+            style: TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBackEmpty(ThemeData theme, HeroCardColors heroColors) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: DottedBorder(
+          options: RoundedRectDottedBorderOptions(
+            radius: const Radius.circular(12),
+            color: theme.colorScheme.outline.withValues(alpha: 0.6),
+            strokeWidth: 1.5,
+            dashPattern: const [6, 4],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                setState(() {
+                  _backViewState = _BackViewState.edit;
+                  _editText = '/';
+                  _editController.text = '/';
+                  _editController.selection = TextSelection.collapsed(offset: 1);
+                });
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                child: Text(
+                  '+ 新增發票載具',
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBackEdit(ThemeData theme, HeroCardColors heroColors) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            controller: _editController,
+            autofocus: true,
+            textCapitalization: TextCapitalization.characters,
+            onChanged: (value) => setState(() => _editText = value),
+            decoration: InputDecoration(
+              hintText: '/AB12345',
+              border: const OutlineInputBorder(),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            ),
+            onSubmitted: (_) => _saveCarrier(),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _backViewState = _carrier != null && _carrier!.isNotEmpty
+                        ? _BackViewState.display
+                        : _BackViewState.empty;
+                    _editText = _carrier ?? '';
+                    _editController.text = _editText;
+                  });
+                },
+                child: const Text('取消'),
+              ),
+              const SizedBox(width: 8),
+              TextButton(onPressed: _saveCarrier, child: const Text('儲存')),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _saveCarrier() async {
+    final trimmed = _editController.text.trim();
+    if (trimmed.isEmpty) {
+      await _carrierRepository.save(null);
+      if (mounted) {
+        setState(() {
+          _carrier = null;
+          _backViewState = _BackViewState.empty;
+          _editText = '';
+          _editController.text = '';
+        });
+      }
+      return;
+    }
+    if (!_carrierRegex.hasMatch(trimmed)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('請輸入正確格式：/ 開頭加 7 碼（大寫英文、數字或 + - .）')),
+        );
+      }
+      return;
+    }
+    await _carrierRepository.save(trimmed);
+    if (mounted) {
+      setState(() {
+        _carrier = trimmed;
+        _backViewState = _BackViewState.display;
+        _editText = trimmed;
+        _editController.text = trimmed;
+      });
+      if (_isFlipped) _setBrightnessHigh();
+    }
   }
 }
 
