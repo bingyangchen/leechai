@@ -19,7 +19,10 @@ class _ShellState extends State<Shell> {
   int _currentIndex = 0;
 
   List<Widget> _buildPages() => [
-    JournalPage(refreshTrigger: widget.refreshTrigger),
+    JournalPage(
+      refreshTrigger: widget.refreshTrigger,
+      isPageVisible: _currentIndex == 0,
+    ),
     StatisticsPage(
       refreshTrigger: widget.refreshTrigger,
       isPageVisible: _currentIndex == 1,

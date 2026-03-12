@@ -17,6 +17,7 @@ import 'package:mobile/features/entry/presentation/entry_list_handlers.dart';
 import 'package:mobile/features/entry/presentation/widgets/sticky_date_header.dart'
     show buildDateHeaderSection;
 import 'package:mobile/features/entry/presentation/widgets/transaction_row.dart';
+import 'package:mobile/features/profile/data/services/achievement.dart';
 import 'package:mobile/shared/scopes/data_refresh.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/refresh_snap_back.dart';
@@ -108,6 +109,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
 
     final accountId = data.account.id;
 
+    final occurredAt = DateTime.now();
     if (diff > 0) {
       await EntryRepository.insert(
         type: EntryType.adjustment.name,
@@ -116,7 +118,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
         amount: diff,
         tagIds: [],
         memo: '市值更新',
-        occurredAt: DateTime.now(),
+        occurredAt: occurredAt,
       );
     } else {
       await EntryRepository.insert(
@@ -126,11 +128,18 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
         amount: -diff,
         tagIds: [],
         memo: '市值更新',
-        occurredAt: DateTime.now(),
+        occurredAt: occurredAt,
       );
     }
+    await AchievementService.evaluateAfterEntryInserted(
+      type: EntryType.adjustment.name,
+      occurredAt: occurredAt,
+      tagIds: [],
+      amount: diff.abs(),
+    );
     if (mounted) {
       _onRefresh();
+      DataRefreshScope.notify(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('已記錄未實現損益 \$${formatAmountForDisplay(diff)}'),

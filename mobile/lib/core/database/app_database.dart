@@ -6,6 +6,8 @@ import 'package:mobile/features/account/data/schema/account.dart' as account_sch
 import 'package:mobile/features/entry/data/schema/entry.dart' as entry_schema;
 import 'package:mobile/features/entry/data/schema/entry_tag.dart' as entry_tag_schema;
 import 'package:mobile/features/entry/data/schema/tag.dart' as tag_schema;
+import 'package:mobile/features/profile/data/schema/achievement.dart'
+    as achievement_schema;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
@@ -47,6 +49,7 @@ class AppDatabase {
     await tag_schema.run(db);
     await entry_schema.run(db);
     await entry_tag_schema.run(db);
+    await achievement_schema.run(db);
   }
 
   static Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
