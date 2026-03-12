@@ -102,8 +102,8 @@ class _UserStatsCardState extends State<UserStatsCard> with TickerProviderStateM
     final delta = event.position - _lastPosition!;
     _lastPosition = event.position;
     setState(() {
-      _tiltY += delta.dx * _dragSensitivity;
-      _tiltX -= delta.dy * _dragSensitivity;
+      _tiltY -= delta.dx * _dragSensitivity;
+      _tiltX += delta.dy * _dragSensitivity;
       _tiltX = _tiltX.clamp(-_maxTilt, _maxTilt);
       _tiltY = _tiltY.clamp(-_maxTilt, _maxTilt);
     });
