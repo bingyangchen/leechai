@@ -1,11 +1,17 @@
+import 'dart:io' show Platform;
+
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:in_app_review/in_app_review.dart';
 import 'package:mobile/features/category/presentation/pages/category_management_page.dart';
 import 'package:mobile/features/profile/presentation/pages/notification_settings_page.dart';
 import 'package:mobile/features/tag/presentation/pages/tag_management_page.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/theme/theme_mode_scope.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 String _themeModeLabel(ThemeMode mode) {
@@ -22,6 +28,7 @@ String _themeModeLabel(ThemeMode mode) {
 const _appVersion = 'v1.0.0';
 const _privacyPolicyUrl = 'https://github.com/bingyangchen/leechai';
 const _termsOfServiceUrl = 'https://github.com/bingyangchen/leechai';
+const _feedbackEmail = 'leechai.app@gmail.com';
 
 class ProfileSettingsSection extends StatelessWidget {
   const ProfileSettingsSection({
@@ -110,7 +117,8 @@ class ProfileSettingsSection extends StatelessWidget {
               _SettingsTile(
                 icon: Icons.rate_review_outlined,
                 title: '評價與回饋',
-                onTap: () => _pushPlaceholderPage(context, '評價與回饋'), // TODO
+                showTrailingArrow: false,
+                onTap: () => _onFeedbackTap(context),
               ),
               _SettingsTile(
                 icon: Icons.info_outline,
@@ -126,6 +134,182 @@ class ProfileSettingsSection extends StatelessWidget {
     );
   }
 
+  Future<void> _onFeedbackTap(BuildContext context) async {
+    final result = await Connectivity().checkConnectivity();
+    final hasNetwork = result.any(
+      (e) => e == ConnectivityResult.mobile || e == ConnectivityResult.wifi,
+    );
+    if (!hasNetwork) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('請檢查網路連線後再試')));
+      return;
+    }
+    if (!context.mounted) return;
+    _showFeedbackBottomSheet(context);
+  }
+
+  void _showFeedbackBottomSheet(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textStyles = theme.textStyles;
+    showAppBottomSheet<void>(
+      context,
+      mode: AppBottomSheetMode.static,
+      builder: (sheetContext) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Icon(Icons.volunteer_activism, size: 48, color: colorScheme.primary),
+              const SizedBox(height: 16),
+              Text(
+                '您的回饋是我們前進的動力',
+                textAlign: TextAlign.center,
+                style: textStyles.titleLargeEmphasis,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '如果您喜歡這個應用程式，請給我們五星好評；如果有任何問題或建議，歡迎前往 GitHub 回報給我們！',
+                textAlign: TextAlign.center,
+                style: textStyles.bodyMuted,
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: FilledButton.icon(
+                  onPressed: () {
+                    Navigator.of(sheetContext).pop();
+                    _requestInAppReview(context);
+                  },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: colorScheme.onPrimary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const Icon(Icons.star, size: 20),
+                  label: Text(
+                    '五星好評',
+                    style: textStyles.labelLargeEmphasis.copyWith(
+                      color: colorScheme.onPrimary,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.of(sheetContext).pop();
+                    _openFeedbackEmail(context);
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: colorScheme.primary,
+                    side: BorderSide(color: colorScheme.primary),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const Icon(Icons.bug_report_outlined, size: 20),
+                  label: Text(
+                    '問題回報',
+                    style: textStyles.labelLargeEmphasis.copyWith(
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _requestInAppReview(BuildContext context) async {
+    final inAppReview = InAppReview.instance;
+    if (await inAppReview.isAvailable()) {
+      await inAppReview.requestReview();
+      if (!context.mounted) return;
+      final theme = Theme.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          persist: false,
+          content: Text(
+            '感謝您的支持！若未出現評分視窗，請點下方按鈕前往商店評分。',
+            style: theme.textStyles.body.copyWith(color: theme.colorScheme.onSurface),
+          ),
+          backgroundColor: theme.colorScheme.surfaceContainerHighest,
+          action: SnackBarAction(
+            label: '前往商店',
+            textColor: theme.colorScheme.primary,
+            onPressed: () => inAppReview.openStoreListing(),
+          ),
+        ),
+      );
+    } else {
+      if (!context.mounted) return;
+      await inAppReview.openStoreListing();
+    }
+  }
+
+  Future<String> _buildFeedbackEmailBody() async {
+    final deviceInfo = DeviceInfoPlugin();
+    String osVersion = '';
+    String deviceModel = '';
+    if (Platform.isAndroid) {
+      final android = await deviceInfo.androidInfo;
+      osVersion = 'Android ${android.version.release}';
+      deviceModel = android.model;
+    } else if (Platform.isIOS) {
+      final ios = await deviceInfo.iosInfo;
+      osVersion = 'iOS ${ios.systemVersion}';
+      deviceModel = ios.utsname.machine;
+    }
+    final packageInfo = await PackageInfo.fromPlatform();
+    return '''
+（請在此描述您遇到的問題）
+
+---
+設備資訊（請勿刪除）：
+App 版本：${packageInfo.version} (${packageInfo.buildNumber})
+設備型號：$deviceModel
+作業系統：$osVersion
+''';
+  }
+
+  Future<void> _openFeedbackEmail(BuildContext context) async {
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      final subject = '[問題回報] ${packageInfo.appName} v${packageInfo.version}';
+      final body = await _buildFeedbackEmailBody();
+      final uri = Uri(
+        scheme: 'mailto',
+        path: _feedbackEmail,
+        query:
+            'subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}',
+      );
+      final launched = await launchUrl(uri);
+      if (!launched && context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('目前無法開啟郵件，請稍後再試')));
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('目前無法開啟郵件，請稍後再試')));
+      }
+    }
+  }
+
   Future<void> _openInBrowser(BuildContext context, String urlString) async {
     final uri = Uri.parse(urlString);
     try {
@@ -136,7 +320,7 @@ class ProfileSettingsSection extends StatelessWidget {
           SnackBar(
             content: Text(
               '目前無法開啟連結，請稍後再試',
-              style: TextStyle(color: theme.colorScheme.onError),
+              style: theme.textStyles.body.copyWith(color: theme.colorScheme.onError),
             ),
             backgroundColor: theme.colorScheme.error,
           ),
@@ -149,7 +333,7 @@ class ProfileSettingsSection extends StatelessWidget {
           SnackBar(
             content: Text(
               '目前無法開啟連結，請稍後再試',
-              style: TextStyle(color: theme.colorScheme.onError),
+              style: theme.textStyles.body.copyWith(color: theme.colorScheme.onError),
             ),
             backgroundColor: theme.colorScheme.error,
           ),

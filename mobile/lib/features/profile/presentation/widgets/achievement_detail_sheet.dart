@@ -153,7 +153,7 @@ class _HeroSectionState extends State<_HeroSection>
                 widget.item.isUnlocked && widget.item.unlockedAt != null
                     ? '解鎖於 ${formatDate(widget.item.unlockedAt!)}'
                     : '尚未解鎖',
-                style: theme.textTheme.labelSmall?.copyWith(
+                style: textStyles.labelSmallMuted.copyWith(
                   color: widget.item.isUnlocked
                       ? colorScheme.primary
                       : colorScheme.onSurfaceVariant,
@@ -217,16 +217,13 @@ class _ProgressSectionState extends State<_ProgressSection>
           child: Text.rich(
             TextSpan(
               text: '目前進度：',
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
+              style: theme.textStyles.labelMuted,
               children: [
                 TextSpan(
                   text:
                       '${_integerFormat.format(widget.item.current)} / ${_integerFormat.format(widget.item.target)}',
-                  style: theme.textTheme.labelMedium?.copyWith(
+                  style: theme.textStyles.labelEmphasis.copyWith(
                     color: colorScheme.primary,
-                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
@@ -296,6 +293,7 @@ class _ConditionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final textStyles = theme.textStyles;
 
     return Container(
       width: double.infinity,
@@ -315,7 +313,7 @@ class _ConditionCard extends StatelessWidget {
               const SizedBox(width: 6),
               Text(
                 '取得條件',
-                style: theme.textTheme.labelMedium?.copyWith(
+                style: textStyles.labelEmphasis.copyWith(
                   color: colorScheme.primary,
                 ),
               ),
@@ -324,7 +322,7 @@ class _ConditionCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             conditionText,
-            style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface),
+            style: textStyles.body,
           ),
         ],
       ),
