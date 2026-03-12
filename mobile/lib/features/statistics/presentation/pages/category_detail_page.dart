@@ -123,14 +123,7 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: kToolbarHeight,
-        title: Text(widget.subType),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(true),
-        ),
-      ),
+      appBar: AppBar(toolbarHeight: kToolbarHeight, title: Text(widget.subType)),
       body: FutureBuilder<_DetailData>(
         future: _future,
         builder: (context, snapshot) {

@@ -99,9 +99,16 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
     final data = await _future;
     if (!mounted) return;
     final oldBalance = data.balance;
-    final newValue = await showDialog<double>(
-      context: context,
-      builder: (ctx) => _MarketValueDialog(currentValue: oldBalance),
+    final newValue = await showAppBottomSheet<double?>(
+      context,
+      title: '更新市值',
+      showCloseButton: false,
+      mode: AppBottomSheetMode.static,
+      builder: (ctx) => _MarketValueSheetContent(
+        currentValue: oldBalance,
+        onConfirm: (value) => Navigator.of(ctx).pop(value),
+        onCancel: () => Navigator.of(ctx).pop(),
+      ),
     );
     if (newValue == null || !mounted) return;
     final diff = newValue - oldBalance;
@@ -430,16 +437,22 @@ class _DetailData {
   final double balance;
 }
 
-class _MarketValueDialog extends StatefulWidget {
-  const _MarketValueDialog({required this.currentValue});
+class _MarketValueSheetContent extends StatefulWidget {
+  const _MarketValueSheetContent({
+    required this.currentValue,
+    required this.onConfirm,
+    required this.onCancel,
+  });
 
   final double currentValue;
+  final ValueChanged<double> onConfirm;
+  final VoidCallback onCancel;
 
   @override
-  State<_MarketValueDialog> createState() => _MarketValueDialogState();
+  State<_MarketValueSheetContent> createState() => _MarketValueSheetContentState();
 }
 
-class _MarketValueDialogState extends State<_MarketValueDialog> {
+class _MarketValueSheetContentState extends State<_MarketValueSheetContent> {
   late TextEditingController _controller;
 
   @override
@@ -449,10 +462,12 @@ class _MarketValueDialogState extends State<_MarketValueDialog> {
       text: formatAmountForDisplay(widget.currentValue),
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _controller.selection = TextSelection(
-        baseOffset: 0,
-        extentOffset: _controller.text.length,
-      );
+      if (_controller.text.isNotEmpty) {
+        _controller.selection = TextSelection(
+          baseOffset: 0,
+          extentOffset: _controller.text.length,
+        );
+      }
     });
   }
 
@@ -464,35 +479,44 @@ class _MarketValueDialogState extends State<_MarketValueDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('更新市值'),
-      content: TextField(
-        controller: _controller,
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d,.]'))],
-        decoration: const InputDecoration(
-          labelText: '目前市值',
-          hintText: '輸入金額',
-          prefixText: '\$ ',
-        ),
-        autofocus: true,
+    final viewInsets = MediaQuery.viewInsetsOf(context);
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24, 8, 24, 24 + viewInsets.bottom),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            controller: _controller,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d,.]'))],
+            decoration: const InputDecoration(
+              labelText: '目前市值',
+              hintText: '輸入金額',
+              prefixText: '\$ ',
+            ),
+            autofocus: true,
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(onPressed: widget.onCancel, child: const Text('取消')),
+              const SizedBox(width: 8),
+              FilledButton(
+                onPressed: () {
+                  final raw = stripAmount(_controller.text);
+                  final value = double.tryParse(raw);
+                  if (value != null && value >= 0) {
+                    widget.onConfirm(value);
+                  }
+                },
+                child: const Text('確定'),
+              ),
+            ],
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
-        ),
-        FilledButton(
-          onPressed: () {
-            final raw = stripAmount(_controller.text);
-            final value = double.tryParse(raw);
-            if (value != null && value >= 0) {
-              Navigator.of(context).pop(value);
-            }
-          },
-          child: const Text('確定'),
-        ),
-      ],
     );
   }
 }

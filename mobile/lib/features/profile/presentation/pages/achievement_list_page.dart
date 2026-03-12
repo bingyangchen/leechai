@@ -61,7 +61,7 @@ class _AchievementListPageState extends State<AchievementListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('我的成就')),
+      appBar: AppBar(toolbarHeight: kToolbarHeight, title: const Text('我的成就')),
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         children: [
