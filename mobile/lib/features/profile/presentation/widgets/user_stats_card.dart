@@ -155,6 +155,13 @@ class _UserStatsCardState extends State<UserStatsCard> with TickerProviderStateM
     final glossCenterX = 0.5 + _tiltY * 2.5;
     final glossCenterY = 0.5 + _tiltX * 2.5;
 
+    const double cardAspectRatio = 85.6 / 53.98;
+    const double thicknessPixels = 8;
+    final thicknessOffset = Offset(thicknessPixels * _tiltY, -thicknessPixels * _tiltX);
+    final edgeColor = isDark
+        ? theme.colorScheme.surface.withValues(alpha: 0.5)
+        : theme.colorScheme.primary.withValues(alpha: 0.55);
+
     return Listener(
       onPointerDown: _onPointerDown,
       onPointerMove: _onPointerMove,
@@ -162,130 +169,154 @@ class _UserStatsCardState extends State<UserStatsCard> with TickerProviderStateM
       onPointerCancel: _onPointerCancel,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Transform(
-          alignment: Alignment.center,
-          transform: transform,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              gradient: gradient,
-              boxShadow: [
-                BoxShadow(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.35),
-                  blurRadius: 16,
-                  offset: const Offset(0, 6),
-                  spreadRadius: 0,
-                ),
-                BoxShadow(
-                  color: heroColors.shadowSubtle,
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                  spreadRadius: 0,
-                ),
-              ],
-            ),
-            clipBehavior: Clip.antiAlias,
+        child: AspectRatio(
+          aspectRatio: cardAspectRatio,
+          child: Transform(
+            alignment: Alignment.center,
+            transform: transform,
             child: Stack(
+              clipBehavior: Clip.none,
               children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        flex: 6,
-                        child: _HeroStreakBlock(
-                          value:
-                              '${(widget.data.consecutiveActiveDays * entranceT).round()}',
-                          label: '連續活躍日',
-                          progressFactor: entranceT,
-                          contentColor: heroColors.content,
-                          contentColorMuted: heroColors.contentMuted,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        flex: 5,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _AuxStatBlock(
-                                    icon: Icons.edit_note,
-                                    value:
-                                        '${(widget.data.totalEntries * entranceT).round()}',
-                                    label: '總記帳數',
-                                    contentColor: heroColors.content,
-                                    contentColorMuted: heroColors.contentMuted,
-                                  ),
-                                ),
-                                Expanded(
-                                  child: _AuxStatBlock(
-                                    icon: Icons.calendar_today,
-                                    value:
-                                        '${(widget.data.totalDays * entranceT).round()}',
-                                    label: '累積天數',
-                                    contentColor: heroColors.content,
-                                    contentColorMuted: heroColors.contentMuted,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _BadgeProgressBlock(
-                                    unlocked: widget.data.unlockedBadgesCount,
-                                    total: widget.data.totalBadgesCount,
-                                    progressFactor: entranceT,
-                                    contentColor: heroColors.content,
-                                    contentColorMuted: heroColors.contentMuted,
-                                  ),
-                                ),
-                                Expanded(
-                                  child: _AuxStatBlock(
-                                    icon: Icons.bar_chart,
-                                    value:
-                                        '${(widget.data.entriesThisMonth * entranceT).round()}',
-                                    label: '本月記帳',
-                                    contentColor: heroColors.content,
-                                    contentColorMuted: heroColors.contentMuted,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
                 Positioned.fill(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      gradient: RadialGradient(
-                        center: Alignment(
-                          glossCenterX.clamp(-1.0, 2.0),
-                          glossCenterY.clamp(-1.0, 2.0),
-                        ),
-                        radius: 1.2,
-                        colors: [
-                          heroColors.content.withValues(alpha: 0.12),
-                          heroColors.content.withValues(alpha: 0.04),
-                          heroColors.content.withValues(alpha: 0.0),
-                        ],
-                        stops: const [0.0, 0.5, 1.0],
+                  child: Transform.translate(
+                    offset: thicknessOffset,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: edgeColor,
                       ),
                     ),
                   ),
                 ),
-                Positioned(
-                  left: 16,
-                  bottom: 12,
-                  child: _BrandMark(heroColors: heroColors),
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    gradient: gradient,
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.35),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                        spreadRadius: 0,
+                      ),
+                      BoxShadow(
+                        color: heroColors.shadowSubtle,
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                        spreadRadius: 0,
+                      ),
+                    ],
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 24,
+                            horizontal: 20,
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                flex: 6,
+                                child: _HeroStreakBlock(
+                                  value:
+                                      '${(widget.data.consecutiveActiveDays * entranceT).round()}',
+                                  label: '連續活躍日',
+                                  progressFactor: entranceT,
+                                  contentColor: heroColors.content,
+                                  contentColorMuted: heroColors.contentMuted,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                flex: 5,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: _AuxStatBlock(
+                                            icon: Icons.edit_note,
+                                            value:
+                                                '${(widget.data.totalEntries * entranceT).round()}',
+                                            label: '總記帳數',
+                                            contentColor: heroColors.content,
+                                            contentColorMuted: heroColors.contentMuted,
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: _AuxStatBlock(
+                                            icon: Icons.calendar_today,
+                                            value:
+                                                '${(widget.data.totalDays * entranceT).round()}',
+                                            label: '累積天數',
+                                            contentColor: heroColors.content,
+                                            contentColorMuted: heroColors.contentMuted,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: _BadgeProgressBlock(
+                                            unlocked: widget.data.unlockedBadgesCount,
+                                            total: widget.data.totalBadgesCount,
+                                            progressFactor: entranceT,
+                                            contentColor: heroColors.content,
+                                            contentColorMuted: heroColors.contentMuted,
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: _AuxStatBlock(
+                                            icon: Icons.bar_chart,
+                                            value:
+                                                '${(widget.data.entriesThisMonth * entranceT).round()}',
+                                            label: '本月記帳',
+                                            contentColor: heroColors.content,
+                                            contentColorMuted: heroColors.contentMuted,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Positioned.fill(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            gradient: RadialGradient(
+                              center: Alignment(
+                                glossCenterX.clamp(-1.0, 2.0),
+                                glossCenterY.clamp(-1.0, 2.0),
+                              ),
+                              radius: 1.2,
+                              colors: [
+                                heroColors.content.withValues(alpha: 0.12),
+                                heroColors.content.withValues(alpha: 0.04),
+                                heroColors.content.withValues(alpha: 0.0),
+                              ],
+                              stops: const [0.0, 0.5, 1.0],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        left: 16,
+                        bottom: 12,
+                        child: _BrandMark(heroColors: heroColors),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
