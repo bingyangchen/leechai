@@ -103,11 +103,6 @@ class ProfileSettingsSection extends StatelessWidget {
                   ),
                 ),
               ),
-              _SettingsTile(
-                icon: Icons.backup_outlined,
-                title: '資料備份與匯出',
-                onTap: () => _pushPlaceholderPage(context, '資料備份與匯出'), // TODO
-              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -517,7 +512,7 @@ App 版本：${packageInfo.version} (${packageInfo.buildNumber})
             trailing: Icons.chevron_right,
             onTap: () {
               Navigator.of(sheetContext).pop();
-              _pushPlaceholderPage(context, '開源授權');
+              _pushPlaceholderPage(context, '開源授權'); // TODO
             },
           ),
           const SizedBox(height: 24),
