@@ -27,6 +27,9 @@ dependencies:
   flutter_local_notifications: ^17.2.3
   timezone: ^0.9.4
   flutter_timezone: ^2.0.1
+  barcode_widget: ^2.0.4
+  screen_brightness: ^2.1.7
+  dotted_border: ^3.1.0
 
 dev_dependencies:
   flutter_test:
