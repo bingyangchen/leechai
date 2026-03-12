@@ -58,7 +58,6 @@ class _UserStatsCardState extends State<UserStatsCard>
   String? _carrier;
   UserStatsCardBackViewState _backViewState = UserStatsCardBackViewState.empty;
   String _editText = '';
-  double? _savedBrightness;
   bool _carrierLoaded = false;
 
   void _runEntranceAnimation() {
@@ -126,21 +125,15 @@ class _UserStatsCardState extends State<UserStatsCard>
   }
 
   Future<void> _setBrightnessHigh() async {
-    if (_savedBrightness != null) return;
     try {
-      _savedBrightness = await ScreenBrightness().application;
       await ScreenBrightness().setApplicationScreenBrightness(1.0);
     } catch (_) {}
   }
 
   Future<void> _restoreBrightness() async {
-    if (_savedBrightness == null) return;
     try {
-      await ScreenBrightness().setApplicationScreenBrightness(_savedBrightness!);
-      if (mounted) setState(() => _savedBrightness = null);
-    } catch (_) {
-      if (mounted) setState(() => _savedBrightness = null);
-    }
+      await ScreenBrightness().resetApplicationScreenBrightness();
+    } catch (_) {}
   }
 
   void _discardBackEditIfNeeded() {
