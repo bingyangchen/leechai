@@ -4,14 +4,16 @@ import 'package:mobile/shared/theme/app_theme.dart';
 class UserProfileHeader extends StatelessWidget {
   const UserProfileHeader({
     super.key,
-    this.isLoggedIn = true,
-    this.userName = 'Lee Chai',
-    this.userEmail = 'lee@example.com',
+    this.isLoggedIn = false,
+    this.userName = '',
+    this.userEmail = '',
+    this.onTap,
   });
 
   final bool isLoggedIn;
   final String userName;
   final String userEmail;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -25,9 +27,7 @@ class UserProfileHeader extends StatelessWidget {
         borderRadius: BorderRadius.circular(radius),
         child: InkWell(
           borderRadius: BorderRadius.circular(radius),
-          onTap: () {
-            // TODO: 導航至「帳號管理頁面」或「登入頁面」
-          },
+          onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(8, 12, 16, 12),
             child: Row(
@@ -51,11 +51,11 @@ class UserProfileHeader extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        isLoggedIn ? userName : '尚未登入',
+                        isLoggedIn ? userName : '登入 / 註冊',
                         style: theme.textStyles.titleEmphasis,
                       ),
                       Text(
-                        isLoggedIn ? userEmail : '點擊登入以啟用雲端同步',
+                        isLoggedIn ? userEmail : '登入以啟用雲端備份，保全資料不遺失',
                         style: theme.textStyles.bodyMuted,
                       ),
                     ],

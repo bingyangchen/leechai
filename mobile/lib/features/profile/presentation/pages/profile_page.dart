@@ -5,6 +5,7 @@ import 'package:mobile/features/entry/data/repositories/entry.dart'
 import 'package:mobile/features/profile/data/repositories/achievement.dart';
 import 'package:mobile/features/profile/domain/achievement_definitions.dart';
 import 'package:mobile/features/profile/domain/profile_page_data.dart';
+import 'package:mobile/features/profile/presentation/pages/account_management_page.dart';
 import 'package:mobile/features/profile/presentation/pages/achievement_list_page.dart';
 import 'package:mobile/features/profile/presentation/widgets/profile_settings_section.dart';
 import 'package:mobile/features/profile/presentation/widgets/profile_skeleton.dart';
@@ -179,7 +180,17 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
                     const SliverToBoxAdapter(child: SizedBox(height: 12)),
-                    SliverToBoxAdapter(child: UserProfileHeader()),
+                    SliverToBoxAdapter(
+                      child: UserProfileHeader(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => const AccountManagementPage(),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                     SliverToBoxAdapter(
                       child: ProfileSettingsSection(
                         totalBudgetSummary: data.totalBudgetSummary,
