@@ -33,7 +33,7 @@ class _UserStatsCardState extends State<UserStatsCard> with TickerProviderStateM
   static const double _maxTilt = 0.12;
   static const double _tapSlop = 18;
   static const double _dragSensitivity = 0.003;
-  static const double _flipThreshold = 70;
+  static const double _flipThreshold = 100;
   static const int _springBackDurationMs = 200;
   static const int _entranceDurationMs = 1000;
   static const int _flipDurationMs = 320;
