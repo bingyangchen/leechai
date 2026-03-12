@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -26,14 +27,21 @@ class _UserStatsCardState extends State<UserStatsCard> with TickerProviderStateM
   double _tiltY = 0;
   Offset? _lastPosition;
   Offset? _pointerDownPosition;
+  double _totalDragDown = 0;
+  double _totalDragUp = 0;
+  bool _isFlipped = false;
   static const double _maxTilt = 0.12;
   static const double _tapSlop = 18;
   static const double _dragSensitivity = 0.003;
+  static const double _flipThreshold = 70;
   static const int _springBackDurationMs = 200;
   static const int _entranceDurationMs = 1000;
+  static const int _flipDurationMs = 320;
 
   late AnimationController _springController;
   late AnimationController _entranceController;
+  late AnimationController _flipController;
+  late Animation<double> _flipAnimation;
   double _tiltXBeforeSpring = 0;
   double _tiltYBeforeSpring = 0;
   bool _wasPageVisible = false;
@@ -57,6 +65,12 @@ class _UserStatsCardState extends State<UserStatsCard> with TickerProviderStateM
       duration: const Duration(milliseconds: _entranceDurationMs),
     );
     _entranceController.addListener(() => setState(() {}));
+    _flipController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: _flipDurationMs),
+    );
+    _flipAnimation = CurvedAnimation(parent: _flipController, curve: Curves.easeInOut);
+    _flipController.addListener(() => setState(() {}));
     _wasPageVisible = widget.isPageVisible;
     if (widget.isPageVisible) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _runEntranceAnimation());
@@ -87,12 +101,15 @@ class _UserStatsCardState extends State<UserStatsCard> with TickerProviderStateM
   void dispose() {
     _springController.dispose();
     _entranceController.dispose();
+    _flipController.dispose();
     super.dispose();
   }
 
   void _onPointerDown(PointerDownEvent event) {
     _lastPosition = event.position;
     _pointerDownPosition = event.position;
+    _totalDragDown = 0;
+    _totalDragUp = 0;
     _springController.stop();
     widget.interactionNotifier?.value = true;
   }
@@ -101,6 +118,8 @@ class _UserStatsCardState extends State<UserStatsCard> with TickerProviderStateM
     if (_lastPosition == null) return;
     final delta = event.position - _lastPosition!;
     _lastPosition = event.position;
+    if (delta.dy > 0) _totalDragDown += delta.dy;
+    if (delta.dy < 0) _totalDragUp -= delta.dy;
     setState(() {
       _tiltY -= delta.dx * _dragSensitivity;
       _tiltX += delta.dy * _dragSensitivity;
@@ -116,8 +135,16 @@ class _UserStatsCardState extends State<UserStatsCard> with TickerProviderStateM
     widget.interactionNotifier?.value = false;
     if (down != null &&
         widget.onTap != null &&
-        (event.position - down).distance <= _tapSlop) {
+        (event.position - down).distance <= _tapSlop &&
+        !_isFlipped) {
       widget.onTap!();
+    }
+    if (!_isFlipped && _totalDragDown >= _flipThreshold) {
+      _isFlipped = true;
+      _flipController.forward();
+    } else if (_isFlipped && _totalDragUp >= _flipThreshold) {
+      _isFlipped = false;
+      _flipController.reverse();
     }
     _tiltXBeforeSpring = _tiltX;
     _tiltYBeforeSpring = _tiltY;
@@ -162,6 +189,8 @@ class _UserStatsCardState extends State<UserStatsCard> with TickerProviderStateM
         ? theme.colorScheme.surface.withValues(alpha: 0.5)
         : theme.colorScheme.primary.withValues(alpha: 0.55);
 
+    final flipT = _flipAnimation.value;
+
     return Listener(
       onPointerDown: _onPointerDown,
       onPointerMove: _onPointerMove,
@@ -174,155 +203,273 @@ class _UserStatsCardState extends State<UserStatsCard> with TickerProviderStateM
           child: Transform(
             alignment: Alignment.center,
             transform: transform,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Positioned.fill(
-                  child: Transform.translate(
-                    offset: thicknessOffset,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        color: edgeColor,
+            child: Transform(
+              alignment: Alignment.center,
+              transform: Matrix4.identity()
+                ..setEntry(3, 2, 0.001)
+                ..rotateX(flipT * math.pi),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned.fill(
+                    child: Opacity(
+                      opacity: flipT < 0.5 ? 1 : 0,
+                      child: _buildFrontFace(
+                        theme: theme,
+                        heroColors: heroColors,
+                        gradient: gradient,
+                        edgeColor: edgeColor,
+                        thicknessOffset: thicknessOffset,
+                        glossCenterX: glossCenterX,
+                        glossCenterY: glossCenterY,
+                        entranceT: entranceT,
                       ),
                     ),
                   ),
+                  Positioned.fill(
+                    child: Opacity(
+                      opacity: flipT >= 0.5 ? 1 : 0,
+                      child: Transform(
+                        alignment: Alignment.center,
+                        transform: Matrix4.rotationX(math.pi),
+                        child: _buildBackFace(
+                          theme: theme,
+                          heroColors: heroColors,
+                          gradient: gradient,
+                          edgeColor: edgeColor,
+                          thicknessOffset: thicknessOffset,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFrontFace({
+    required ThemeData theme,
+    required HeroCardColors heroColors,
+    required Gradient gradient,
+    required Color edgeColor,
+    required Offset thicknessOffset,
+    required double glossCenterX,
+    required double glossCenterY,
+    required double entranceT,
+  }) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Positioned.fill(
+          child: Transform.translate(
+            offset: thicknessOffset,
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                color: edgeColor,
+              ),
+            ),
+          ),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: gradient,
+            boxShadow: [
+              BoxShadow(
+                color: theme.colorScheme.primary.withValues(alpha: 0.35),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+                spreadRadius: 0,
+              ),
+              BoxShadow(
+                color: heroColors.shadowSubtle,
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+                spreadRadius: 0,
+              ),
+            ],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 6,
+                        child: _HeroStreakBlock(
+                          value:
+                              '${(widget.data.consecutiveActiveDays * entranceT).round()}',
+                          label: '連續活躍日',
+                          progressFactor: entranceT,
+                          contentColor: heroColors.content,
+                          contentColorMuted: heroColors.contentMuted,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        flex: 5,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _AuxStatBlock(
+                                    icon: Icons.edit_note,
+                                    value:
+                                        '${(widget.data.totalEntries * entranceT).round()}',
+                                    label: '總記帳數',
+                                    contentColor: heroColors.content,
+                                    contentColorMuted: heroColors.contentMuted,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: _AuxStatBlock(
+                                    icon: Icons.calendar_today,
+                                    value:
+                                        '${(widget.data.totalDays * entranceT).round()}',
+                                    label: '累積天數',
+                                    contentColor: heroColors.content,
+                                    contentColorMuted: heroColors.contentMuted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _BadgeProgressBlock(
+                                    unlocked: widget.data.unlockedBadgesCount,
+                                    total: widget.data.totalBadgesCount,
+                                    progressFactor: entranceT,
+                                    contentColor: heroColors.content,
+                                    contentColorMuted: heroColors.contentMuted,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: _AuxStatBlock(
+                                    icon: Icons.bar_chart,
+                                    value:
+                                        '${(widget.data.entriesThisMonth * entranceT).round()}',
+                                    label: '本月記帳',
+                                    contentColor: heroColors.content,
+                                    contentColorMuted: heroColors.contentMuted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                Container(
+              ),
+              Positioned.fill(
+                child: DecoratedBox(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(20),
-                    gradient: gradient,
-                    boxShadow: [
-                      BoxShadow(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.35),
-                        blurRadius: 16,
-                        offset: const Offset(0, 6),
-                        spreadRadius: 0,
+                    gradient: RadialGradient(
+                      center: Alignment(
+                        glossCenterX.clamp(-1.0, 2.0),
+                        glossCenterY.clamp(-1.0, 2.0),
                       ),
-                      BoxShadow(
-                        color: heroColors.shadowSubtle,
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                        spreadRadius: 0,
-                      ),
-                    ],
+                      radius: 1.2,
+                      colors: [
+                        heroColors.content.withValues(alpha: 0.12),
+                        heroColors.content.withValues(alpha: 0.04),
+                        heroColors.content.withValues(alpha: 0.0),
+                      ],
+                      stops: const [0.0, 0.5, 1.0],
+                    ),
                   ),
-                  clipBehavior: Clip.antiAlias,
-                  child: Stack(
-                    children: [
-                      Positioned.fill(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 24,
-                            horizontal: 20,
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                flex: 6,
-                                child: _HeroStreakBlock(
-                                  value:
-                                      '${(widget.data.consecutiveActiveDays * entranceT).round()}',
-                                  label: '連續活躍日',
-                                  progressFactor: entranceT,
-                                  contentColor: heroColors.content,
-                                  contentColorMuted: heroColors.contentMuted,
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                flex: 5,
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: _AuxStatBlock(
-                                            icon: Icons.edit_note,
-                                            value:
-                                                '${(widget.data.totalEntries * entranceT).round()}',
-                                            label: '總記帳數',
-                                            contentColor: heroColors.content,
-                                            contentColorMuted: heroColors.contentMuted,
-                                          ),
-                                        ),
-                                        Expanded(
-                                          child: _AuxStatBlock(
-                                            icon: Icons.calendar_today,
-                                            value:
-                                                '${(widget.data.totalDays * entranceT).round()}',
-                                            label: '累積天數',
-                                            contentColor: heroColors.content,
-                                            contentColorMuted: heroColors.contentMuted,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: _BadgeProgressBlock(
-                                            unlocked: widget.data.unlockedBadgesCount,
-                                            total: widget.data.totalBadgesCount,
-                                            progressFactor: entranceT,
-                                            contentColor: heroColors.content,
-                                            contentColorMuted: heroColors.contentMuted,
-                                          ),
-                                        ),
-                                        Expanded(
-                                          child: _AuxStatBlock(
-                                            icon: Icons.bar_chart,
-                                            value:
-                                                '${(widget.data.entriesThisMonth * entranceT).round()}',
-                                            label: '本月記帳',
-                                            contentColor: heroColors.content,
-                                            contentColorMuted: heroColors.contentMuted,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      Positioned.fill(
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            gradient: RadialGradient(
-                              center: Alignment(
-                                glossCenterX.clamp(-1.0, 2.0),
-                                glossCenterY.clamp(-1.0, 2.0),
-                              ),
-                              radius: 1.2,
-                              colors: [
-                                heroColors.content.withValues(alpha: 0.12),
-                                heroColors.content.withValues(alpha: 0.04),
-                                heroColors.content.withValues(alpha: 0.0),
-                              ],
-                              stops: const [0.0, 0.5, 1.0],
-                            ),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        left: 16,
-                        bottom: 12,
-                        child: _BrandMark(heroColors: heroColors),
-                      ),
-                    ],
+                ),
+              ),
+              Positioned(
+                left: 16,
+                bottom: 12,
+                child: _BrandMark(heroColors: heroColors),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBackFace({
+    required ThemeData theme,
+    required HeroCardColors heroColors,
+    required Gradient gradient,
+    required Color edgeColor,
+    required Offset thicknessOffset,
+  }) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Positioned.fill(
+          child: Transform.translate(
+            offset: thicknessOffset,
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                color: edgeColor,
+              ),
+            ),
+          ),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: gradient,
+            boxShadow: [
+              BoxShadow(
+                color: theme.colorScheme.primary.withValues(alpha: 0.35),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+                spreadRadius: 0,
+              ),
+              BoxShadow(
+                color: heroColors.shadowSubtle,
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+                spreadRadius: 0,
+              ),
+            ],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'LEECHAI',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 3,
+                    color: heroColors.content.withValues(alpha: 0.9),
                   ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '向上拖曳翻回',
+                  style: TextStyle(fontSize: 13, color: heroColors.contentMuted),
                 ),
               ],
             ),
           ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -334,25 +481,14 @@ class _BrandMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final baseColor = heroColors.contentMuted.withValues(alpha: 0.82);
-    final shadowColor = theme.colorScheme.shadow.withValues(alpha: 0.22);
-    final highlightColor = heroColors.content.withValues(alpha: 0.28);
+    final silver = heroColors.content.withValues(alpha: 0.62);
     return Text(
       'LEECHAI',
       style: TextStyle(
         fontSize: 11,
         fontWeight: FontWeight.w600,
         letterSpacing: 2,
-        color: baseColor,
-        shadows: [
-          Shadow(offset: const Offset(1, 1), blurRadius: 0, color: shadowColor),
-          Shadow(
-            offset: const Offset(-0.6, -0.6),
-            blurRadius: 0,
-            color: highlightColor,
-          ),
-        ],
+        color: silver,
       ),
     );
   }
