@@ -173,11 +173,12 @@ class AppTheme {
 
   static const double _labelSize = 12;
   static const double _labelSmallSize = 11;
-  static const double _sectionLabelSize = 14;
+  static const double _labelLargeSize = 14;
   static const double _bodySize = 14;
   static const double _bodySmallSize = 12;
   static const double _bodyLargeSize = 16;
   static const double _titleSize = 16;
+  static const double _titleLargeSize = 22;
   static const double _titleSmallSize = 14;
   static const double _headlineSmallSize = 24;
   static const double _headlineSize = 28;
@@ -205,7 +206,7 @@ class AppTheme {
     return AppTextStyles(
       sectionLabel: merge(
         textTheme.titleSmall,
-        size: _sectionLabelSize,
+        size: _labelLargeSize,
         weight: w500,
         color: onSurfaceVariant,
       ),
@@ -222,6 +223,18 @@ class AppTheme {
       labelEmphasis: merge(
         textTheme.labelMedium,
         size: _labelSize,
+        weight: w600,
+        color: onSurface,
+      ),
+      labelLarge: merge(
+        textTheme.labelLarge,
+        size: _labelLargeSize,
+        weight: w400,
+        color: onSurface,
+      ),
+      labelLargeEmphasis: merge(
+        textTheme.labelLarge,
+        size: _labelLargeSize,
         weight: w600,
         color: onSurface,
       ),
@@ -270,6 +283,18 @@ class AppTheme {
         textTheme.titleMedium,
         size: _titleSize,
         weight: w600,
+        color: onSurface,
+      ),
+      titleLarge: merge(
+        textTheme.titleLarge,
+        size: _titleLargeSize,
+        weight: w400,
+        color: onSurface,
+      ),
+      titleLargeEmphasis: merge(
+        textTheme.titleLarge,
+        size: _titleLargeSize,
+        weight: bold,
         color: onSurface,
       ),
       headlineSmall: merge(
@@ -426,9 +451,13 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
     required this.labelSmallMuted,
     required this.labelMuted,
     required this.labelEmphasis,
+    required this.labelLarge,
+    required this.labelLargeEmphasis,
     required this.title,
     required this.titleMuted,
     required this.titleEmphasis,
+    required this.titleLarge,
+    required this.titleLargeEmphasis,
     required this.headlineSmall,
     required this.headlineSmallEmphasis,
     required this.titleSmallEmphasis,
@@ -441,6 +470,8 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
   final TextStyle labelMuted;
   final TextStyle labelSmallMuted;
   final TextStyle labelEmphasis;
+  final TextStyle labelLarge;
+  final TextStyle labelLargeEmphasis;
   final TextStyle body;
   final TextStyle bodyMuted;
   final TextStyle bodySmallMuted;
@@ -449,6 +480,8 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
   final TextStyle title;
   final TextStyle titleMuted;
   final TextStyle titleEmphasis;
+  final TextStyle titleLarge;
+  final TextStyle titleLargeEmphasis;
   final TextStyle headlineSmall;
   final TextStyle headlineSmallEmphasis;
   final TextStyle titleSmallEmphasis;
@@ -468,6 +501,8 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
     TextStyle? labelSmallMuted,
     TextStyle? labelMuted,
     TextStyle? labelEmphasis,
+    TextStyle? labelLarge,
+    TextStyle? labelLargeEmphasis,
     TextStyle? body,
     TextStyle? bodyMuted,
     TextStyle? bodyLargeMuted,
@@ -476,6 +511,8 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
     TextStyle? title,
     TextStyle? titleMuted,
     TextStyle? titleEmphasis,
+    TextStyle? titleLarge,
+    TextStyle? titleLargeEmphasis,
     TextStyle? headlineSmall,
     TextStyle? headlineSmallEmphasis,
     TextStyle? titleSmallEmphasis,
@@ -487,6 +524,8 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
     labelSmallMuted: labelSmallMuted ?? this.labelSmallMuted,
     labelMuted: labelMuted ?? this.labelMuted,
     labelEmphasis: labelEmphasis ?? this.labelEmphasis,
+    labelLarge: labelLarge ?? this.labelLarge,
+    labelLargeEmphasis: labelLargeEmphasis ?? this.labelLargeEmphasis,
     body: body ?? this.body,
     bodyMuted: bodyMuted ?? this.bodyMuted,
     bodyLargeMuted: bodyLargeMuted ?? this.bodyLargeMuted,
@@ -495,6 +534,8 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
     title: title ?? this.title,
     titleMuted: titleMuted ?? this.titleMuted,
     titleEmphasis: titleEmphasis ?? this.titleEmphasis,
+    titleLarge: titleLarge ?? this.titleLarge,
+    titleLargeEmphasis: titleLargeEmphasis ?? this.titleLargeEmphasis,
     headlineSmall: headlineSmall ?? this.headlineSmall,
     headlineSmallEmphasis: headlineSmallEmphasis ?? this.headlineSmallEmphasis,
     titleSmallEmphasis: titleSmallEmphasis ?? this.titleSmallEmphasis,
@@ -516,9 +557,21 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
       labelSmallMuted: TextStyle.lerp(labelSmallMuted, other.labelSmallMuted, t)!,
       labelMuted: TextStyle.lerp(labelMuted, other.labelMuted, t)!,
       labelEmphasis: TextStyle.lerp(labelEmphasis, other.labelEmphasis, t)!,
+      labelLarge: TextStyle.lerp(labelLarge, other.labelLarge, t)!,
+      labelLargeEmphasis: TextStyle.lerp(
+        labelLargeEmphasis,
+        other.labelLargeEmphasis,
+        t,
+      )!,
       title: TextStyle.lerp(title, other.title, t)!,
       titleMuted: TextStyle.lerp(titleMuted, other.titleMuted, t)!,
       titleEmphasis: TextStyle.lerp(titleEmphasis, other.titleEmphasis, t)!,
+      titleLarge: TextStyle.lerp(titleLarge, other.titleLarge, t)!,
+      titleLargeEmphasis: TextStyle.lerp(
+        titleLargeEmphasis,
+        other.titleLargeEmphasis,
+        t,
+      )!,
       headlineSmall: TextStyle.lerp(headlineSmall, other.headlineSmall, t)!,
       headlineSmallEmphasis: TextStyle.lerp(
         headlineSmallEmphasis,
