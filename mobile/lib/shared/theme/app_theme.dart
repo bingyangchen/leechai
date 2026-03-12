@@ -34,6 +34,13 @@ class _HeroCardContentValues {
   static final Color shadowSubtle = Colors.black.withValues(alpha: 0.08);
 }
 
+class _BarcodeColorValues {
+  _BarcodeColorValues._();
+
+  static const Color bar = Color(0xFF000000);
+  static const Color background = Color(0xFFFFFFFF);
+}
+
 class _ChartPaletteValues {
   _ChartPaletteValues._();
 
@@ -166,6 +173,10 @@ class AppTheme {
           content: _HeroCardContentValues.content,
           contentMuted: _HeroCardContentValues.contentMuted,
           shadowSubtle: _HeroCardContentValues.shadowSubtle,
+        ),
+        BarcodeColors(
+          bar: _BarcodeColorValues.bar,
+          background: _BarcodeColorValues.background,
         ),
       ],
     );
@@ -427,7 +438,43 @@ class AppTheme {
           contentMuted: _HeroCardContentValues.contentMuted,
           shadowSubtle: _HeroCardContentValues.shadowSubtle,
         ),
+        BarcodeColors(
+          bar: _BarcodeColorValues.bar,
+          background: _BarcodeColorValues.background,
+        ),
       ],
+    );
+  }
+}
+
+class BarcodeColors extends ThemeExtension<BarcodeColors> {
+  const BarcodeColors({required this.bar, required this.background});
+
+  final Color bar;
+  final Color background;
+
+  static BarcodeColors of(BuildContext context) {
+    final ext = Theme.of(context).extension<BarcodeColors>();
+    assert(ext != null);
+    return ext!;
+  }
+
+  static BarcodeColors fromTheme(ThemeData theme) {
+    final ext = theme.extension<BarcodeColors>();
+    assert(ext != null);
+    return ext!;
+  }
+
+  @override
+  BarcodeColors copyWith({Color? bar, Color? background}) =>
+      BarcodeColors(bar: bar ?? this.bar, background: background ?? this.background);
+
+  @override
+  BarcodeColors lerp(ThemeExtension<BarcodeColors>? other, double t) {
+    if (other is! BarcodeColors) return this;
+    return BarcodeColors(
+      bar: Color.lerp(bar, other.bar, t)!,
+      background: Color.lerp(background, other.background, t)!,
     );
   }
 }

@@ -145,8 +145,20 @@ class _UserStatsCardState extends State<UserStatsCard>
     }
   }
 
+  void _discardBackEditIfNeeded() {
+    if (_backViewState != _BackViewState.edit) return;
+    setState(() {
+      _backViewState = _carrier != null && _carrier!.isNotEmpty
+          ? _BackViewState.display
+          : _BackViewState.empty;
+      _editText = _carrier ?? '';
+      _editController.text = _editText;
+    });
+  }
+
   void _flipBackToFront() {
     if (!_isFlipped) return;
+    _discardBackEditIfNeeded();
     _restoreBrightness();
     setState(() {
       _isFlipped = false;
@@ -225,6 +237,7 @@ class _UserStatsCardState extends State<UserStatsCard>
       _isFlipped = true;
       _flipController.forward();
     } else if (_isFlipped && _totalDragUp >= _flipThreshold) {
+      _discardBackEditIfNeeded();
       _isFlipped = false;
       _flipController.reverse();
     }
@@ -573,6 +586,7 @@ class _UserStatsCardState extends State<UserStatsCard>
 
   Widget _buildBackDisplay(ThemeData theme, HeroCardColors heroColors) {
     final carrier = _carrier ?? '';
+    final barcodeColors = BarcodeColors.fromTheme(theme);
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
       child: Column(
@@ -600,7 +614,7 @@ class _UserStatsCardState extends State<UserStatsCard>
           ),
           Container(
             decoration: BoxDecoration(
-              color: const Color(0xFFFFFFFF),
+              color: barcodeColors.background,
               borderRadius: BorderRadius.circular(12),
             ),
             child: BarcodeWidget(
@@ -610,8 +624,8 @@ class _UserStatsCardState extends State<UserStatsCard>
               height: 85,
               margin: const EdgeInsets.all(20),
               drawText: false,
-              color: const Color(0xFF000000),
-              backgroundColor: const Color(0xFFFFFFFF),
+              color: barcodeColors.bar,
+              backgroundColor: barcodeColors.background,
               errorBuilder: (_, context) => const SizedBox(height: 56),
             ),
           ),
