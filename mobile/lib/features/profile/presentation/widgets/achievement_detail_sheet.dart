@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile/features/profile/domain/achievement_definitions.dart';
 import 'package:mobile/features/profile/domain/profile_page_data.dart';
 import 'package:mobile/features/profile/presentation/widgets/achievement_badge_graphics.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
@@ -9,7 +10,8 @@ import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
 final _integerFormat = NumberFormat('#,##0');
 
 bool _hasNavigationTarget(AchievementItem item) {
-  return item.id == 'first_entry';
+  return item.id == AchievementId.firstEntry.key ||
+      item.id == AchievementId.firstIncome.key;
 }
 
 bool _hasActionArea(AchievementItem item) {
@@ -51,7 +53,11 @@ Future<bool?> showAchievementDetailSheet(BuildContext context, AchievementItem i
                 _ProgressSection(item: item),
               ],
               const SizedBox(height: 24),
-              _ConditionCard(conditionText: item.conditionText),
+              _ConditionCard(
+                conditionText: item.isSecret && !item.isUnlocked
+                    ? '解鎖後揭曉'
+                    : item.conditionText,
+              ),
               if (_hasActionArea(item)) const SizedBox(height: 32),
               _ActionArea(item: item),
             ],
@@ -313,17 +319,12 @@ class _ConditionCard extends StatelessWidget {
               const SizedBox(width: 6),
               Text(
                 '取得條件',
-                style: textStyles.labelEmphasis.copyWith(
-                  color: colorScheme.primary,
-                ),
+                style: textStyles.labelEmphasis.copyWith(color: colorScheme.primary),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          Text(
-            conditionText,
-            style: textStyles.body,
-          ),
+          Text(conditionText, style: textStyles.body),
         ],
       ),
     );

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile/features/account/domain/constants.dart';
-import 'package:mobile/features/entry/data/repositories/entry.dart'
-    show EntryRepository;
+import 'package:mobile/features/entry/data/repositories/entry.dart';
 import 'package:mobile/features/entry/domain/entry_type.dart';
 import 'package:mobile/features/entry/presentation/pages/entry_page.dart';
+import 'package:mobile/features/profile/data/services/achievement.dart';
 import 'package:mobile/shared/scopes/data_refresh.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
@@ -165,7 +165,17 @@ class EntryListHandlers {
   ) async {
     final entryId = entry['id'] as String;
     try {
-      await EntryRepository.duplicate(entryId, DateTime.now());
+      final occurredAt = DateTime.now();
+      final newId = await EntryRepository.duplicate(entryId, occurredAt);
+      final type = entry['type'] as String? ?? 'expense';
+      final tagIds = await EntryRepository.getTagIdsForEntry(newId);
+      final amount = (entry['amount'] as num?)?.toDouble() ?? 0.0;
+      await AchievementService.evaluateAfterEntryInserted(
+        type: type,
+        occurredAt: occurredAt,
+        tagIds: tagIds,
+        amount: amount,
+      );
       if (context.mounted) {
         HapticFeedback.mediumImpact();
         onCopied();

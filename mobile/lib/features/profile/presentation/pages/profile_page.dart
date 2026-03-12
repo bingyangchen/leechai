@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/features/entry/data/repositories/entry.dart'
     show EntryRepository;
+import 'package:mobile/features/profile/data/repositories/achievement.dart';
+import 'package:mobile/features/profile/domain/achievement_definitions.dart';
 import 'package:mobile/features/profile/domain/profile_page_data.dart';
 import 'package:mobile/features/profile/presentation/pages/achievement_list_page.dart';
 import 'package:mobile/features/profile/presentation/widgets/profile_settings_section.dart';
@@ -66,13 +68,18 @@ class _ProfilePageState extends State<ProfilePage> {
         : 0;
     final monthEntries = await EntryRepository.getByMonth(now);
     final consecutiveActiveDays = await _computeConsecutiveActiveDays(now);
+    final achievementRows = await AchievementRepository.getAll();
+    final achievements = achievementsFromRepositoryRows(
+      achievementRows,
+      achievementDefinitions,
+    );
     return ProfilePageData(
       consecutiveActiveDays: consecutiveActiveDays,
       totalEntries: totalEntries,
       totalDays: totalDays,
       entriesThisMonth: monthEntries.length,
       noSpendDaysThisWeek: 0,
-      achievements: buildAchievements(totalEntries),
+      achievements: achievements,
       totalBudgetSummary: 20000,
     );
   }

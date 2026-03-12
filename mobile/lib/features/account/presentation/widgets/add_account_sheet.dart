@@ -5,6 +5,8 @@ import 'package:mobile/features/account/data/repositories/account.dart'
 import 'package:mobile/features/account/domain/account.dart';
 import 'package:mobile/features/account/domain/asset_type.dart';
 import 'package:mobile/features/account/domain/liability_type.dart';
+import 'package:mobile/features/profile/data/services/achievement.dart';
+import 'package:mobile/shared/scopes/data_refresh.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
@@ -208,6 +210,7 @@ class _AddAccountFormState extends State<_AddAccountForm> {
           initialBalance: amount,
           icon: _iconForSubType(),
         );
+        await AchievementService.evaluateAfterAccountInserted();
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -217,6 +220,7 @@ class _AddAccountFormState extends State<_AddAccountForm> {
     if (!_isEdit) HapticFeedback.mediumImpact();
     widget.onSuccess();
     if (!context.mounted) return;
+    DataRefreshScope.notify(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(_isEdit ? '帳戶更新成功！' : '帳戶建立成功！'),

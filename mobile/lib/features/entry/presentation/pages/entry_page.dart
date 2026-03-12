@@ -17,6 +17,7 @@ import 'package:mobile/features/entry/presentation/widgets/category_section.dart
 import 'package:mobile/features/entry/presentation/widgets/date_chip_row.dart';
 import 'package:mobile/features/entry/presentation/widgets/notes_section.dart';
 import 'package:mobile/features/entry/presentation/widgets/tags_section.dart';
+import 'package:mobile/features/profile/data/services/achievement.dart';
 import 'package:mobile/features/profile/data/services/achievement_unlock.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
@@ -473,6 +474,12 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
           tagIds: tagIds,
           memo: memo,
           occurredAt: _selectedDate,
+        );
+        await AchievementService.evaluateAfterEntryInserted(
+          type: _entryType.name,
+          occurredAt: _selectedDate,
+          tagIds: tagIds,
+          amount: amount,
         );
       }
     } finally {

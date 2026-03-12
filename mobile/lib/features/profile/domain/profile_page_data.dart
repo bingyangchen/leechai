@@ -1,3 +1,5 @@
+import 'package:mobile/features/profile/domain/achievement_definitions.dart';
+
 class AchievementItem {
   const AchievementItem({
     required this.id,
@@ -8,6 +10,8 @@ class AchievementItem {
     this.unlockedAt,
     required this.current,
     required this.target,
+    this.completedCount = 0,
+    this.isSecret = false,
   });
 
   final String id;
@@ -18,6 +22,8 @@ class AchievementItem {
   final DateTime? unlockedAt;
   final int current;
   final int target;
+  final int completedCount;
+  final bool isSecret;
 
   double get progress => target > 0 ? (current / target).clamp(0.0, 1.0) : 0.0;
 }
@@ -46,43 +52,46 @@ class ProfilePageData {
   int get totalBadgesCount => achievements.length;
 }
 
-List<AchievementItem> buildAchievements(int totalEntries) {
-  // TODO: Design and implement
-  final now = DateTime.now();
-  final firstUnlocked = totalEntries >= 1;
-  final hundredUnlocked = totalEntries >= 100;
-  final threeWeeksUnlocked = false;
-
-  return [
-    AchievementItem(
-      id: 'first_entry',
-      name: '初來乍到',
-      description: '完成你的第一筆記帳，開啟理財習慣養成之路。',
-      conditionText: '記錄第一筆帳',
-      isUnlocked: firstUnlocked,
-      unlockedAt: firstUnlocked ? now.subtract(const Duration(days: 1)) : null,
-      current: totalEntries.clamp(0, 1),
-      target: 1,
-    ),
-    AchievementItem(
-      id: 'hundred_entries',
-      name: '百筆達成',
-      description: '累積記帳滿 100 筆，你已經養成持續記錄的好習慣。',
-      conditionText: '累積記帳 100 筆',
-      isUnlocked: hundredUnlocked,
-      unlockedAt: hundredUnlocked ? now.subtract(const Duration(days: 5)) : null,
-      current: totalEntries.clamp(0, 100),
-      target: 100,
-    ),
-    AchievementItem(
-      id: 'three_weeks_streak',
-      name: '理財日常',
-      description: '連續 3 週都有記帳活動，代表你已把記帳融入生活。',
-      conditionText: '連續 3 週有記帳',
-      isUnlocked: threeWeeksUnlocked,
-      unlockedAt: null,
-      current: 0,
-      target: 3,
-    ),
-  ];
+List<AchievementItem> achievementsFromRepositoryRows(
+  List<Map<String, Object?>> rows,
+  List<AchievementDefinition> definitions,
+) {
+  final byId = {for (final r in rows) r['id'] as String: r};
+  return definitions
+      .where((def) {
+        if (!def.isSecret) return true;
+        final r = byId[def.id];
+        return r != null && r['unlocked_at'] != null;
+      })
+      .map((def) {
+        final r = byId[def.id];
+        if (r == null) {
+          return AchievementItem(
+            id: def.id,
+            name: def.name,
+            description: def.description,
+            conditionText: def.conditionText,
+            isUnlocked: false,
+            unlockedAt: null,
+            current: 0,
+            target: def.target,
+            completedCount: 0,
+            isSecret: def.isSecret,
+          );
+        }
+        final unlockedAtStr = r['unlocked_at'] as String?;
+        return AchievementItem(
+          id: def.id,
+          name: def.name,
+          description: def.description,
+          conditionText: def.conditionText,
+          isUnlocked: unlockedAtStr != null,
+          unlockedAt: unlockedAtStr != null ? DateTime.tryParse(unlockedAtStr) : null,
+          current: (r['progress'] as int?) ?? 0,
+          target: (r['target'] as int?) ?? def.target,
+          completedCount: (r['completed_count'] as int?) ?? 0,
+          isSecret: def.isSecret,
+        );
+      })
+      .toList();
 }

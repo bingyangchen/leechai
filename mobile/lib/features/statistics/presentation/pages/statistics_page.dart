@@ -56,7 +56,7 @@ class _StatisticsPageState extends State<StatisticsPage>
       oldWidget.refreshTrigger?.removeListener(_onRefresh);
       widget.refreshTrigger?.addListener(_onRefresh);
     }
-    if (!oldWidget.isPageVisible && widget.isPageVisible && _tabController.index == 0) {
+    if (!oldWidget.isPageVisible && widget.isPageVisible) {
       setState(() => _rankingAnimationTrigger++);
     }
   }

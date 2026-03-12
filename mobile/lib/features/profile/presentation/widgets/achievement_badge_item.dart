@@ -14,11 +14,42 @@ class AchievementBadgeItem extends StatelessWidget {
 
     final badgeIcon = GestureDetector(
       onTap: onTap,
-      child: AchievementBadgeGraphics(
-        size: 72,
-        item: item,
-        showProgressRing: true,
-        glow: false,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          AchievementBadgeGraphics(
+            size: 72,
+            item: item,
+            showProgressRing: true,
+            glow: false,
+          ),
+          if (item.completedCount > 1)
+            Positioned(
+              top: -4,
+              right: -4,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.colorScheme.shadow.withValues(alpha: 0.2),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  '×${item.completedCount}',
+                  style: theme.textStyles.labelSmallMuted.copyWith(
+                    color: theme.colorScheme.onPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
 

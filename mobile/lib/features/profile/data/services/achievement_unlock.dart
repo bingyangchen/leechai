@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:developer' as developer;
 
-import 'package:mobile/features/entry/data/repositories/entry.dart'
-    show EntryRepository;
+import 'package:mobile/features/profile/data/repositories/achievement.dart';
+import 'package:mobile/features/profile/domain/achievement_definitions.dart';
 import 'package:mobile/features/profile/domain/profile_page_data.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -31,8 +31,8 @@ class AchievementUnlockService {
 
   Future<void> checkAndNotify() async {
     try {
-      final totalEntries = await EntryRepository.getCount();
-      final achievements = buildAchievements(totalEntries);
+      final rows = await AchievementRepository.getAll();
+      final achievements = achievementsFromRepositoryRows(rows, achievementDefinitions);
       final prefs = await SharedPreferences.getInstance();
       final notified = prefs.getStringList(_keyNotifiedIds) ?? [];
       final toNotify = achievements

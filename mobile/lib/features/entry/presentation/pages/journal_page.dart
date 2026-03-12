@@ -17,6 +17,7 @@ import 'package:mobile/features/entry/presentation/widgets/sticky_date_header.da
     show buildDateHeaderSection, DateHeaderContent;
 import 'package:mobile/features/entry/presentation/widgets/sync_indicator.dart';
 import 'package:mobile/features/entry/presentation/widgets/transaction_row.dart';
+import 'package:mobile/features/profile/data/services/achievement.dart';
 import 'package:mobile/shared/constants/refresh_trigger.dart';
 import 'package:mobile/shared/utils/refresh_snap_back.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
@@ -24,8 +25,9 @@ import 'package:mobile/shared/widgets/app_refresh_indicator.dart';
 import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
 
 class JournalPage extends StatefulWidget {
-  const JournalPage({super.key, this.refreshTrigger});
+  const JournalPage({super.key, this.refreshTrigger, this.isPageVisible = true});
   final ValueListenable<int>? refreshTrigger;
+  final bool isPageVisible;
 
   @override
   State<JournalPage> createState() => _JournalPageState();
@@ -52,6 +54,9 @@ class _JournalPageState extends State<JournalPage> {
     _future = _loadData();
     _scrollController.addListener(_onScroll);
     widget.refreshTrigger?.addListener(_onRefreshTrigger);
+    if (widget.isPageVisible) {
+      AchievementService.evaluatePositiveCashflowForPreviousMonth();
+    }
   }
 
   @override
@@ -60,6 +65,9 @@ class _JournalPageState extends State<JournalPage> {
     if (oldWidget.refreshTrigger != widget.refreshTrigger) {
       oldWidget.refreshTrigger?.removeListener(_onRefreshTrigger);
       widget.refreshTrigger?.addListener(_onRefreshTrigger);
+    }
+    if (!oldWidget.isPageVisible && widget.isPageVisible) {
+      AchievementService.evaluatePositiveCashflowForPreviousMonth();
     }
   }
 

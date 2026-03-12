@@ -29,9 +29,37 @@ class AchievementBadgeGraphics extends StatelessWidget {
       case 'first_entry':
         return Icons.celebration;
       case 'hundred_entries':
-        return Icons.stacked_bar_chart;
-      case 'three_weeks_streak':
-        return Icons.calendar_today;
+        return Icons.format_list_numbered;
+      case 'thousand_entries':
+        return Icons.emoji_events;
+      case 'streak_7_days':
+      case 'streak_30_days':
+      case 'streak_100_days':
+        return Icons.local_fire_department;
+      case 'monthly_perfect':
+        return Icons.calendar_month;
+      case 'four_weekends_streak':
+        return Icons.weekend;
+      case 'backfill_streak_3':
+        return Icons.history;
+      case 'second_account':
+        return Icons.account_balance_wallet;
+      case 'first_budget':
+        return Icons.savings;
+      case 'first_custom_tag':
+        return Icons.label;
+      case 'budget_guardian':
+        return Icons.shield;
+      case 'positive_cashflow':
+        return Icons.trending_up;
+      case 'first_income':
+        return Icons.monetization_on;
+      case 'one_year':
+        return Icons.cake;
+      case 'night_owl':
+        return Icons.nightlight_round;
+      case 'lucky_777':
+        return Icons.casino;
       default:
         return Icons.emoji_events;
     }
