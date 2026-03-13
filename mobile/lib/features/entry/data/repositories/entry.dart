@@ -187,7 +187,7 @@ class EntryRepository {
     );
     await db.update(
       _entryTagTable,
-      {'deleted_at': now, 'synced': 0},
+      {'deleted_at': now, 'updated_at': now, 'synced': 0},
       where: 'entry_id = ?',
       whereArgs: [id],
     );

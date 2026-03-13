@@ -5,6 +5,7 @@ Future<void> run(Database db) async {
   CREATE TABLE IF NOT EXISTS entry_tag (
     entry_id TEXT NOT NULL REFERENCES entry (id),
     tag_id TEXT NOT NULL REFERENCES tag (id),
+    updated_at TEXT NOT NULL DEFAULT (DATETIME('now')),
     deleted_at TEXT,
     synced INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (entry_id, tag_id)
