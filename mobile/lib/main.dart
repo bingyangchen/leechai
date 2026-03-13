@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/features/profile/data/services/achievement_unlock.dart';
 import 'package:mobile/features/profile/data/services/notification_init.dart';
 import 'package:mobile/features/profile/presentation/widgets/achievement_notification_overlay.dart';
 import 'package:mobile/shared/scopes/data_refresh.dart';
@@ -30,7 +29,6 @@ class _MainAppState extends State<MainApp> {
   @override
   void initState() {
     super.initState();
-    AchievementUnlockService.instance.clearNotifiedIds(); // TODO: Remove this
     loadThemeMode().then((mode) {
       if (mounted) {
         setState(() {

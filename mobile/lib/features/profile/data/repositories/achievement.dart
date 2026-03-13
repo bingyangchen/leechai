@@ -17,6 +17,20 @@ class AchievementRepository {
     return rows.single;
   }
 
+  static Future<void> markAsNotified(List<String> achievementIds) async {
+    if (achievementIds.isEmpty) return;
+    final db = await AppDatabase.database;
+    final now = DateTime.now().toUtc().toIso8601String();
+    for (final id in achievementIds) {
+      await db.update(
+        _table,
+        {'is_notified': 1, 'updated_at': now, 'synced': 0},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    }
+  }
+
   static Future<void> updateProgress(
     String achievementId, {
     int? progress,
