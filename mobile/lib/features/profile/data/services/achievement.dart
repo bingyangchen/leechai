@@ -1,12 +1,49 @@
+import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:mobile/features/account/data/repositories/account.dart';
 import 'package:mobile/features/entry/data/repositories/entry.dart';
 import 'package:mobile/features/profile/data/repositories/achievement.dart';
 import 'package:mobile/features/profile/domain/achievement_definitions.dart';
+import 'package:mobile/features/profile/domain/profile_page_data.dart';
 
 class AchievementService {
   AchievementService._();
+
+  static final AchievementService instance = AchievementService._();
+
+  final _controller = StreamController<AchievementItem>.broadcast();
+  Stream<AchievementItem> get onUnlocked => _controller.stream;
+
+  final List<AchievementItem> _pendingUnlocks = [];
+
+  List<AchievementItem> drainPending() {
+    final list = _pendingUnlocks.toList();
+    _pendingUnlocks.clear();
+    return list;
+  }
+
+  Future<void> notifyUnlocked(String achievementId) async {
+    try {
+      final row = await AchievementRepository.getByAchievementId(achievementId);
+      if (row == null ||
+          row['unlocked_at'] == null ||
+          (row['is_notified'] as int? ?? 0) == 1) {
+        return;
+      }
+      final achievements = achievementsFromRepositoryRows([
+        row,
+      ], achievementDefinitions);
+      final item = achievements.where((a) => a.id == achievementId).firstOrNull;
+      if (item == null || !item.isUnlocked) return;
+      await Future.delayed(const Duration(milliseconds: 350));
+      _controller.add(item);
+      _pendingUnlocks.add(item);
+      await AchievementRepository.markAsNotified([achievementId]);
+    } catch (error, stackTrace) {
+      developer.log('notifyUnlocked failed', error: error, stackTrace: stackTrace);
+    }
+  }
 
   static bool _isOneTimeAndAlreadyUnlocked(
     Map<String, Object?>? row,
@@ -77,6 +114,9 @@ class AchievementService {
             progress: accounts.length,
             unlockedAt: DateTime.now(),
           );
+          await AchievementService.instance.notifyUnlocked(
+            AchievementId.secondAccount.key,
+          );
         }
       }
     } catch (error, stackTrace) {
@@ -99,11 +139,15 @@ class AchievementService {
       final target = id.definition.target;
       final progress = totalCount.clamp(0, target);
       final alreadyUnlocked = row['unlocked_at'] != null;
+      final justUnlocked = !alreadyUnlocked && progress >= target;
       await AchievementRepository.updateProgress(
         id.key,
         progress: progress,
-        unlockedAt: (!alreadyUnlocked && progress >= target) ? DateTime.now() : null,
+        unlockedAt: justUnlocked ? DateTime.now() : null,
       );
+      if (justUnlocked) {
+        await AchievementService.instance.notifyUnlocked(id.key);
+      }
     }
   }
 
@@ -115,11 +159,17 @@ class AchievementService {
     final current = isBackfill ? ((row['progress'] as int?) ?? 0) + 1 : 0;
     final target = AchievementId.backfillStreak3.definition.target;
     final alreadyUnlocked = row['unlocked_at'] != null;
+    final justUnlocked = !alreadyUnlocked && current >= target;
     await AchievementRepository.updateProgress(
       AchievementId.backfillStreak3.key,
       progress: current.clamp(0, target),
-      unlockedAt: (!alreadyUnlocked && current >= target) ? DateTime.now() : null,
+      unlockedAt: justUnlocked ? DateTime.now() : null,
     );
+    if (justUnlocked) {
+      await AchievementService.instance.notifyUnlocked(
+        AchievementId.backfillStreak3.key,
+      );
+    }
   }
 
   static bool _isWeekend(DateTime date) {
@@ -167,6 +217,11 @@ class AchievementService {
       completedCount: newCompletedCount,
       unlockedAt: unlockAt,
     );
+    if (unlockAt != null) {
+      await AchievementService.instance.notifyUnlocked(
+        AchievementId.monthlyPerfect.key,
+      );
+    }
   }
 
   static Future<void> _updateFourWeekendsStreak() async {
@@ -203,6 +258,9 @@ class AchievementService {
       AchievementId.fourWeekendsStreak.key,
       progress: AchievementId.fourWeekendsStreak.definition.target,
       unlockedAt: DateTime.now(),
+    );
+    await AchievementService.instance.notifyUnlocked(
+      AchievementId.fourWeekendsStreak.key,
     );
   }
 
@@ -254,11 +312,15 @@ class AchievementService {
       final target = id.definition.target;
       final progress = streak.clamp(0, target);
       final alreadyUnlocked = row['unlocked_at'] != null;
+      final justUnlocked = !alreadyUnlocked && progress >= target;
       await AchievementRepository.updateProgress(
         id.key,
         progress: progress,
-        unlockedAt: (!alreadyUnlocked && progress >= target) ? DateTime.now() : null,
+        unlockedAt: justUnlocked ? DateTime.now() : null,
       );
+      if (justUnlocked) {
+        await AchievementService.instance.notifyUnlocked(id.key);
+      }
     }
   }
 
@@ -288,13 +350,19 @@ class AchievementService {
       if (income <= expense) return;
       final completedCount = (row['completed_count'] as int?) ?? 0;
       final alreadyUnlocked = row['unlocked_at'] != null;
+      final justUnlocked = !alreadyUnlocked;
       await AchievementRepository.updateProgress(
         AchievementId.positiveCashflow.key,
         progress: 1,
         progressPeriod: periodKey,
         completedCount: completedCount + 1,
-        unlockedAt: alreadyUnlocked ? null : DateTime.now(),
+        unlockedAt: justUnlocked ? DateTime.now() : null,
       );
+      if (justUnlocked) {
+        await AchievementService.instance.notifyUnlocked(
+          AchievementId.positiveCashflow.key,
+        );
+      }
     } catch (error, stackTrace) {
       developer.log(
         'evaluatePositiveCashflowForPreviousMonth failed',
@@ -316,6 +384,7 @@ class AchievementService {
       progress: 1,
       unlockedAt: DateTime.now(),
     );
+    await AchievementService.instance.notifyUnlocked(AchievementId.firstIncome.key);
   }
 
   static Future<void> _unlockOneYear() async {
@@ -332,6 +401,7 @@ class AchievementService {
       progress: 1,
       unlockedAt: DateTime.now(),
     );
+    await AchievementService.instance.notifyUnlocked(AchievementId.oneYear.key);
   }
 
   static Future<void> _unlockFirstCustomTag() async {
@@ -347,6 +417,7 @@ class AchievementService {
       progress: 1,
       unlockedAt: DateTime.now(),
     );
+    await AchievementService.instance.notifyUnlocked(AchievementId.firstCustomTag.key);
   }
 
   static Future<void> _unlockNightOwl() async {
@@ -361,6 +432,7 @@ class AchievementService {
       progress: 1,
       unlockedAt: DateTime.now(),
     );
+    await AchievementService.instance.notifyUnlocked(AchievementId.nightOwl.key);
   }
 
   static bool _amountContains777(double amount) {
@@ -380,5 +452,6 @@ class AchievementService {
       progress: 1,
       unlockedAt: DateTime.now(),
     );
+    await AchievementService.instance.notifyUnlocked(AchievementId.lucky777.key);
   }
 }
