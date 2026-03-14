@@ -10,21 +10,34 @@
 ### Architecture
 
 ```mermaid
-architecture-beta
-    group clients(cloud)[Mobile Clients]
-    service app(app)[Mobile App] in clients
-    group localhost(server)[Localhost]
-    service db(database)[Relational Database] in localhost
-    service in_mem_cache(database)[In Memory Cache] in localhost
-    service api_server(server)[API Server] in localhost
-    service reverse_proxy(server)[Reverse Proxy] in localhost
-    service internet(internet)[Internet]
+flowchart LR
+    subgraph Mobile["📱 Mobile Client"]
+        direction TB
+        App["Flutter App"]
+        LocalDB[("SQLite<br/>(Local DB)")]
+        SyncService["Cloud Sync Service"]
 
-    app{group}:B --> T:internet
-    internet:B --> T:reverse_proxy
-    reverse_proxy:R --> L:api_server
-    api_server:R --> L:db
-    api_server:B --> L:in_mem_cache
+        App <-->|Read / Write| LocalDB
+        App --> SyncService
+        SyncService <-->|Fetch / Update| LocalDB
+    end
+
+    Internet(("🌐 Internet"))
+
+    subgraph Backend["☁️ Backend Services"]
+        direction TB
+        Proxy["Nginx<br/>(Reverse Proxy)"]
+        API["FastAPI Server"]
+        Cache[("Redis<br/>(In-Memory Cache)")]
+        DB[("PostgreSQL<br/>(Relational DB)")]
+
+        Proxy <--> API
+        API <--> Cache
+        API <--> DB
+    end
+
+    SyncService <-->|Sync API| Internet
+    Internet <--> Proxy
 ```
 
 ### Branches
