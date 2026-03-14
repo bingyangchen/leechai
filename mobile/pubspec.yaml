@@ -45,6 +45,7 @@ flutter:
   assets:
     - assets/icon/app_icon.png
     - assets/icon/cool.png
+    - assets/icon/google_logo.webp
 
 names_launcher:
   name: "Leechai"
