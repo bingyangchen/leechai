@@ -32,8 +32,6 @@ class _UserStatsCardState extends State<UserStatsCard>
   double _tiltY = 0;
   Offset? _lastPosition;
   Offset? _pointerDownPosition;
-  double _totalDragDown = 0;
-  double _totalDragUp = 0;
   bool _isFlipped = false;
   static const double _maxTilt = 0.12;
   static const double _tapSlop = 18;
@@ -193,8 +191,6 @@ class _UserStatsCardState extends State<UserStatsCard>
   void _onPointerDown(PointerDownEvent event) {
     _lastPosition = event.position;
     _pointerDownPosition = event.position;
-    _totalDragDown = 0;
-    _totalDragUp = 0;
     _springController.stop();
     widget.interactionNotifier?.value = true;
   }
@@ -203,8 +199,6 @@ class _UserStatsCardState extends State<UserStatsCard>
     if (_lastPosition == null) return;
     final delta = event.position - _lastPosition!;
     _lastPosition = event.position;
-    if (delta.dy > 0) _totalDragDown += delta.dy;
-    if (delta.dy < 0) _totalDragUp -= delta.dy;
     setState(() {
       _tiltY -= delta.dx * _dragSensitivity;
       _tiltX += delta.dy * _dragSensitivity;
@@ -224,13 +218,16 @@ class _UserStatsCardState extends State<UserStatsCard>
         !_isFlipped) {
       widget.onTap!();
     }
-    if (!_isFlipped && _totalDragDown >= _flipThreshold) {
-      _isFlipped = true;
-      _flipController.forward();
-    } else if (_isFlipped && _totalDragUp >= _flipThreshold) {
-      _discardBackEditIfNeeded();
-      _isFlipped = false;
-      _flipController.reverse();
+    if (down != null) {
+      final verticalDisplacement = event.position.dy - down.dy;
+      if (!_isFlipped && verticalDisplacement >= _flipThreshold) {
+        _isFlipped = true;
+        _flipController.forward();
+      } else if (_isFlipped && verticalDisplacement <= -_flipThreshold) {
+        _discardBackEditIfNeeded();
+        _isFlipped = false;
+        _flipController.reverse();
+      }
     }
     _tiltXBeforeSpring = _tiltX;
     _tiltYBeforeSpring = _tiltY;
