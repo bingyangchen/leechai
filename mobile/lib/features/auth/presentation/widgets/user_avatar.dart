@@ -20,22 +20,12 @@ class UserAvatar extends StatelessWidget {
       );
     }
 
-    final initial = user.displayName.isNotEmpty
-        ? user.displayName[0].toUpperCase()
-        : user.email.isNotEmpty
-        ? user.email[0].toUpperCase()
-        : '?';
-
-    return CircleAvatar(
-      radius: size / 2,
-      backgroundColor: colorScheme.primaryContainer,
-      child: Text(
-        initial,
-        style: TextStyle(
-          fontSize: size * 0.42,
-          fontWeight: FontWeight.w600,
-          color: colorScheme.onPrimaryContainer,
-        ),
+    return ClipOval(
+      child: Image.asset(
+        'assets/icon/app_icon.png',
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
       ),
     );
   }
