@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:mobile/core/database/app_database.dart';
 import 'package:mobile/features/auth/data/services/auth.dart';
-import 'package:mobile/features/profile/data/repositories/last_sync.dart';
+import 'package:mobile/features/profile/data/repositories/cloud_sync.dart';
 
 enum CloudSyncStatus { synced, syncing, offline }
 
