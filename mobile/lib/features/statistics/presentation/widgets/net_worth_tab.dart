@@ -78,6 +78,8 @@ class _NetWorthTabState extends State<NetWorthTab> {
         slivers: [
           appSliverRefreshControl(
             onRefresh: () => runRefreshWithSnapBack(_scrollController, () async {
+              // NOTE: placebo effect
+              await Future.delayed(const Duration(seconds: 1));
               _onRefresh();
               await _future;
             }),

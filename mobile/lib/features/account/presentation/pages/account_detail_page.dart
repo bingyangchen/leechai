@@ -344,24 +344,29 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
                   appSliverRefreshControl(
                     onRefresh: () =>
                         runRefreshWithSnapBack(_scrollController, () async {
+                          // NOTE: placebo effect
+                          await Future.delayed(const Duration(seconds: 1));
                           _onRefresh();
                           await _future;
                         }),
                   ),
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.receipt_long_outlined,
-                            size: 64,
-                            color: theme.colorScheme.outline.withValues(alpha: 0.5),
-                          ),
-                          const SizedBox(height: 16),
-                          Text('此帳戶尚無交易紀錄', style: theme.textStyles.titleMuted),
-                        ],
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 100),
+                      child: SizedBox(
+                        height: 400,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.receipt_long_outlined,
+                              size: 64,
+                              color: theme.colorScheme.outline.withValues(alpha: 0.5),
+                            ),
+                            const SizedBox(height: 16),
+                            Text('此帳戶尚無交易紀錄', style: theme.textStyles.titleMuted),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -379,6 +384,8 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
               slivers: [
                 appSliverRefreshControl(
                   onRefresh: () => runRefreshWithSnapBack(_scrollController, () async {
+                    // NOTE: placebo effect
+                    await Future.delayed(const Duration(seconds: 1));
                     _onRefresh();
                     await _future;
                   }),
