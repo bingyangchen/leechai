@@ -28,7 +28,7 @@ class AchievementNotificationOverlay {
 
   void _onUnlocked(AchievementItem item) {
     _queue.add(item);
-    _processQueue();
+    Future.delayed(const Duration(seconds: 1), _processQueue);
   }
 
   void _processQueue() {

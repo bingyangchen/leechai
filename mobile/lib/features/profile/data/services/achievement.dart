@@ -36,7 +36,6 @@ class AchievementService {
       ], achievementDefinitions);
       final item = achievements.where((a) => a.id == achievementId).firstOrNull;
       if (item == null || !item.isUnlocked) return;
-      await Future.delayed(const Duration(milliseconds: 350));
       _controller.add(item);
       _pendingUnlocks.add(item);
       await AchievementRepository.markAsNotified([achievementId]);
