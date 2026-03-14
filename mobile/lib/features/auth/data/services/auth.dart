@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:mobile/features/auth/data/repositories/auth.dart';
 import 'package:mobile/features/auth/domain/account_conflict.dart';
 import 'package:mobile/features/auth/domain/auth_state.dart';
+import 'package:mobile/features/auth/domain/sign_in_cancelled.dart';
 import 'package:mobile/features/profile/data/services/cloud_sync.dart';
 
 class AuthService {
@@ -17,26 +19,41 @@ class AuthService {
 
   _PendingSignIn? _pendingSignIn;
 
+  static const String _webClientId =
+      '1039175482663-b22bnh80h3jd78dae683bm93f1qit2fe.apps.googleusercontent.com';
+
   Future<void> ensureLoaded() async {
     if (_loaded) return;
+    await GoogleSignIn.instance.initialize(serverClientId: _webClientId);
     final state = await AuthRepository.load();
     currentUser.value = state;
     _loaded = true;
   }
 
   Future<void> signInWithGoogle() async {
-    // TODO: Replace mock with actual GoogleSignIn SDK call:
-    //   final googleUser = await GoogleSignIn().signIn();
-    //   if (googleUser == null) throw const SignInCancelledException();
-    //   final userId = googleUser.id;
-    //   final displayName = googleUser.displayName ?? '';
-    //   final email = googleUser.email;
-    //   final avatarUrl = googleUser.photoUrl;
-    await Future<void>.delayed(const Duration(seconds: 2));
-    final userId = 'mock-${DateTime.now().millisecondsSinceEpoch}';
-    const displayName = '使用者';
-    const email = 'user@example.com';
-    const String? avatarUrl = null;
+    final GoogleSignInAccount account;
+    try {
+      account = await GoogleSignIn.instance.authenticate();
+    } on GoogleSignInException catch (e) {
+      if (e.code == GoogleSignInExceptionCode.canceled) {
+        throw const SignInCancelledException();
+      }
+      rethrow;
+    }
+
+    final auth = account.authentication;
+    final idToken = auth.idToken;
+
+    if (idToken == null) throw Exception('無法取得 Google ID Token');
+
+    // TODO: 將 idToken 傳送給後端進行驗證，並換取 App 專屬的 Session / JWT
+    // final backendResponse = await api.loginWithGoogle(idToken);
+    // final appToken = backendResponse.token;
+
+    final userId = account.id;
+    final displayName = account.displayName ?? '';
+    final email = account.email;
+    final avatarUrl = account.photoUrl;
 
     final lastLinkedId = await AuthRepository.loadLastLinkedUserId();
     if (lastLinkedId != null && lastLinkedId != userId) {
@@ -78,6 +95,7 @@ class AuthService {
   }
 
   Future<void> signOut() async {
+    await GoogleSignIn.instance.signOut();
     await AuthRepository.clear();
     currentUser.value = null;
   }
