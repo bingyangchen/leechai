@@ -111,6 +111,8 @@ class _IncomeExpenseTabState extends State<IncomeExpenseTab> {
         slivers: [
           appSliverRefreshControl(
             onRefresh: () => runRefreshWithSnapBack(_scrollController, () async {
+              // NOTE: placebo effect
+              await Future.delayed(const Duration(seconds: 1));
               _onRefresh();
               await _future;
             }),
@@ -130,14 +132,6 @@ class _IncomeExpenseTabState extends State<IncomeExpenseTab> {
                   return const Padding(
                     padding: EdgeInsets.all(48),
                     child: Center(child: CircularProgressIndicator()),
-                  );
-                }
-                if (snapshot.hasError) {
-                  return Padding(
-                    padding: const EdgeInsets.all(48),
-                    child: Center(
-                      child: Text('錯誤：${snapshot.error}', textAlign: TextAlign.center),
-                    ),
                   );
                 }
                 final data = snapshot.data;

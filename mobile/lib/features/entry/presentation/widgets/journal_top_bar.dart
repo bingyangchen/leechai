@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/features/entry/presentation/widgets/month_picker.dart';
-import 'package:mobile/features/entry/presentation/widgets/sync_indicator.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
 import 'package:mobile/shared/widgets/date_time_picker_sheet.dart';
 
@@ -9,14 +8,12 @@ class JournalTopBar extends StatelessWidget {
     super.key,
     required this.selectedMonth,
     required this.onMonthSelected,
-    required this.syncStatus,
     required this.privacyMode,
     required this.onPrivacyModeToggle,
   });
 
   final DateTime selectedMonth;
   final ValueChanged<DateTime> onMonthSelected;
-  final SyncStatus syncStatus;
   final bool privacyMode;
   final VoidCallback onPrivacyModeToggle;
 
@@ -47,8 +44,6 @@ class JournalTopBar extends StatelessWidget {
             },
           ),
           const Spacer(),
-          SyncIndicator(status: syncStatus),
-          const SizedBox(width: 12),
           IconButton(
             icon: Icon(
               privacyMode ? Icons.visibility_off_outlined : Icons.visibility_outlined,

@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:mobile/features/profile/data/services/achievement_unlock.dart';
+import 'package:mobile/features/profile/data/services/achievement.dart';
 import 'package:mobile/features/profile/domain/profile_page_data.dart';
 import 'package:mobile/features/profile/presentation/widgets/achievement_notification_banner.dart';
 
@@ -20,15 +20,15 @@ class AchievementNotificationOverlay {
     if (_overlayState == overlayState) return;
     _subscription?.cancel();
     _overlayState = overlayState;
-    for (final item in AchievementUnlockService.instance.drainPending()) {
+    for (final item in AchievementService.instance.drainPending()) {
       _onUnlocked(item);
     }
-    _subscription = AchievementUnlockService.instance.onUnlocked.listen(_onUnlocked);
+    _subscription = AchievementService.instance.onUnlocked.listen(_onUnlocked);
   }
 
   void _onUnlocked(AchievementItem item) {
     _queue.add(item);
-    _processQueue();
+    Future.delayed(const Duration(seconds: 1), _processQueue);
   }
 
   void _processQueue() {

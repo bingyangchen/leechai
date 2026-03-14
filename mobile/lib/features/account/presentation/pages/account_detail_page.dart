@@ -99,9 +99,16 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
     final data = await _future;
     if (!mounted) return;
     final oldBalance = data.balance;
-    final newValue = await showDialog<double>(
-      context: context,
-      builder: (ctx) => _MarketValueDialog(currentValue: oldBalance),
+    final newValue = await showAppBottomSheet<double?>(
+      context,
+      title: '更新市值',
+      showCloseButton: false,
+      mode: AppBottomSheetMode.static,
+      builder: (ctx) => _MarketValueSheetContent(
+        currentValue: oldBalance,
+        onConfirm: (value) => Navigator.of(ctx).pop(value),
+        onCancel: () => Navigator.of(ctx).pop(),
+      ),
     );
     if (newValue == null || !mounted) return;
     final diff = newValue - oldBalance;
@@ -317,11 +324,6 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
               !snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (snapshot.hasError) {
-            return Center(
-              child: Text('錯誤：${snapshot.error}', textAlign: TextAlign.center),
-            );
-          }
           final data = snapshot.data;
           if (data == null) return const SizedBox.shrink();
 
@@ -337,24 +339,29 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
                   appSliverRefreshControl(
                     onRefresh: () =>
                         runRefreshWithSnapBack(_scrollController, () async {
+                          // NOTE: placebo effect
+                          await Future.delayed(const Duration(seconds: 1));
                           _onRefresh();
                           await _future;
                         }),
                   ),
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.receipt_long_outlined,
-                            size: 64,
-                            color: theme.colorScheme.outline.withValues(alpha: 0.5),
-                          ),
-                          const SizedBox(height: 16),
-                          Text('此帳戶尚無交易紀錄', style: theme.textStyles.titleMuted),
-                        ],
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 100),
+                      child: SizedBox(
+                        height: 400,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.receipt_long_outlined,
+                              size: 64,
+                              color: theme.colorScheme.outline.withValues(alpha: 0.5),
+                            ),
+                            const SizedBox(height: 16),
+                            Text('此帳戶尚無交易紀錄', style: theme.textStyles.titleMuted),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -372,6 +379,8 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
               slivers: [
                 appSliverRefreshControl(
                   onRefresh: () => runRefreshWithSnapBack(_scrollController, () async {
+                    // NOTE: placebo effect
+                    await Future.delayed(const Duration(seconds: 1));
                     _onRefresh();
                     await _future;
                   }),
@@ -430,16 +439,22 @@ class _DetailData {
   final double balance;
 }
 
-class _MarketValueDialog extends StatefulWidget {
-  const _MarketValueDialog({required this.currentValue});
+class _MarketValueSheetContent extends StatefulWidget {
+  const _MarketValueSheetContent({
+    required this.currentValue,
+    required this.onConfirm,
+    required this.onCancel,
+  });
 
   final double currentValue;
+  final ValueChanged<double> onConfirm;
+  final VoidCallback onCancel;
 
   @override
-  State<_MarketValueDialog> createState() => _MarketValueDialogState();
+  State<_MarketValueSheetContent> createState() => _MarketValueSheetContentState();
 }
 
-class _MarketValueDialogState extends State<_MarketValueDialog> {
+class _MarketValueSheetContentState extends State<_MarketValueSheetContent> {
   late TextEditingController _controller;
 
   @override
@@ -449,10 +464,12 @@ class _MarketValueDialogState extends State<_MarketValueDialog> {
       text: formatAmountForDisplay(widget.currentValue),
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _controller.selection = TextSelection(
-        baseOffset: 0,
-        extentOffset: _controller.text.length,
-      );
+      if (_controller.text.isNotEmpty) {
+        _controller.selection = TextSelection(
+          baseOffset: 0,
+          extentOffset: _controller.text.length,
+        );
+      }
     });
   }
 
@@ -464,35 +481,44 @@ class _MarketValueDialogState extends State<_MarketValueDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('更新市值'),
-      content: TextField(
-        controller: _controller,
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d,.]'))],
-        decoration: const InputDecoration(
-          labelText: '目前市值',
-          hintText: '輸入金額',
-          prefixText: '\$ ',
-        ),
-        autofocus: true,
+    final viewInsets = MediaQuery.viewInsetsOf(context);
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24, 8, 24, 24 + viewInsets.bottom),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            controller: _controller,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d,.]'))],
+            decoration: const InputDecoration(
+              labelText: '目前市值',
+              hintText: '輸入金額',
+              prefixText: '\$ ',
+            ),
+            autofocus: true,
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(onPressed: widget.onCancel, child: const Text('取消')),
+              const SizedBox(width: 8),
+              FilledButton(
+                onPressed: () {
+                  final raw = stripAmount(_controller.text);
+                  final value = double.tryParse(raw);
+                  if (value != null && value >= 0) {
+                    widget.onConfirm(value);
+                  }
+                },
+                child: const Text('確定'),
+              ),
+            ],
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
-        ),
-        FilledButton(
-          onPressed: () {
-            final raw = stripAmount(_controller.text);
-            final value = double.tryParse(raw);
-            if (value != null && value >= 0) {
-              Navigator.of(context).pop(value);
-            }
-          },
-          child: const Text('確定'),
-        ),
-      ],
     );
   }
 }

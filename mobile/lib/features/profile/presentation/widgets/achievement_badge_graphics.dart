@@ -24,6 +24,44 @@ class AchievementBadgeGraphics extends StatelessWidget {
   ]);
   // dart format on
 
+  static const String _coolIconPath = 'assets/icon/cool.png';
+
+  static String? imageAssetForId(String id) {
+    switch (id) {
+      case 'thousand_entries':
+        return _coolIconPath;
+      default:
+        return null;
+    }
+  }
+
+  static Widget _buildIconContent({
+    required AchievementItem item,
+    required double size,
+    required Color primary,
+    required ThemeData theme,
+  }) {
+    final iconSize = size * 32 / 72;
+    final imagePath = imageAssetForId(item.id);
+    if (imagePath != null) {
+      final image = Padding(
+        padding: EdgeInsets.all(size * 0.15),
+        child: Image.asset(imagePath, fit: BoxFit.contain),
+      );
+      if (!item.isUnlocked) {
+        return Opacity(opacity: 0.45, child: image);
+      }
+      return image;
+    }
+    return Icon(
+      iconForId(item.id),
+      size: iconSize,
+      color: item.isUnlocked
+          ? primary
+          : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+    );
+  }
+
   static IconData iconForId(String id) {
     switch (id) {
       case 'first_entry':
@@ -149,12 +187,11 @@ class AchievementBadgeGraphics extends StatelessWidget {
               color: item.isUnlocked ? null : theme.colorScheme.surfaceContainerHighest,
               boxShadow: boxShadows,
             ),
-            child: Icon(
-              iconForId(item.id),
-              size: size * 32 / 72,
-              color: item.isUnlocked
-                  ? primary
-                  : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+            child: _buildIconContent(
+              item: item,
+              size: size,
+              primary: primary,
+              theme: theme,
             ),
           ),
         ],

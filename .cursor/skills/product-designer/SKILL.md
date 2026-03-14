@@ -41,6 +41,7 @@ Think as a designer who ships code. Every decision considers:
 
 ## Design–Engineering Bridge
 
+- **Design specs, not implementation**: When handing off a design, describe the outcome, behavior, and specs (what and why). Do not prescribe how to implement; that is the engineer’s responsibility.
 - Use the project design system (theme, colorScheme, textStyles, semantic tokens); do not hardcode colors or ad-hoc typography.
 - Use existing components where possible.
 - Consider perceived performance (skeleton, optimistic updates) as part of UX.
