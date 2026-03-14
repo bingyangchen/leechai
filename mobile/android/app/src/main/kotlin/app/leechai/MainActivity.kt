@@ -1,4 +1,4 @@
-package com.example.mobile
+package app.leechai
 
 import io.flutter.embedding.android.FlutterActivity
 
