@@ -1,15 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:mobile/features/entry/data/repositories/entry.dart'
-    show EntryRepository;
+import 'package:mobile/features/auth/data/services/auth.dart';
+import 'package:mobile/features/entry/data/repositories/entry.dart';
 import 'package:mobile/features/profile/data/repositories/achievement.dart';
+import 'package:mobile/features/profile/data/services/cloud_sync.dart';
 import 'package:mobile/features/profile/domain/achievement_definitions.dart';
 import 'package:mobile/features/profile/domain/profile_page_data.dart';
-import 'package:mobile/features/profile/presentation/pages/account_management_page.dart';
 import 'package:mobile/features/profile/presentation/pages/achievement_list_page.dart';
+import 'package:mobile/features/profile/presentation/widgets/cloud_sync_banner.dart';
 import 'package:mobile/features/profile/presentation/widgets/profile_settings_section.dart';
-import 'package:mobile/features/profile/presentation/widgets/profile_skeleton.dart';
-import 'package:mobile/features/profile/presentation/widgets/user_profile_header.dart';
 import 'package:mobile/features/profile/presentation/widgets/user_stats_card.dart';
 import 'package:mobile/shared/utils/refresh_snap_back.dart';
 import 'package:mobile/shared/widgets/app_refresh_indicator.dart';
@@ -35,6 +34,8 @@ class _ProfilePageState extends State<ProfilePage> {
     super.initState();
     _future = _loadData();
     widget.refreshTrigger?.addListener(_onRefresh);
+    AuthService.instance.currentUser.addListener(_onExternalStateChanged);
+    CloudSyncService.instance.status.addListener(_onExternalStateChanged);
   }
 
   @override
@@ -48,10 +49,16 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   void dispose() {
+    AuthService.instance.currentUser.removeListener(_onExternalStateChanged);
+    CloudSyncService.instance.status.removeListener(_onExternalStateChanged);
     widget.refreshTrigger?.removeListener(_onRefresh);
     _scrollController.dispose();
     _cardInteracting.dispose();
     super.dispose();
+  }
+
+  void _onExternalStateChanged() {
+    if (mounted) setState(() {});
   }
 
   void _onRefresh() {
@@ -115,28 +122,12 @@ class _ProfilePageState extends State<ProfilePage> {
         builder: (context, snapshot) {
           if (snapshot.hasData) _lastData = snapshot.data;
           if (snapshot.connectionState == ConnectionState.waiting &&
-              _lastData == null) {
-            return const ProfileSkeleton();
+              !snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
             return Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('載入失敗：${snapshot.error}', textAlign: TextAlign.center),
-                    const SizedBox(height: 16),
-                    FilledButton(
-                      onPressed: () => setState(() {
-                        _future = _loadData();
-                      }),
-                      child: const Text('重試'),
-                    ),
-                  ],
-                ),
-              ),
+              child: Text('錯誤：${snapshot.error}', textAlign: TextAlign.center),
             );
           }
           final data = snapshot.data ?? _lastData!;
@@ -154,6 +145,8 @@ class _ProfilePageState extends State<ProfilePage> {
                     appSliverRefreshControl(
                       onRefresh: () =>
                           runRefreshWithSnapBack(_scrollController, () async {
+                            // NOTE: placebo effect
+                            await Future.delayed(const Duration(seconds: 1));
                             _onRefresh();
                             await _future;
                           }),
@@ -181,14 +174,9 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                     const SliverToBoxAdapter(child: SizedBox(height: 12)),
                     SliverToBoxAdapter(
-                      child: UserProfileHeader(
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) => const AccountManagementPage(),
-                            ),
-                          );
-                        },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: CloudSyncBanner(),
                       ),
                     ),
                     SliverToBoxAdapter(
