@@ -134,14 +134,6 @@ class _IncomeExpenseTabState extends State<IncomeExpenseTab> {
                     child: Center(child: CircularProgressIndicator()),
                   );
                 }
-                if (snapshot.hasError) {
-                  return Padding(
-                    padding: const EdgeInsets.all(48),
-                    child: Center(
-                      child: Text('錯誤：${snapshot.error}', textAlign: TextAlign.center),
-                    ),
-                  );
-                }
                 final data = snapshot.data;
                 if (data == null) return const SizedBox.shrink();
 

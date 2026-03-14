@@ -125,12 +125,8 @@ class _ProfilePageState extends State<ProfilePage> {
               !snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (snapshot.hasError) {
-            return Center(
-              child: Text('錯誤：${snapshot.error}', textAlign: TextAlign.center),
-            );
-          }
-          final data = snapshot.data ?? _lastData!;
+          final data = snapshot.data ?? _lastData;
+          if (data == null) return const SizedBox.shrink();
           return HapticRefreshWrapper(
             child: SafeArea(
               bottom: false,

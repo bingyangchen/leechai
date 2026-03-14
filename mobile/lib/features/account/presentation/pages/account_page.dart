@@ -218,11 +218,6 @@ class _AssetsPageState extends State<AssetsPage> {
                   !snapshot.hasData) {
                 return const Center(child: CircularProgressIndicator());
               }
-              if (snapshot.hasError) {
-                return Center(
-                  child: Text('錯誤：${snapshot.error}', textAlign: TextAlign.center),
-                );
-              }
               final data = snapshot.data;
               if (data == null) return const SizedBox.shrink();
 

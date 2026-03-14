@@ -118,10 +118,11 @@ class _CategoryList extends StatelessWidget {
     return FutureBuilder<List<Account>>(
       future: future,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
-        final list = snapshot.data ?? [];
+        final list = snapshot.data;
+        if (list == null) return const SizedBox.shrink();
         if (list.isEmpty) {
           return Center(child: Text('尚無分類', style: theme.textStyles.bodyLargeMuted));
         }
