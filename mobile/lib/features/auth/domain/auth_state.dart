@@ -4,10 +4,12 @@ class AuthState {
     required this.displayName,
     required this.email,
     this.avatarUrl,
+    required this.appToken,
   });
 
   final String userId;
   final String displayName;
   final String email;
   final String? avatarUrl;
+  final String appToken;
 }

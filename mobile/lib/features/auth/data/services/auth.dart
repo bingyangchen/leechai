@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:mobile/core/network/api_client.dart';
+import 'package:mobile/features/auth/data/apis/auth.dart';
 import 'package:mobile/features/auth/data/repositories/auth.dart';
 import 'package:mobile/features/auth/domain/account_conflict.dart';
 import 'package:mobile/features/auth/domain/auth_state.dart';
@@ -10,6 +12,8 @@ class AuthService {
   AuthService._();
 
   static final AuthService instance = AuthService._();
+
+  final AuthApi _authApi = AuthApi(client: ApiClient());
 
   final ValueNotifier<AuthState?> currentUser = ValueNotifier<AuthState?>(null);
 
@@ -41,40 +45,33 @@ class AuthService {
       rethrow;
     }
 
-    final auth = account.authentication;
-    final idToken = auth.idToken;
-
+    final idToken = account.authentication.idToken;
     if (idToken == null) throw Exception('無法取得 Google ID Token');
 
-    // TODO: 將 idToken 傳送給後端進行驗證，並換取 App 專屬的 Session / JWT
-    // final backendResponse = await api.loginWithGoogle(idToken);
-    // final appToken = backendResponse.token;
-
-    final userId = account.id;
-    final displayName = account.displayName ?? '';
-    final email = account.email;
-    final avatarUrl = account.photoUrl;
+    final login = await _authApi.loginWithGoogle(idToken);
 
     final lastLinkedId = await AuthRepository.loadLastLinkedUserId();
-    if (lastLinkedId != null && lastLinkedId != userId) {
+    if (lastLinkedId != null && lastLinkedId != login.userId) {
       _pendingSignIn = _PendingSignIn(
-        userId: userId,
-        displayName: displayName,
-        email: email,
-        avatarUrl: avatarUrl,
+        userId: login.userId,
+        displayName: login.displayName,
+        email: login.email,
+        avatarUrl: login.avatarUrl,
+        appToken: login.token,
       );
       throw AccountConflictException(
         previousUserId: lastLinkedId,
-        newUserId: userId,
-        newEmail: email,
+        newUserId: login.userId,
+        newEmail: login.email,
       );
     }
 
     await _persistUser(
-      userId: userId,
-      displayName: displayName,
-      email: email,
-      avatarUrl: avatarUrl,
+      userId: login.userId,
+      displayName: login.displayName,
+      email: login.email,
+      avatarUrl: login.avatarUrl,
+      appToken: login.token,
     );
   }
 
@@ -87,6 +84,7 @@ class AuthService {
       displayName: pending.displayName,
       email: pending.email,
       avatarUrl: pending.avatarUrl,
+      appToken: pending.appToken,
     );
   }
 
@@ -105,12 +103,14 @@ class AuthService {
     required String displayName,
     required String email,
     String? avatarUrl,
+    required String appToken,
   }) async {
     final state = AuthState(
       userId: userId,
       displayName: displayName,
       email: email,
       avatarUrl: avatarUrl,
+      appToken: appToken,
     );
     await AuthRepository.save(state);
     currentUser.value = state;
@@ -124,10 +124,12 @@ class _PendingSignIn {
     required this.displayName,
     required this.email,
     this.avatarUrl,
+    required this.appToken,
   });
 
   final String userId;
   final String displayName;
   final String email;
   final String? avatarUrl;
+  final String appToken;
 }

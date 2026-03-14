@@ -5,6 +5,7 @@ const String _keyUserId = 'auth_user_id';
 const String _keyDisplayName = 'auth_display_name';
 const String _keyEmail = 'auth_email';
 const String _keyAvatarUrl = 'auth_avatar_url';
+const String _keyAppToken = 'auth_app_token';
 const String _keyLastLinkedUserId = 'auth_last_linked_user_id';
 
 class AuthRepository {
@@ -13,12 +14,16 @@ class AuthRepository {
   static Future<AuthState?> load() async {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getString(_keyUserId);
-    if (userId == null || userId.isEmpty) return null;
+    final appToken = prefs.getString(_keyAppToken);
+    if (userId == null || userId.isEmpty || appToken == null || appToken.isEmpty) {
+      return null;
+    }
     return AuthState(
       userId: userId,
       displayName: prefs.getString(_keyDisplayName) ?? '',
       email: prefs.getString(_keyEmail) ?? '',
       avatarUrl: prefs.getString(_keyAvatarUrl),
+      appToken: appToken,
     );
   }
 
@@ -27,6 +32,7 @@ class AuthRepository {
     await prefs.setString(_keyUserId, state.userId);
     await prefs.setString(_keyDisplayName, state.displayName);
     await prefs.setString(_keyEmail, state.email);
+    await prefs.setString(_keyAppToken, state.appToken);
     if (state.avatarUrl != null) {
       await prefs.setString(_keyAvatarUrl, state.avatarUrl!);
     } else {
@@ -41,6 +47,8 @@ class AuthRepository {
     await prefs.remove(_keyDisplayName);
     await prefs.remove(_keyEmail);
     await prefs.remove(_keyAvatarUrl);
+    await prefs.remove(_keyAppToken);
+    // NOTE: Do not remove _keyLastLinkedUserId, which is used to avoid account conflict.
   }
 
   static Future<String?> loadLastLinkedUserId() async {
