@@ -96,7 +96,7 @@ class AuthService {
     );
     await AuthRepository.save(state);
     currentUser.value = state;
-    CloudSyncService.instance.syncIfNeeded().catchError((_, __) {});
+    CloudSyncService.instance.syncIfNeeded().catchError((_, stackTrace) {});
   }
 }
 

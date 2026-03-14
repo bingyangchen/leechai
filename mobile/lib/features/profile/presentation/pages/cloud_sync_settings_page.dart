@@ -623,10 +623,7 @@ class _DisconnectSection extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-          child: Text(
-            '關閉後，新的記帳資料將只會保存在此設備上。已備份到雲端的資料不會被刪除。',
-            style: textStyles.labelMuted,
-          ),
+          child: Text('關閉後將停止備份，已在雲端的資料不受影響。', style: textStyles.labelMuted),
         ),
       ],
     );
