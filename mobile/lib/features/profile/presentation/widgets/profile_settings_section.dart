@@ -26,8 +26,8 @@ String _themeModeLabel(ThemeMode mode) {
 }
 
 const _appVersion = 'v1.0.0';
-const _privacyPolicyUrl = 'https://github.com/bingyangchen/leechai';
-const _termsOfServiceUrl = 'https://github.com/bingyangchen/leechai';
+const _privacyPolicyUrl = 'https://bingyangchen.github.io/leechai/privacy-policy/';
+const _termsOfServiceUrl = 'https://bingyangchen.github.io/leechai/terms-of-service/';
 const _feedbackEmail = 'leechai.app@gmail.com';
 
 class ProfileSettingsSection extends StatelessWidget {
