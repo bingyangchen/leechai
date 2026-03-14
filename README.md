@@ -66,11 +66,20 @@ gitGraph
 
 ### Prerequisites
 
+#### Backend (API Server)
+
 - Operating System: MacOS or Linux
 - Git (>=2.34.0)
 - GNU Make (>=3.81.0)
 - Docker (>=27.4.0)
 - Visual Studio Code (or any other editor that supports devcontainer)
+
+#### Frontend (Mobile App)
+
+- Flutter SDK (>=3.11.0)
+- Android Studio (for Android development)
+- Xcode (for iOS development, macOS only)
+- CocoaPods (for iOS dependencies)
 
 ### Quick Start
 
@@ -80,6 +89,8 @@ gitGraph
   git clone git@github.com:bingyangchen/leechai.git
   cd leechai
   ```
+
+#### Backend (API Server)
 
 - Step 1: Create .env file
 
@@ -116,6 +127,28 @@ gitGraph
   # To stop the server, run `make stop`
   ```
 
+#### Frontend (Mobile App)
+
+Ensure the backend server is running locally before starting the app.
+
+- Step 1: Navigate to the `mobile` directory
+
+  ```bash
+  cd mobile
+  ```
+
+- Step 2: Install dependencies
+
+  ```bash
+  flutter pub get
+  ```
+
+- Step 3: Run the app
+
+  ```bash
+  flutter run
+  ```
+
 ### The Development Workflow
 
 - **Step 1:** Create a branch from `main`, naming it `feature/xxx` or `fix/xxx`.
@@ -127,13 +160,19 @@ gitGraph
 
 Let's dive deeper into the details of **Step 2** of the development workflow when you need to add or remove a dependency:
 
-#### API Server
+#### Backend (API Server)
 
 - **Step 2-1:** Enter the shell of the API server container.
 - **Step 2-2:** Install/Remove the dependency: `uv add {DEPENDENCY} --no-sync` or `uv remove {DEPENDENCY} --no-sync`
   - Note: The `--no-sync` flag prevents the download of the dependency, only version check will be performed.
 - **Step 2-3:** Exit the shell and rebuild the images for development.
 - **Step 2-4:** Restart the API server container.
+
+#### Frontend (Mobile App)
+
+- **Step 2-1:** Navigate to the `mobile` directory.
+- **Step 2-2:** Add the dependency: `flutter pub add {DEPENDENCY}` or remove it: `flutter pub remove {DEPENDENCY}`.
+- **Step 2-3:** If it's an iOS-specific dependency, navigate to `mobile/ios` and run `pod install`.
 
 ### Environment Variable Management
 
