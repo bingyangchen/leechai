@@ -15,10 +15,8 @@ import 'package:mobile/features/entry/presentation/widgets/journal_top_bar.dart'
 import 'package:mobile/features/entry/presentation/widgets/month_summary_card.dart';
 import 'package:mobile/features/entry/presentation/widgets/sticky_date_header.dart'
     show buildDateHeaderSection, DateHeaderContent;
-import 'package:mobile/features/entry/presentation/widgets/sync_indicator.dart';
 import 'package:mobile/features/entry/presentation/widgets/transaction_row.dart';
 import 'package:mobile/features/profile/data/services/achievement.dart';
-import 'package:mobile/shared/constants/refresh_trigger.dart';
 import 'package:mobile/shared/utils/refresh_snap_back.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/app_refresh_indicator.dart';
@@ -36,7 +34,6 @@ class JournalPage extends StatefulWidget {
 class _JournalPageState extends State<JournalPage> {
   DateTime _selectedMonth = DateTime.now();
   bool _privacyMode = false;
-  SyncStatus _syncStatus = SyncStatus.idle;
   final ScrollController _scrollController = ScrollController();
   static const double _summaryCardHeight = 140;
   bool _showCollapsedSummary = false;
@@ -158,13 +155,11 @@ class _JournalPageState extends State<JournalPage> {
 
   Future<void> _onRefresh() async {
     await runRefreshWithSnapBack(_scrollController, () async {
+      await Future.delayed(const Duration(seconds: 1)); // NOTE: placebo effect
       setState(() {
-        _syncStatus = SyncStatus.syncing;
         _future = _loadData();
       });
       await _future;
-      await Future.delayed(const Duration(seconds: 1)); // TODO: remove this
-      if (mounted) setState(() => _syncStatus = SyncStatus.idle);
     });
   }
 
@@ -189,7 +184,6 @@ class _JournalPageState extends State<JournalPage> {
                   _future = _loadData();
                 });
               },
-              syncStatus: _syncStatus,
               privacyMode: _privacyMode,
               onPrivacyModeToggle: () => setState(() => _privacyMode = !_privacyMode),
             ),
@@ -234,15 +228,13 @@ class _JournalPageState extends State<JournalPage> {
                                   privacyMode: _privacyMode,
                                 ),
                               ),
-                              SliverFillRemaining(
-                                hasScrollBody: false,
+                              SliverToBoxAdapter(
                                 child: Padding(
-                                  padding: EdgeInsets.only(
-                                    top: _syncStatus == SyncStatus.syncing
-                                        ? kRefreshIndicatorExtent
-                                        : 0,
+                                  padding: const EdgeInsets.only(top: 32),
+                                  child: SizedBox(
+                                    height: 400,
+                                    child: const JournalEmptyState(),
                                   ),
-                                  child: const Center(child: JournalEmptyState()),
                                 ),
                               ),
                             ],
