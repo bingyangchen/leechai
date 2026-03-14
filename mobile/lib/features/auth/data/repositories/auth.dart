@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 const String _keyUserId = 'auth_user_id';
 const String _keyDisplayName = 'auth_display_name';
 const String _keyEmail = 'auth_email';
+const String _keyAvatarUrl = 'auth_avatar_url';
 
 class AuthRepository {
   AuthRepository._();
@@ -16,6 +17,7 @@ class AuthRepository {
       userId: userId,
       displayName: prefs.getString(_keyDisplayName) ?? '',
       email: prefs.getString(_keyEmail) ?? '',
+      avatarUrl: prefs.getString(_keyAvatarUrl),
     );
   }
 
@@ -24,6 +26,11 @@ class AuthRepository {
     await prefs.setString(_keyUserId, state.userId);
     await prefs.setString(_keyDisplayName, state.displayName);
     await prefs.setString(_keyEmail, state.email);
+    if (state.avatarUrl != null) {
+      await prefs.setString(_keyAvatarUrl, state.avatarUrl!);
+    } else {
+      await prefs.remove(_keyAvatarUrl);
+    }
   }
 
   static Future<void> clear() async {
@@ -31,5 +38,6 @@ class AuthRepository {
     await prefs.remove(_keyUserId);
     await prefs.remove(_keyDisplayName);
     await prefs.remove(_keyEmail);
+    await prefs.remove(_keyAvatarUrl);
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:mobile/core/database/app_database.dart';
 import 'package:mobile/features/auth/data/services/auth.dart';
@@ -18,15 +20,30 @@ class CloudSyncService {
 
   static final CloudSyncService instance = CloudSyncService._();
 
+  static const _periodicInterval = Duration(seconds: 30);
+
   final ValueNotifier<CloudSyncStatus> status = ValueNotifier(CloudSyncStatus.synced);
   ValueNotifier<DateTime?> get lastSyncAt => LastSyncRepository.lastSyncAt;
 
   VoidCallback? onSyncComplete;
 
   bool _isSyncing = false;
+  Timer? _periodicTimer;
 
   Future<void> ensureLoaded() async {
     await LastSyncRepository.ensureLoaded();
+  }
+
+  void startPeriodicSync() {
+    _periodicTimer?.cancel();
+    _periodicTimer = Timer.periodic(_periodicInterval, (_) {
+      syncIfNeeded().catchError((_, stackTrace) {});
+    });
+  }
+
+  void stopPeriodicSync() {
+    _periodicTimer?.cancel();
+    _periodicTimer = null;
   }
 
   Future<void> sync() async {
