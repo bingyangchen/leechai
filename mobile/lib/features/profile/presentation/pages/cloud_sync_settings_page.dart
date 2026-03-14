@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile/features/auth/data/services/auth.dart';
+import 'package:mobile/features/auth/domain/account_conflict.dart';
 import 'package:mobile/features/auth/domain/auth_state.dart';
 import 'package:mobile/features/auth/domain/sign_in_cancelled.dart';
 import 'package:mobile/features/auth/presentation/widgets/user_avatar.dart';
@@ -157,6 +158,9 @@ class _UnauthenticatedViewState extends State<_UnauthenticatedView>
       await AuthService.instance.signInWithGoogle();
     } on SignInCancelledException {
       // User cancelled — no feedback needed
+    } on AccountConflictException catch (conflict) {
+      if (!mounted) return;
+      await _showAccountConflictDialog(conflict);
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -172,6 +176,36 @@ class _UnauthenticatedViewState extends State<_UnauthenticatedView>
     }
   }
 
+  Future<void> _showAccountConflictDialog(AccountConflictException conflict) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('偵測到不同帳號'),
+        content: Text(
+          '此設備先前連結的是另一個 Google 帳號。'
+          '繼續將會把本機資料同步到 ${conflict.newEmail}，'
+          '原帳號的雲端資料不會受到影響。',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              AuthService.instance.cancelPendingSignIn();
+              Navigator.of(ctx).pop(false);
+            },
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('繼續連結'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await AuthService.instance.confirmSignInWithDifferentAccount();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -183,71 +217,74 @@ class _UnauthenticatedViewState extends State<_UnauthenticatedView>
     const minHeroWidth = 80.0;
     final heroWidth = (screenWidth * 0.28).clamp(minHeroWidth, maxHeroWidth);
 
-    return AnimatedBuilder(
-      animation: _heroController,
-      builder: (context, child) {
-        return Opacity(
-          opacity: _heroOpacity.value.clamp(0.0, 1.0),
-          child: Transform.translate(
-            offset: Offset(0, _heroOffsetY.value),
-            child: child,
-          ),
-        );
-      },
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(heroWidth * 0.22),
-            child: Image.asset(
-              'assets/icon/app_icon.png',
-              width: heroWidth,
-              height: heroWidth,
+    return PopScope(
+      canPop: !_isLoading,
+      child: AnimatedBuilder(
+        animation: _heroController,
+        builder: (context, child) {
+          return Opacity(
+            opacity: _heroOpacity.value.clamp(0.0, 1.0),
+            child: Transform.translate(
+              offset: Offset(0, _heroOffsetY.value),
+              child: child,
             ),
-          ),
-          const SizedBox(height: 32),
-          Text(
-            '保護你的財務資料',
-            style: textStyles.headlineSmallEmphasis.copyWith(
-              color: colorScheme.onSurface,
+          );
+        },
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(heroWidth * 0.22),
+              child: Image.asset(
+                'assets/icon/app_icon.png',
+                width: heroWidth,
+                height: heroWidth,
+              ),
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Text(
-              '開啟雲端同步，即使更換手機或遺失設備，你的記帳紀錄也能安全無虞地還原。',
-              style: textStyles.bodyLargeMuted.copyWith(
-                color: colorScheme.onSurfaceVariant,
-                height: 1.5,
+            const SizedBox(height: 32),
+            Text(
+              '保護你的財務資料',
+              style: textStyles.headlineSmallEmphasis.copyWith(
+                color: colorScheme.onSurface,
               ),
               textAlign: TextAlign.center,
             ),
-          ),
-          const SizedBox(height: 48),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 400),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: GoogleLinkButton(
-                    isLoading: _isLoading,
-                    isPressed: _isPressed,
-                    onTap: _onLinkGoogleTap,
-                    onTapDown: (_) {
-                      if (!_isLoading) setState(() => _isPressed = true);
-                    },
-                    onTapUp: (_) => setState(() => _isPressed = false),
-                    onTapCancel: () => setState(() => _isPressed = false),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Text(
+                '開啟雲端同步，即使更換手機或遺失設備，你的記帳紀錄也能安全無虞地還原。',
+                style: textStyles.bodyLargeMuted.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 48),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 400),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: GoogleLinkButton(
+                      isLoading: _isLoading,
+                      isPressed: _isPressed,
+                      onTap: _onLinkGoogleTap,
+                      onTapDown: (_) {
+                        if (!_isLoading) setState(() => _isPressed = true);
+                      },
+                      onTapUp: (_) => setState(() => _isPressed = false),
+                      onTapCancel: () => setState(() => _isPressed = false),
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -607,6 +644,10 @@ class _DisconnectSection extends StatelessWidget {
             child: const Text('取消'),
           ),
           FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
             onPressed: () => Navigator.of(ctx).pop(true),
             child: const Text('關閉'),
           ),

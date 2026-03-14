@@ -5,6 +5,7 @@ const String _keyUserId = 'auth_user_id';
 const String _keyDisplayName = 'auth_display_name';
 const String _keyEmail = 'auth_email';
 const String _keyAvatarUrl = 'auth_avatar_url';
+const String _keyLastLinkedUserId = 'auth_last_linked_user_id';
 
 class AuthRepository {
   AuthRepository._();
@@ -31,6 +32,7 @@ class AuthRepository {
     } else {
       await prefs.remove(_keyAvatarUrl);
     }
+    await prefs.setString(_keyLastLinkedUserId, state.userId);
   }
 
   static Future<void> clear() async {
@@ -39,5 +41,10 @@ class AuthRepository {
     await prefs.remove(_keyDisplayName);
     await prefs.remove(_keyEmail);
     await prefs.remove(_keyAvatarUrl);
+  }
+
+  static Future<String?> loadLastLinkedUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keyLastLinkedUserId);
   }
 }
