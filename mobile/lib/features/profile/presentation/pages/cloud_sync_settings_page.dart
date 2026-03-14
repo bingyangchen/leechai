@@ -563,22 +563,17 @@ class _SyncStatusPanel extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          if (status == CloudSyncStatus.syncing)
-            TextButton(
-              onPressed: null,
-              child: Text(
-                '同步中...',
-                style: textStyles.labelEmphasis.copyWith(color: colorScheme.primary),
-              ),
-            )
-          else
-            TextButton(
-              onPressed: onSyncTap,
-              child: Text(
-                '立即同步',
-                style: textStyles.labelEmphasis.copyWith(color: colorScheme.primary),
+          TextButton(
+            onPressed: status == CloudSyncStatus.syncing ? null : onSyncTap,
+            child: Text(
+              '立即同步',
+              style: textStyles.labelEmphasis.copyWith(
+                color: status == CloudSyncStatus.syncing
+                    ? colorScheme.primary.withValues(alpha: 0.4)
+                    : colorScheme.primary,
               ),
             ),
+          ),
         ],
       ),
     );
