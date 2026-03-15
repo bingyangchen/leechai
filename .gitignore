@@ -2,3 +2,4 @@
 .env
 reverseproxy/dev-cert.pem
 reverseproxy/dev-key.pem
+__pycache__/

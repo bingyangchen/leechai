@@ -1,6 +1,5 @@
 ARG BUILDER_VARIANT=prod
-ARG VENV_PATH=/opt/venv
-ARG FINAL_VENV_PATH=/venv
+ARG VENV_PATH=/venv
 ARG PYTHON_VERSION=3.14.3
 ARG UV_IMAGE=ghcr.io/astral-sh/uv:0.10
 
@@ -31,10 +30,10 @@ FROM builder-${BUILDER_VARIANT} AS builder
 
 FROM base AS final
 ARG VENV_PATH
-ARG FINAL_VENV_PATH
 WORKDIR /app
-COPY --from=builder ${VENV_PATH} ${FINAL_VENV_PATH}
+COPY --from=builder /usr/local/bin/uv /usr/local/bin/uv
+COPY --from=builder ${VENV_PATH} ${VENV_PATH}
 COPY --from=builder /app /app
 ENV PYTHONPATH=/app
-ENV PATH="${FINAL_VENV_PATH}/bin:${PATH}"
-CMD ["python", "-c", "while True: pass"]
+ENV PATH="${VENV_PATH}/bin:${PATH}"
+CMD ["fastapi", "run", "main/main.py", "--host", "0.0.0.0", "--port", "8000"]
