@@ -3,6 +3,7 @@ name = "Leechai"
 version = "1.0.0"
 description = "Leechai API Server"
 requires-python = "==3.14.3"
+
 dependencies = [
     "fastapi[standard]==0.135.1",
     "sqlalchemy[asyncio]==2.0.48",
@@ -11,4 +12,9 @@ dependencies = [
     "pydantic-settings==2.13.1",
     "google-auth==2.49.1",
     "PyJWT==2.12.1",
+]
+
+[dependency-groups]
+dev = [
+    "ruff==0.14.14",
 ]
