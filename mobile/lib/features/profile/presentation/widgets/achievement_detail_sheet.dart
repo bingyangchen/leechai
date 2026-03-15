@@ -337,11 +337,11 @@ class _ActionArea extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (item.isUnlocked) {
-      // TODO: Implement the share achievement logic
-      return FilledButton.tonal(onPressed: null, child: const Text('分享成就'));
-    }
-    if (_hasNavigationTarget(item)) {
+    // TODO: Implement the share achievement logic
+    // if (item.isUnlocked) {
+    //   return FilledButton.tonal(onPressed: null, child: const Text('分享成就'));
+    // }
+    if (!item.isUnlocked && _hasNavigationTarget(item)) {
       return FilledButton(
         onPressed: () => Navigator.of(context).pop(true),
         child: const Text('前往完成任務'),
