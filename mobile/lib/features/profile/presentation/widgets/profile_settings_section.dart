@@ -28,6 +28,8 @@ String _themeModeLabel(ThemeMode mode) {
 const _appVersion = 'v1.0.0';
 const _privacyPolicyUrl = 'https://bingyangchen.github.io/leechai/privacy-policy/';
 const _termsOfServiceUrl = 'https://bingyangchen.github.io/leechai/terms-of-service/';
+const _openSourceLicensesUrl =
+    'https://bingyangchen.github.io/leechai/open-source-licenses/';
 const _feedbackEmail = 'leechai.app@gmail.com';
 
 class ProfileSettingsSection extends StatelessWidget {
@@ -337,17 +339,6 @@ App 版本：${packageInfo.version} (${packageInfo.buildNumber})
     }
   }
 
-  void _pushPlaceholderPage(BuildContext context, String title) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => Scaffold(
-          appBar: AppBar(title: Text(title)),
-          body: const Center(child: Text('敬請期待')),
-        ),
-      ),
-    );
-  }
-
   void _showThemeModeBottomSheet(BuildContext context) {
     final scope = ThemeModeScope.of(context);
     final theme = Theme.of(context);
@@ -509,10 +500,10 @@ App 版本：${packageInfo.version} (${packageInfo.buildNumber})
           _AboutSheetTile(
             icon: Icons.code_outlined,
             title: '開源授權',
-            trailing: Icons.chevron_right,
+            trailing: Icons.open_in_new,
             onTap: () {
               Navigator.of(sheetContext).pop();
-              _pushPlaceholderPage(context, '開源授權'); // TODO
+              _openInBrowser(context, _openSourceLicensesUrl);
             },
           ),
           const SizedBox(height: 24),

@@ -8,10 +8,14 @@ class ApiClient {
   final String baseUrl;
   final http.Client _httpClient;
 
-  Future<http.Response> get(String path) async {
+  Future<http.Response> get(String path, {Map<String, String>? queryParameters}) async {
+    var uri = Uri.parse('$baseUrl$path');
+    if (queryParameters != null && queryParameters.isNotEmpty) {
+      uri = uri.replace(queryParameters: queryParameters);
+    }
     final token = await _getToken();
     return _httpClient.get(
-      Uri.parse('$baseUrl$path'),
+      uri,
       headers: {if (token != null) 'Authorization': 'Bearer $token'},
     );
   }

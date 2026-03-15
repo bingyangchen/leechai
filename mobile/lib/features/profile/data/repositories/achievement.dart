@@ -3,7 +3,7 @@ import 'package:mobile/core/database/app_database.dart';
 class AchievementRepository {
   AchievementRepository._();
 
-  static const String _table = 'achievements';
+  static const String _table = 'achievement';
 
   static Future<List<Map<String, Object?>>> getAll() async {
     final db = await AppDatabase.database;
