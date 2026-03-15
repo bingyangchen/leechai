@@ -8,7 +8,9 @@ class Settings(BaseSettings):
         env_file=".env", env_file_encoding="utf-8", case_sensitive=True
     )
 
+    DATABASE_URL: str = "postgresql+asyncpg://postgres:password@db:5432/leechai"
     LOG_LEVEL: str = "INFO"
+    SQL_LOG: bool = False
 
 
 @cache

@@ -6,25 +6,37 @@ from fastapi.responses import JSONResponse
 
 from main.config import settings
 
+logging.config.dictConfig(
+    {
+        "version": 1,
+        "formatters": {
+            "default": {
+                "format": "[%(levelname)s]%(asctime)s (%(name)s:%(lineno)d)\n%(message)s"  # noqa: E501
+            },
+            "sql": {
+                "format": "[SQL] %(asctime)s | %(message)s",
+            },
+        },
+        "handlers": {
+            "default": {"class": "logging.StreamHandler", "formatter": "default"},
+            "sql": {"class": "logging.StreamHandler", "formatter": "sql"},
+        },
+        "root": {"level": settings.LOG_LEVEL, "handlers": ["default"]},
+        "loggers": {
+            "sqlalchemy.engine": {
+                "level": "INFO",
+                "handlers": ["sql"],
+                "propagate": False,
+            },
+            "sqlalchemy.pool": {
+                "level": "INFO",
+                "handlers": ["sql"],
+                "propagate": False,
+            },
+        },
+    }
+)
 logger = logging.getLogger(__name__)
-
-
-def setup_logging() -> None:
-    logging.config.dictConfig(
-        {
-            "version": 1,
-            "formatters": {
-                "default": {
-                    "format": "[%(levelname)s]%(asctime)s - %(name)s:%(lineno)d\n%(message)s"  # noqa: E501
-                },
-            },
-            "handlers": {
-                "default": {"class": "logging.StreamHandler", "formatter": "default"},
-            },
-            "root": {"level": settings.LOG_LEVEL, "handlers": ["default"]},
-        }
-    )
-
 
 app = FastAPI(title="Leechai API Server")
 
