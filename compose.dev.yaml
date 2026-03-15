@@ -14,6 +14,7 @@ services:
     command: ["nginx", "-g", "daemon off;"]
 
   apiserver:
+    image: leechaiapp/apiserver:dev
     build:
       context: ./apiserver
       target: final
