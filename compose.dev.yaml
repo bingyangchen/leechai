@@ -1,0 +1,46 @@
+services:
+  reverseproxy:
+    image: nginx:1.29.6-alpine-slim
+    volumes:
+      - ./reverseproxy/nginx.dev.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./reverseproxy/dev-cert.pem:/etc/ssl/certs/taigu.tw/cert.pem:ro
+      - ./reverseproxy/dev-key.pem:/etc/ssl/certs/taigu.tw/key.pem:ro
+    depends_on:
+      - apiserver
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    command: ["nginx", "-g", "daemon off;"]
+
+  apiserver:
+    build:
+      context: ./apiserver
+      target: final
+      args:
+        BUILDER_VARIANT: dev
+    volumes:
+      - ./apiserver:/app
+    env_file:
+      - .env
+    depends_on:
+      - db
+    restart: unless-stopped
+    command: ["python", "-c", "while True: pass"]
+
+  db:
+    image: postgres:18.1-alpine
+    volumes:
+      - db_data:/var/lib/postgresql
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: leechai
+      PGDATABASE: leechai
+      PGUSER: postgres
+      PGPASSWORD: password
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+
+volumes:
+  db_data:

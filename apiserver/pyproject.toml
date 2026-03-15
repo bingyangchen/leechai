@@ -1,0 +1,6 @@
+[project]
+name = "Leechai"
+version = "1.0.0"
+description = "Leechai API Server"
+requires-python = "==3.14.3"
+dependencies = []
