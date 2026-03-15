@@ -2,8 +2,10 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 
+from main.features.auth.dependencies import get_current_user
+from main.features.auth.models import User
 from main.features.auth.schema.requests import GoogleLoginRequest
-from main.features.auth.schema.responses import LoginResponse
+from main.features.auth.schema.responses import CurrentUserResponse, LoginResponse
 from main.features.auth.services import AuthService
 
 router = APIRouter()
@@ -25,4 +27,16 @@ async def google_login(
         display_name=user.name,
         email=user.email,
         avatar_url=user.avatar_url,
+    )
+
+
+@router.get("/me", response_model=CurrentUserResponse)
+async def get_me(
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> CurrentUserResponse:
+    return CurrentUserResponse(
+        user_id=str(current_user.id),
+        display_name=current_user.name,
+        email=current_user.email,
+        avatar_url=current_user.avatar_url,
     )

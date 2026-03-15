@@ -12,7 +12,7 @@ logging.config.dictConfig(
         "version": 1,
         "formatters": {
             "default": {
-                "format": "[%(levelname)s]%(asctime)s (%(name)s:%(lineno)d)\n%(message)s"  # noqa: E501
+                "format": "[%(levelname)s] %(asctime)s (%(name)s:%(lineno)d)\n%(message)s"  # noqa: E501
             },
             "sql": {
                 "format": "[SQL] %(asctime)s | %(message)s",
@@ -24,6 +24,7 @@ logging.config.dictConfig(
         },
         "root": {"level": settings.LOG_LEVEL, "handlers": ["default"]},
         "loggers": {
+            "uvicorn": {"propagate": False},
             "sqlalchemy.engine": {
                 "level": "INFO",
                 "handlers": ["sql"],

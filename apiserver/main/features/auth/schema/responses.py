@@ -7,3 +7,10 @@ class LoginResponse(BaseDataModel):
     display_name: str
     email: str
     avatar_url: str | None
+
+
+class CurrentUserResponse(BaseDataModel):
+    user_id: str
+    display_name: str
+    email: str
+    avatar_url: str | None
