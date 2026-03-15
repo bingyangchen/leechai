@@ -29,7 +29,10 @@ COPY . .
 FROM builder-${BUILDER_VARIANT} AS builder
 
 FROM base AS final
+ARG BUILDER_VARIANT
 ARG VENV_PATH
+RUN if [ "$BUILDER_VARIANT" = "dev" ]; then apt-get update && \
+    apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*; fi
 WORKDIR /app
 COPY --from=builder /usr/local/bin/uv /usr/local/bin/uv
 COPY --from=builder ${VENV_PATH} ${VENV_PATH}

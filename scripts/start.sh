@@ -21,7 +21,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-file_name="compose.$ENV.yaml"
+file_name="compose.$ENVIRONMENT.yaml"
 docker compose -f $file_name up -d --force-recreate
 
 if [ "$RECYCLE" = true ]; then

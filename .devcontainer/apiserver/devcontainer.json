@@ -8,7 +8,7 @@
   "image": "leechaiapp/apiserver:dev",
   "workspaceFolder": "/app",
   "mounts": [
-    "source=${localWorkspaceFolder}/apiserver,target=/app,type=bind,consistency=cached"
+    "source=${localWorkspaceFolder},target=/app,type=bind,consistency=cached"
   ],
   "shutdownAction": "stopContainer",
   "customizations": {
@@ -27,7 +27,7 @@
         "python.defaultInterpreterPath": "/venv/bin/python",
         "ruff.organizeImports": true,
         "ruff.settings": {
-          "config": "/app/ruff.toml"
+          "config": "/app/apiserver/ruff.toml"
         }
       },
       "extensions": [
