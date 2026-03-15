@@ -5,6 +5,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from main.config import settings
+from main.features.auth.routes import router as auth_router
 
 logging.config.dictConfig(
     {
@@ -39,6 +40,7 @@ logging.config.dictConfig(
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Leechai API Server")
+app.include_router(auth_router, prefix="/auth", tags=["auth"])
 
 
 @app.exception_handler(Exception)
@@ -47,11 +49,6 @@ async def unexpected_exception_handler(
 ) -> JSONResponse:
     logger.error(f"Unexpected error: {exc}")
     return JSONResponse(status_code=500, content={"detail": "Internal server error"})
-
-
-@app.get("/")
-def root():
-    return {"message": "ok"}
 
 
 @app.get("/health")

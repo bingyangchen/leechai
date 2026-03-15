@@ -5,7 +5,7 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from main.core.models import BaseModel
+from main.core.models import BaseDbModel
 from main.features.auth import models as auth_models  # noqa: F401
 
 config = context.config
@@ -17,7 +17,7 @@ if not database_url:
     raise RuntimeError("DATABASE_URL is not set")
 config.set_main_option("sqlalchemy.url", database_url)
 
-target_metadata = BaseModel.metadata
+target_metadata = BaseDbModel.metadata
 
 
 def run_migrations_offline() -> None:

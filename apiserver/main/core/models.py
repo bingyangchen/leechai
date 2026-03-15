@@ -6,7 +6,7 @@ from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.types import DateTime
 
 
-class Base(DeclarativeBase):
+class BaseDbModel(DeclarativeBase):
     type_annotation_map = {
         UUID: PG_UUID(as_uuid=True),
         datetime: DateTime(timezone=True),

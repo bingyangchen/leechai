@@ -8,14 +8,18 @@ class Settings(BaseSettings):
         env_file=".env", env_file_encoding="utf-8", case_sensitive=True
     )
 
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:password@db:5432/leechai"
+    DATABASE_URL: str
+    GOOGLE_CLIENT_ID: str
+    JWT_SECRET: str
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRE_SECONDS: int = 7 * 24 * 3600
     LOG_LEVEL: str = "INFO"
     SQL_LOG: bool = False
 
 
 @cache
 def get_settings() -> Settings:
-    return Settings()
+    return Settings()  # type: ignore
 
 
 settings = get_settings()
