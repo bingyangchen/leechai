@@ -1,0 +1,25 @@
+target-version = "py314"
+
+[lint]
+select = [
+    "B",  # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "DTZ", # flake8-datetimez
+    "E",  # pycodestyle-error
+    "F",  # Pyflakes
+    "FAST", # fastapi
+    "I",  # isort
+    "N",  # pep8-naming
+    "PIE", # flake8-pie
+    "S",  # flake8-bandit
+    "TID",  # flake8-tidy-imports
+    "T20",  # flake8-print
+    "UP",  # pyupgrade
+    "W",  # pycodestyle-warning
+]
+
+[lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[format]
+docstring-code-format = true

@@ -1,0 +1,41 @@
+{
+  "name": "API Server",
+  "runArgs": [
+    "--name=leechai-devcontainer-apiserver",
+    "--env-file",
+    ".env"
+  ],
+  "image": "leechaiapp/apiserver:dev",
+  "workspaceFolder": "/app",
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/app,type=bind,consistency=cached"
+  ],
+  "shutdownAction": "stopContainer",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "editor.formatOnSave": true,
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff",
+          "editor.codeActionsOnSave": {
+            "source.organizeImports": "always"
+          }
+        },
+        "files.insertFinalNewline": true,
+        "files.trimFinalNewlines": true,
+        "files.trimTrailingWhitespace": true,
+        "python.defaultInterpreterPath": "/venv/bin/python",
+        "ruff.organizeImports": true,
+        "ruff.settings": {
+          "config": "/app/apiserver/ruff.toml"
+        }
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "anysphere.cursorpyright",
+        "charliermarsh.ruff"
+      ]
+    }
+  }
+}
