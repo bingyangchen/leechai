@@ -1,7 +1,7 @@
 import 'package:mobile/features/profile/domain/achievement_definitions.dart';
 import 'package:sqflite/sqflite.dart';
 
-const _table = 'achievements';
+const _table = 'achievement';
 
 Future<void> run(Database db) async {
   await db.execute("""
