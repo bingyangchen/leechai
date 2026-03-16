@@ -24,14 +24,23 @@ logging.config.dictConfig(
         },
         "root": {"level": settings.LOG_LEVEL, "handlers": ["default"]},
         "loggers": {
-            "uvicorn": {"propagate": False},
+            "uvicorn": {
+                "level": settings.LOG_LEVEL,
+                "handlers": ["default"],
+                "propagate": False,
+            },
+            "uvicorn.access": {
+                "level": settings.LOG_LEVEL,
+                "handlers": ["default"],
+                "propagate": False,
+            },
             "sqlalchemy.engine": {
-                "level": "INFO",
+                "level": settings.LOG_LEVEL,
                 "handlers": ["sql"],
                 "propagate": False,
             },
             "sqlalchemy.pool": {
-                "level": "INFO",
+                "level": settings.LOG_LEVEL,
                 "handlers": ["sql"],
                 "propagate": False,
             },

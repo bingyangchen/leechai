@@ -161,12 +161,15 @@ class _UnauthenticatedViewState extends State<_UnauthenticatedView>
     } on AccountConflictException catch (conflict) {
       if (!mounted) return;
       await _showAccountConflictDialog(conflict);
-    } catch (_) {
+    } catch (error) {
       if (!mounted) return;
+      final message = error is Exception
+          ? error.toString().replaceFirst('Exception: ', '')
+          : error.toString();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '連結失敗，請稍後再試。',
+            message,
             style: Theme.of(context).snackBarTheme.contentTextStyle,
           ),
         ),

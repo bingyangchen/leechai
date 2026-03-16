@@ -22,14 +22,18 @@ class AuthService:
         settings: Annotated[Settings, Depends(get_settings)],
     ):
         self._db_session = db_session
-        self._google_client_id = settings.GOOGLE_CLIENT_ID
+        self._google_client_ids = [
+            settings.GOOGLE_WEB_CLIENT_ID,
+            settings.GOOGLE_IOS_CLIENT_ID,
+            settings.GOOGLE_ANDROID_CLIENT_ID,
+        ]
         self._jwt_secret = settings.JWT_SECRET
         self._jwt_algorithm = settings.JWT_ALGORITHM
         self._jwt_expire_seconds = settings.JWT_EXPIRE_SECONDS
 
     def _verify_google_id_token(self, token: str) -> dict[str, object]:
         id_info = id_token.verify_oauth2_token(
-            token, google_requests.Request(), self._google_client_id
+            token, google_requests.Request(), self._google_client_ids
         )
         return dict(id_info)
 
@@ -74,5 +78,5 @@ class AuthService:
             user = await self._get_or_create_user(
                 self._db_session, claims, OAuthProvider.GOOGLE
             )
-            token = self._create_access_token(user.id)
+        token = self._create_access_token(user.id)
         return user, token

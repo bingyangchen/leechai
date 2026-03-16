@@ -9,7 +9,9 @@ class Settings(BaseSettings):
     )
 
     DATABASE_URL: str
-    GOOGLE_CLIENT_ID: str
+    GOOGLE_WEB_CLIENT_ID: str
+    GOOGLE_IOS_CLIENT_ID: str
+    GOOGLE_ANDROID_CLIENT_ID: str
     JWT_SECRET: str
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_SECONDS: int = 7 * 24 * 3600

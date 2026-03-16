@@ -35,7 +35,7 @@ class AuthApi {
 
   Future<LoginResponse> loginWithGoogle(String idToken) async {
     final response = await _client.post(
-      '/login/google',
+      '/auth/login/google',
       body: jsonEncode({'idToken': idToken}),
     );
 
