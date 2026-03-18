@@ -9,7 +9,7 @@ class LoginResponse(BaseDataModel):
     avatar_url: str | None
 
 
-class CurrentUserResponse(BaseDataModel):
+class MeResponse(BaseDataModel):
     user_id: str
     display_name: str
     email: str
