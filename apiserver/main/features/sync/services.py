@@ -60,7 +60,6 @@ class SyncService:
         return changes, _utc_now()
 
     async def push(self, user_id: UUID, changes: Changes) -> datetime:
-        synced_at = _utc_now()
         async with self._db_session.begin():
             if entry_rows := changes.entry:
                 values = [{**r.model_dump(), "user_id": user_id} for r in entry_rows]
@@ -167,4 +166,4 @@ class SyncService:
                 )
                 await self._db_session.execute(statement)
 
-        return synced_at
+        return _utc_now()

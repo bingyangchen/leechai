@@ -35,9 +35,7 @@ async def get_current_user(
 
     try:
         payload = jwt_decode(
-            token,
-            settings.JWT_SECRET,
-            algorithms=[settings.JWT_ALGORITHM],
+            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
         )
     except InvalidTokenError:
         raise HTTPException(

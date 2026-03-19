@@ -52,7 +52,6 @@ class CloudSyncService {
     status.value = CloudSyncStatus.syncing;
     try {
       final db = await AppDatabase.database;
-
       final pullResponse = await _syncApi.pull(
         LastSyncRepository.lastSyncAt.value?.toUtc().toIso8601String(),
       );
