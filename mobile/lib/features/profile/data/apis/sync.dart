@@ -49,7 +49,7 @@ class SyncApi {
 
   Future<SyncPullResponse> pull(String? lastSyncedAt) async {
     final queryParameters = lastSyncedAt != null
-        ? <String, String>{'lastSyncedAt': lastSyncedAt}
+        ? <String, String>{'last_synced_at': lastSyncedAt}
         : null;
     final response = await _client.get('/sync/pull', queryParameters: queryParameters);
     if (response.statusCode == 200) {

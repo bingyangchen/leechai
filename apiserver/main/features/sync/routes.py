@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 
 from main.features.auth.dependencies import get_current_user
 from main.features.auth.models import User
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 async def pull(
     sync_service: Annotated[SyncService, Depends(SyncService)],
     user: Annotated[User, Depends(get_current_user)],
-    last_synced_at: Annotated[datetime | None, Query(alias="lastSyncedAt")] = None,
+    last_synced_at: datetime | None = None,
 ) -> SyncPullResponse:
     changes, synced_at = await sync_service.pull(
         user_id=user.id, last_synced_at=last_synced_at
