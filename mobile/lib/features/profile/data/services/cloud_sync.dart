@@ -84,6 +84,15 @@ class CloudSyncService {
     await LastSyncRepository.clear();
   }
 
+  static Map<String, Object?> _rowForSqlite(Map<String, dynamic> row) {
+    return row.map((key, value) {
+      if (value is bool) {
+        return MapEntry(key, value ? 1 : 0);
+      }
+      return MapEntry(key, value as Object?);
+    });
+  }
+
   Future<void> _mergePulledChanges(
     Database db,
     Map<String, List<Map<String, dynamic>>> changes,
@@ -98,21 +107,14 @@ class CloudSyncService {
         final whereArgs = primaryKey.map((col) => remoteRow[col]).toList();
         final locals = await db.query(table, where: whereClause, whereArgs: whereArgs);
 
+        final row = _rowForSqlite({...remoteRow, 'synced': 1});
         if (locals.isEmpty) {
-          await db.insert(table, {
-            ...remoteRow,
-            'synced': 1,
-          }, conflictAlgorithm: ConflictAlgorithm.replace);
+          await db.insert(table, row, conflictAlgorithm: ConflictAlgorithm.replace);
         } else {
           final localUpdatedAt = locals.first['updated_at'] as String;
           final remoteUpdatedAt = remoteRow['updated_at'] as String;
           if (DateTime.parse(remoteUpdatedAt).isAfter(DateTime.parse(localUpdatedAt))) {
-            await db.update(
-              table,
-              {...remoteRow, 'synced': 1},
-              where: whereClause,
-              whereArgs: whereArgs,
-            );
+            await db.update(table, row, where: whereClause, whereArgs: whereArgs);
           }
         }
       }
