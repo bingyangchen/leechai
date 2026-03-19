@@ -96,12 +96,12 @@ class _ProfilePageState extends State<ProfilePage> {
     const maxDays = 999;
     final start = now.subtract(const Duration(days: maxDays));
     final end = now;
-    final rows = await EntryRepository.getByDateRange(start, end);
+    final rows = await EntryRepository.getByCreatedAtDateRange(start, end);
     final activeDates = <DateTime>{};
     for (final row in rows) {
-      final occurredAt = row['occurred_at'];
-      if (occurredAt == null) continue;
-      final date = DateTime.parse(occurredAt as String).toLocal();
+      final createdAt = row['created_at'];
+      if (createdAt == null) continue;
+      final date = DateTime.parse(createdAt as String).toLocal();
       activeDates.add(DateTime(date.year, date.month, date.day));
     }
     final today = DateTime(now.year, now.month, now.day);

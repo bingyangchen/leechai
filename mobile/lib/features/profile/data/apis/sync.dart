@@ -15,7 +15,7 @@ class SyncPullResponse {
         "entry_tag": [{ "entry_id": "uuid-1", "tag_id": "uuid-3", "updated_at": "2024-03-14T00:00:00", "deleted_at": null, "synced": 1 }],
         "achievement": [{ "id": "first_entry", "progress": 1, "target": 1, "unlocked_at": "2024-03-14T00:00:00", "completed_count": 0, "progress_period": null, "is_notified": 0, "created_at": "2024-03-14T00:00:00", "updated_at": "2024-03-14T00:00:00", "synced": 1 }]
       },
-      "syncedAt": "2024-03-14T12:00:00Z"
+      "synced_at": "2024-03-14T12:00:00Z"
     }
     */
     final rawChanges = json['changes'] as Map<String, dynamic>;
@@ -25,7 +25,7 @@ class SyncPullResponse {
           .map((e) => Map<String, dynamic>.from(e as Map))
           .toList();
     }
-    return SyncPullResponse(changes: changes, syncedAt: json['syncedAt'] as String);
+    return SyncPullResponse(changes: changes, syncedAt: json['synced_at'] as String);
   }
 
   final Map<String, List<Map<String, dynamic>>> changes;
@@ -36,7 +36,7 @@ class SyncPushResponse {
   const SyncPushResponse({required this.syncedAt});
 
   factory SyncPushResponse.fromJson(Map<String, dynamic> json) {
-    return SyncPushResponse(syncedAt: json['syncedAt'] as String);
+    return SyncPushResponse(syncedAt: json['synced_at'] as String);
   }
 
   final String syncedAt;
@@ -49,7 +49,7 @@ class SyncApi {
 
   Future<SyncPullResponse> pull(String? lastSyncedAt) async {
     final queryParameters = lastSyncedAt != null
-        ? <String, String>{'lastSyncedAt': lastSyncedAt}
+        ? <String, String>{'last_synced_at': lastSyncedAt}
         : null;
     final response = await _client.get('/sync/pull', queryParameters: queryParameters);
     if (response.statusCode == 200) {
@@ -61,9 +61,15 @@ class SyncApi {
   }
 
   Future<SyncPushResponse> push(Map<String, List<Map<String, dynamic>>> changes) async {
+    final sanitizedChanges = <String, List<Map<String, dynamic>>>{};
+    for (final entry in changes.entries) {
+      sanitizedChanges[entry.key] = entry.value
+          .map((row) => Map<String, dynamic>.from(row)..remove('synced'))
+          .toList();
+    }
     final response = await _client.post(
       '/sync/push',
-      body: jsonEncode({'changes': changes}),
+      body: jsonEncode(sanitizedChanges),
     );
     if (response.statusCode == 200) {
       return SyncPushResponse.fromJson(

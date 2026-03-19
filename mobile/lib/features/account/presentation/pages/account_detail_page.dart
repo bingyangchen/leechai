@@ -116,7 +116,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
 
     final accountId = data.account.id;
 
-    final occurredAt = DateTime.now();
+    final now = DateTime.now();
     if (diff > 0) {
       await EntryRepository.insert(
         type: EntryType.adjustment.name,
@@ -125,7 +125,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
         amount: diff,
         tagIds: [],
         memo: '市值更新',
-        occurredAt: occurredAt,
+        occurredAt: now,
       );
     } else {
       await EntryRepository.insert(
@@ -135,12 +135,12 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
         amount: -diff,
         tagIds: [],
         memo: '市值更新',
-        occurredAt: occurredAt,
+        occurredAt: now,
       );
     }
     await AchievementService.evaluateAfterEntryInserted(
       type: EntryType.adjustment.name,
-      occurredAt: occurredAt,
+      occurredAt: now,
       tagIds: [],
       amount: diff.abs(),
     );

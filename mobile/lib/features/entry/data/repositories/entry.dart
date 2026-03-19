@@ -63,7 +63,7 @@ class EntryRepository {
     );
   }
 
-  static Future<List<Map<String, Object?>>> getByDateRange(
+  static Future<List<Map<String, Object?>>> getByOccurredAtDateRange(
     DateTime start,
     DateTime end,
   ) async {
@@ -75,6 +75,21 @@ class EntryRepository {
       where: 'deleted_at IS NULL AND occurred_at >= ? AND occurred_at <= ?',
       whereArgs: [startStr, endStr],
       orderBy: 'occurred_at ASC',
+    );
+  }
+
+  static Future<List<Map<String, Object?>>> getByCreatedAtDateRange(
+    DateTime start,
+    DateTime end,
+  ) async {
+    final db = await AppDatabase.database;
+    final startStr = start.toUtc().toIso8601String();
+    final endStr = end.toUtc().toIso8601String();
+    return db.query(
+      _table,
+      where: 'deleted_at IS NULL AND created_at >= ? AND created_at <= ?',
+      whereArgs: [startStr, endStr],
+      orderBy: 'created_at ASC',
     );
   }
 
@@ -122,6 +137,7 @@ class EntryRepository {
     final row = rows.single;
     final tagIds = await getTagIdsForEntry(entryId);
     final newId = _uuid.v4();
+    final now = DateTime.now().toUtc().toIso8601String();
     await db.insert(_table, {
       'id': newId,
       'type': row['type'],
@@ -130,9 +146,15 @@ class EntryRepository {
       'amount': row['amount'],
       'memo': row['memo'],
       'occurred_at': occurredAt.toUtc().toIso8601String(),
+      'created_at': now,
+      'updated_at': now,
     });
     for (final tagId in tagIds) {
-      await db.insert(_entryTagTable, {'entry_id': newId, 'tag_id': tagId});
+      await db.insert(_entryTagTable, {
+        'entry_id': newId,
+        'tag_id': tagId,
+        'updated_at': now,
+      });
     }
     return newId;
   }
@@ -195,6 +217,7 @@ class EntryRepository {
       await db.insert(_entryTagTable, {
         'entry_id': id,
         'tag_id': tagId,
+        'updated_at': now,
       }, conflictAlgorithm: ConflictAlgorithm.replace);
     }
   }
@@ -210,6 +233,7 @@ class EntryRepository {
   }) async {
     final db = await AppDatabase.database;
     final id = _uuid.v4();
+    final now = DateTime.now().toUtc().toIso8601String();
     await db.insert(_table, {
       'id': id,
       'type': type,
@@ -218,9 +242,15 @@ class EntryRepository {
       'amount': amount,
       'memo': memo,
       'occurred_at': occurredAt.toUtc().toIso8601String(),
+      'created_at': now,
+      'updated_at': now,
     });
     for (final tagId in tagIds) {
-      await db.insert(_entryTagTable, {'entry_id': id, 'tag_id': tagId});
+      await db.insert(_entryTagTable, {
+        'entry_id': id,
+        'tag_id': tagId,
+        'updated_at': now,
+      });
     }
   }
 }

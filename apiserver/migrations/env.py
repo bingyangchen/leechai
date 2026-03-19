@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 from main.core.models import BaseDbModel
 from main.features.auth import models as auth_models  # noqa: F401
+from main.features.sync import models as sync_models  # noqa: F401
 
 config = context.config
 if config.config_file_name is not None:

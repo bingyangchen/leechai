@@ -239,7 +239,7 @@ class AchievementService {
       final sun = sat.add(const Duration(days: 1));
       final start = DateTime(sat.year, sat.month, sat.day);
       final end = DateTime(sun.year, sun.month, sun.day, 23, 59, 59, 999);
-      final entries = await EntryRepository.getByDateRange(start, end);
+      final entries = await EntryRepository.getByCreatedAtDateRange(start, end);
       if (entries.isEmpty) {
         allHaveEntry = false;
         break;
@@ -267,11 +267,11 @@ class AchievementService {
     final now = DateTime.now();
     final end = DateTime(now.year, now.month, now.day, 23, 59, 59, 999);
     final start = end.subtract(const Duration(days: 100));
-    final entries = await EntryRepository.getByDateRange(start, end);
+    final entries = await EntryRepository.getByCreatedAtDateRange(start, end);
     final dates =
         entries
             .map((e) {
-              final v = e['occurred_at'];
+              final v = e['created_at'];
               if (v == null) return null;
               final dt = DateTime.parse(v as String).toLocal();
               return DateTime(dt.year, dt.month, dt.day);

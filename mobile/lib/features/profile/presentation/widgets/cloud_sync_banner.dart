@@ -134,7 +134,7 @@ class _AuthenticatedBanner extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          user.email,
+                          user.displayName,
                           style: textStyles.titleEmphasis.copyWith(
                             color: colorScheme.onSurface,
                           ),

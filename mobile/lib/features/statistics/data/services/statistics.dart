@@ -33,7 +33,7 @@ class StatisticsService {
     DateTime end,
     bool isExpense,
   ) async {
-    final entries = await EntryRepository.getByDateRange(start, end);
+    final entries = await EntryRepository.getByOccurredAtDateRange(start, end);
     final allAccounts = <String, Account>{};
     for (final a in await AccountRepository.getAll()) {
       allAccounts[a.id] = a;
@@ -146,7 +146,10 @@ class StatisticsService {
   ) async {
     final rangeStart = DateTime(rangeEnd.year, rangeEnd.month - 11, 1);
     final endOfRange = DateTime(rangeEnd.year, rangeEnd.month + 1, 0, 23, 59, 59, 999);
-    final entries = await EntryRepository.getByDateRange(rangeStart, endOfRange);
+    final entries = await EntryRepository.getByOccurredAtDateRange(
+      rangeStart,
+      endOfRange,
+    );
     final allAccounts = <String, Account>{};
     for (final a in await AccountRepository.getAll()) {
       allAccounts[a.id] = a;
@@ -209,7 +212,7 @@ class StatisticsService {
     DateTime start,
     DateTime end,
   ) async {
-    final entries = await EntryRepository.getByDateRange(start, end);
+    final entries = await EntryRepository.getByOccurredAtDateRange(start, end);
     double expense = 0;
     double income = 0;
     for (final e in entries) {

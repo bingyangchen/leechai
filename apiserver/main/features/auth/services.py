@@ -22,14 +22,18 @@ class AuthService:
         settings: Annotated[Settings, Depends(get_settings)],
     ):
         self._db_session = db_session
-        self._google_client_id = settings.GOOGLE_CLIENT_ID
+        self._google_client_ids = [
+            settings.GOOGLE_WEB_CLIENT_ID,
+            settings.GOOGLE_IOS_CLIENT_ID,
+            settings.GOOGLE_ANDROID_CLIENT_ID,
+        ]
         self._jwt_secret = settings.JWT_SECRET
         self._jwt_algorithm = settings.JWT_ALGORITHM
         self._jwt_expire_seconds = settings.JWT_EXPIRE_SECONDS
 
     def _verify_google_id_token(self, token: str) -> dict[str, object]:
         id_info = id_token.verify_oauth2_token(
-            token, google_requests.Request(), self._google_client_id
+            token, google_requests.Request(), self._google_client_ids
         )
         return dict(id_info)
 
@@ -41,38 +45,34 @@ class AuthService:
         }
         return jwt_encode(payload, self._jwt_secret, algorithm=self._jwt_algorithm)
 
-    async def _get_or_create_user(
-        self, db_session: AsyncSession, claims: dict, provider: str
-    ) -> User:
+    async def _get_or_create_user(self, claims: dict, provider: str) -> User:
         oauth_sub = claims["sub"]
         statement = select(User).where(
             User.oauth_provider == provider, User.oauth_sub == oauth_sub
         )
-        result = await db_session.execute(statement)
-        user = result.scalar_one_or_none()
-        if user is not None:
-            return user
+        async with self._db_session.begin():
+            result = await self._db_session.execute(statement)
+            user = result.scalar_one_or_none()
+            if user is not None:
+                return user
 
-        email = claims.get("email") or ""
-        name = claims.get("name") or email or "User"
-        picture = claims.get("picture")
-        user = User(
-            email=email,
-            oauth_provider=provider,
-            oauth_sub=oauth_sub,
-            name=name,
-            avatar_url=picture,
-        )
-        db_session.add(user)
-        await db_session.flush()
-        await db_session.refresh(user)
+            email = claims.get("email") or ""
+            name = claims.get("name") or email or "User"
+            picture = claims.get("picture")
+            user = User(
+                email=email,
+                oauth_provider=provider,
+                oauth_sub=oauth_sub,
+                name=name,
+                avatar_url=picture,
+            )
+            self._db_session.add(user)
+            await self._db_session.flush()
+            await self._db_session.refresh(user)
         return user
 
     async def login_with_google(self, id_token: str) -> tuple[User, str]:
         claims = self._verify_google_id_token(id_token)
-        async with self._db_session.begin():
-            user = await self._get_or_create_user(
-                self._db_session, claims, OAuthProvider.GOOGLE
-            )
-            token = self._create_access_token(user.id)
+        user = await self._get_or_create_user(claims, OAuthProvider.GOOGLE)
+        token = self._create_access_token(user.id)
         return user, token

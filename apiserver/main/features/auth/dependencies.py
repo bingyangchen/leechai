@@ -35,9 +35,7 @@ async def get_current_user(
 
     try:
         payload = jwt_decode(
-            token,
-            settings.JWT_SECRET,
-            algorithms=[settings.JWT_ALGORITHM],
+            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
         )
     except InvalidTokenError:
         raise HTTPException(
@@ -66,5 +64,5 @@ async def get_current_user(
             status_code=401,
             detail="User not found",
             headers={"WWW-Authenticate": "Bearer"},
-        ) from None
+        )
     return user

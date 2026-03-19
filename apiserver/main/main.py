@@ -6,10 +6,12 @@ from fastapi.responses import JSONResponse
 
 from main.config import settings
 from main.features.auth.routes import router as auth_router
+from main.features.sync.routes import router as sync_router
 
 logging.config.dictConfig(
     {
         "version": 1,
+        "disable_existing_loggers": False,
         "formatters": {
             "default": {
                 "format": "[%(levelname)s] %(asctime)s (%(name)s:%(lineno)d)\n%(message)s"  # noqa: E501
@@ -24,14 +26,23 @@ logging.config.dictConfig(
         },
         "root": {"level": settings.LOG_LEVEL, "handlers": ["default"]},
         "loggers": {
-            "uvicorn": {"propagate": False},
+            "uvicorn": {
+                "level": settings.LOG_LEVEL,
+                "handlers": ["default"],
+                "propagate": False,
+            },
+            "uvicorn.access": {
+                "level": settings.LOG_LEVEL,
+                "handlers": ["default"],
+                "propagate": False,
+            },
             "sqlalchemy.engine": {
-                "level": "INFO",
+                "level": settings.LOG_LEVEL,
                 "handlers": ["sql"],
                 "propagate": False,
             },
             "sqlalchemy.pool": {
-                "level": "INFO",
+                "level": settings.LOG_LEVEL,
                 "handlers": ["sql"],
                 "propagate": False,
             },
@@ -42,6 +53,7 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Leechai API Server")
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
+app.include_router(sync_router, prefix="/sync", tags=["sync"])
 
 
 @app.exception_handler(Exception)

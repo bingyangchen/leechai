@@ -14,10 +14,10 @@ class LoginResponse {
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
     return LoginResponse(
       token: json['token'] as String,
-      userId: json['userId'] as String,
-      displayName: json['displayName'] as String,
+      userId: json['user_id'] as String,
+      displayName: json['display_name'] as String,
       email: json['email'] as String,
-      avatarUrl: json['avatarUrl'] as String?,
+      avatarUrl: json['avatar_url'] as String?,
     );
   }
 
@@ -35,8 +35,8 @@ class AuthApi {
 
   Future<LoginResponse> loginWithGoogle(String idToken) async {
     final response = await _client.post(
-      '/login/google',
-      body: jsonEncode({'idToken': idToken}),
+      '/auth/login/google',
+      body: jsonEncode({'id_token': idToken}),
     );
 
     if (response.statusCode == 200) {
