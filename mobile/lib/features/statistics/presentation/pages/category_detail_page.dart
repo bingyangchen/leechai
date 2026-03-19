@@ -49,7 +49,7 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> {
       widget.dateRange.end,
     );
 
-    final entries = await EntryRepository.getByDateRange(
+    final entries = await EntryRepository.getByOccurredAtDateRange(
       widget.dateRange.start,
       widget.dateRange.end,
     );

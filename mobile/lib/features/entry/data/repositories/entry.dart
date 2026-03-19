@@ -63,7 +63,7 @@ class EntryRepository {
     );
   }
 
-  static Future<List<Map<String, Object?>>> getByDateRange(
+  static Future<List<Map<String, Object?>>> getByOccurredAtDateRange(
     DateTime start,
     DateTime end,
   ) async {
@@ -75,6 +75,21 @@ class EntryRepository {
       where: 'deleted_at IS NULL AND occurred_at >= ? AND occurred_at <= ?',
       whereArgs: [startStr, endStr],
       orderBy: 'occurred_at ASC',
+    );
+  }
+
+  static Future<List<Map<String, Object?>>> getByCreatedAtDateRange(
+    DateTime start,
+    DateTime end,
+  ) async {
+    final db = await AppDatabase.database;
+    final startStr = start.toUtc().toIso8601String();
+    final endStr = end.toUtc().toIso8601String();
+    return db.query(
+      _table,
+      where: 'deleted_at IS NULL AND created_at >= ? AND created_at <= ?',
+      whereArgs: [startStr, endStr],
+      orderBy: 'created_at ASC',
     );
   }
 
