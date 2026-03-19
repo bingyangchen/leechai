@@ -22,6 +22,7 @@ Future<void> run(Database db) async {
 }
 
 Future<void> seedDefaults(Database db) async {
+  final now = DateTime.now().toUtc().toIso8601String();
   // Assets
   await db.insert('account', {
     'id': 'default_cash',
@@ -29,6 +30,9 @@ Future<void> seedDefaults(Database db) async {
     'sub_type': 'cash',
     'name': '現金',
     'icon': Icons.wallet.codePoint.toString(),
+    'last_used_at': now,
+    'created_at': now,
+    'updated_at': now,
   }, conflictAlgorithm: ConflictAlgorithm.ignore);
   await db.insert('account', {
     'id': 'default_bank',
@@ -36,6 +40,9 @@ Future<void> seedDefaults(Database db) async {
     'sub_type': 'bank',
     'name': '銀行',
     'icon': Icons.account_balance.codePoint.toString(),
+    'last_used_at': now,
+    'created_at': now,
+    'updated_at': now,
   }, conflictAlgorithm: ConflictAlgorithm.ignore);
 
   // Liabilities
@@ -45,6 +52,9 @@ Future<void> seedDefaults(Database db) async {
     'sub_type': 'loan',
     'name': '貸款',
     'icon': Icons.credit_card.codePoint.toString(),
+    'last_used_at': now,
+    'created_at': now,
+    'updated_at': now,
   }, conflictAlgorithm: ConflictAlgorithm.ignore);
   await db.insert('account', {
     'id': 'default_credit_card',
@@ -52,6 +62,9 @@ Future<void> seedDefaults(Database db) async {
     'sub_type': 'creditCard',
     'name': '信用卡',
     'icon': Icons.credit_card.codePoint.toString(),
+    'last_used_at': now,
+    'created_at': now,
+    'updated_at': now,
   }, conflictAlgorithm: ConflictAlgorithm.ignore);
 
   // Expense
@@ -69,6 +82,9 @@ Future<void> seedDefaults(Database db) async {
       'type': 'expense',
       'sub_type': subType,
       'icon': icon,
+      'last_used_at': now,
+      'created_at': now,
+      'updated_at': now,
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
@@ -86,6 +102,9 @@ Future<void> seedDefaults(Database db) async {
       'type': 'income',
       'sub_type': subType,
       'icon': icon,
+      'last_used_at': now,
+      'created_at': now,
+      'updated_at': now,
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
@@ -96,5 +115,8 @@ Future<void> seedDefaults(Database db) async {
     'sub_type': 'unrealizedGain',
     'name': '未實現損益',
     'icon': Icons.balance.codePoint.toString(),
+    'last_used_at': now,
+    'created_at': now,
+    'updated_at': now,
   }, conflictAlgorithm: ConflictAlgorithm.ignore);
 }

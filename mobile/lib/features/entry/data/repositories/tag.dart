@@ -115,7 +115,13 @@ class TagRepository {
     if (existing.isNotEmpty) return existing.first['id'] as String;
 
     final id = _uuid.v4();
-    await db.insert(_table, {'id': id, 'title': trimmed});
+    final now = DateTime.now().toUtc().toIso8601String();
+    await db.insert(_table, {
+      'id': id,
+      'title': trimmed,
+      'created_at': now,
+      'updated_at': now,
+    });
     return id;
   }
 

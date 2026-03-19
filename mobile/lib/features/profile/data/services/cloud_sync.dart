@@ -106,7 +106,7 @@ class CloudSyncService {
         } else {
           final localUpdatedAt = locals.first['updated_at'] as String;
           final remoteUpdatedAt = remoteRow['updated_at'] as String;
-          if (remoteUpdatedAt.compareTo(localUpdatedAt) > 0) {
+          if (DateTime.parse(remoteUpdatedAt).isAfter(DateTime.parse(localUpdatedAt))) {
             await db.update(
               table,
               {...remoteRow, 'synced': 1},

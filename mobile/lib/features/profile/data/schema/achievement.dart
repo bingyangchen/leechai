@@ -22,16 +22,13 @@ Future<void> run(Database db) async {
 }
 
 Future<void> seedDefaults(Database db) async {
+  final now = DateTime.now().toUtc().toIso8601String();
   for (final def in achievementDefinitions) {
     await db.insert(_table, {
       'id': def.achievementId.key,
-      'progress': 0,
       'target': def.target,
-      'unlocked_at': null,
-      'completed_count': 0,
-      'progress_period': null,
-      'is_notified': 0,
-      'synced': 0,
+      'created_at': now,
+      'updated_at': now,
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 }

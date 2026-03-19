@@ -61,9 +61,15 @@ class SyncApi {
   }
 
   Future<SyncPushResponse> push(Map<String, List<Map<String, dynamic>>> changes) async {
+    final sanitizedChanges = <String, List<Map<String, dynamic>>>{};
+    for (final entry in changes.entries) {
+      sanitizedChanges[entry.key] = entry.value
+          .map((row) => Map<String, dynamic>.from(row)..remove('synced'))
+          .toList();
+    }
     final response = await _client.post(
       '/sync/push',
-      body: jsonEncode({'changes': changes}),
+      body: jsonEncode(sanitizedChanges),
     );
     if (response.statusCode == 200) {
       return SyncPushResponse.fromJson(

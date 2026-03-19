@@ -58,6 +58,7 @@ class AccountRepository {
   }) async {
     final db = await AppDatabase.database;
     final id = _uuid.v4();
+    final now = DateTime.now().toUtc().toIso8601String();
     await db.insert(_table, {
       'id': id,
       'type': type.name,
@@ -65,6 +66,9 @@ class AccountRepository {
       'name': name,
       'icon': icon != null ? iconToCodePoint(icon) : null,
       'initial_balance': initialBalance,
+      'last_used_at': now,
+      'created_at': now,
+      'updated_at': now,
     });
     return (await getById(id))!;
   }
