@@ -4,3 +4,5 @@
 !uv.lock
 
 !main/**/*.py
+!migrations/**/*.py
+!migrations/script.py.mako
