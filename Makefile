@@ -5,6 +5,18 @@ SHELL := /usr/bin/env bash
 build-dev:
 	$(SHELL) ./scripts/build.sh dev
 
+.PHONY: build-prod
+build-prod:
+	$(SHELL) ./scripts/build.sh prod
+
+.PHONY: push-images-dev
+push-images-dev:
+	$(SHELL) ./scripts/dev/push-images.sh dev
+
+.PHONY: push-images-prod
+push-images-prod:
+	$(SHELL) ./scripts/dev/push-images.sh prod
+
 .PHONY: start
 start:
 	$(SHELL) ./scripts/start.sh
