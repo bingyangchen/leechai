@@ -17,6 +17,14 @@ push-images-dev:
 push-images-prod:
 	$(SHELL) ./scripts/dev/push-images.sh prod
 
+.PHONY: pull-images-dev
+pull-images-dev:
+	$(SHELL) ./scripts/pull-images.sh dev
+
+.PHONY: pull-images-prod
+pull-images-prod:
+	$(SHELL) ./scripts/pull-images.sh prod
+
 .PHONY: start
 start:
 	$(SHELL) ./scripts/start.sh
@@ -44,3 +52,7 @@ shell-db:
 .PHONY: cert
 cert:
 	$(SHELL) ./scripts/dev/cert.sh
+
+.PHONY: deploy
+deploy:
+	$(SHELL) ./scripts/prod/deploy.sh
