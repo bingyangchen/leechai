@@ -105,7 +105,7 @@ class _AuthenticatedBanner extends StatelessWidget {
       case CloudSyncStatus.syncing:
         statusText = '同步中...';
       case CloudSyncStatus.offline:
-        statusText = '離線 / 未同步';
+        statusText = '離線／未同步';
     }
 
     return Padding(
