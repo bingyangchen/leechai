@@ -47,9 +47,9 @@ jobs:
         run: pip install --group dev
         working-directory: ./apiserver
       - name: Run Ruff lint
-        run: ruff check ./apiserver/ --config=./apiserver/ruff.toml --no-cache
+        run: ruff check ./apiserver/ --config=./apiserver/ruff.toml --no-cache --exclude apiserver/migrations
       - name: Run Ruff format
-        run: ruff format --check ./apiserver/ --config=./apiserver/ruff.toml
+        run: ruff format --check ./apiserver/ --config=./apiserver/ruff.toml --exclude apiserver/migrations
 
   lint-mobile:
     name: Lint mobile with Flutter Analyze
