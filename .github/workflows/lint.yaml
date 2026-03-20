@@ -44,7 +44,7 @@ jobs:
           cache: "pip"
           cache-dependency-path: "./apiserver/pyproject.toml"
       - name: Install backend dev dependencies
-        run: pip install ".[dev]"
+        run: pip install --group dev
         working-directory: ./apiserver
       - name: Run Ruff lint
         run: ruff check ./apiserver/ --config=./apiserver/ruff.toml --no-cache
