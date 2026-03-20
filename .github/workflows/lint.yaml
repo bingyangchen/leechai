@@ -1,0 +1,78 @@
+name: Lint
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  detect-changes:
+    name: Detect file changes
+    runs-on: ubuntu-24.04-arm
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      mobile: ${{ steps.filter.outputs.mobile }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - name: Check for backend changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'apiserver/**'
+            mobile:
+              - 'mobile/**'
+
+  lint-backend:
+    name: Lint Python with Ruff
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.backend == 'true' }}
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14.3"
+          cache: "pip"
+          cache-dependency-path: "./apiserver/pyproject.toml"
+      - name: Install backend dev dependencies
+        run: pip install ".[dev]"
+        working-directory: ./apiserver
+      - name: Run Ruff lint
+        run: ruff check ./apiserver/ --config=./apiserver/ruff.toml --no-cache
+      - name: Run Ruff format
+        run: ruff format --check ./apiserver/ --config=./apiserver/ruff.toml
+
+  lint-mobile:
+    name: Lint mobile with Flutter Analyze
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.mobile == 'true' }}
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Install dependencies
+        run: |
+          cd mobile
+          flutter pub get
+      - name: Check formatting
+        run: |
+          cd mobile
+          dart format --set-exit-if-changed .
+      - name: Run static analysis
+        run: |
+          cd mobile
+          flutter analyze
