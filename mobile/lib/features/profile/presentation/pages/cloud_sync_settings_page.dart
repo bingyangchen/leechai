@@ -537,7 +537,7 @@ class _SyncStatusPanel extends StatelessWidget {
         icon = Icons.cloud_upload_rounded;
         iconColor = colorScheme.primary;
       case CloudSyncStatus.offline:
-        title = '離線 / 未同步';
+        title = '離線／未同步';
         icon = Icons.cloud_off;
         iconColor = colorScheme.error;
     }
@@ -651,7 +651,7 @@ class _DisconnectSection extends StatelessWidget {
     );
     if (confirmed == true) {
       await AuthService.instance.signOut();
-      await CloudSyncService.instance.clearLastSyncAt();
+      await CloudSyncService.instance.invalidateLocalSyncState();
     }
   }
 }

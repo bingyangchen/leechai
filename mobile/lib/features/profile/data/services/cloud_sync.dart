@@ -79,8 +79,15 @@ class CloudSyncService {
     await sync();
   }
 
-  Future<void> clearLastSyncAt() async {
+  Future<void> invalidateLocalSyncState() async {
     await LastSyncRepository.clear();
+
+    final db = await AppDatabase.database;
+    final batch = db.batch();
+    for (final (:table, primaryKey: _) in _syncedTables) {
+      batch.update(table, {'synced': 0});
+    }
+    await batch.commit(noResult: true);
   }
 
   static Map<String, Object?> _rowForSqlite(Map<String, dynamic> row) {
