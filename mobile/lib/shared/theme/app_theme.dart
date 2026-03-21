@@ -78,6 +78,8 @@ class _ChartPaletteValues {
 class AppTheme {
   AppTheme._();
 
+  static const double topBarControlSlotHeight = 48;
+
   static TextTheme _textTheme(ColorScheme colorScheme, Brightness brightness) {
     final typography = Typography.material2021(colorScheme: colorScheme);
     return brightness == Brightness.light ? typography.black : typography.white;

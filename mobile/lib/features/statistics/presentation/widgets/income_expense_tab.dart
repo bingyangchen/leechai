@@ -9,10 +9,10 @@ import 'package:mobile/features/statistics/presentation/constants/category_color
 import 'package:mobile/features/statistics/presentation/pages/category_detail_page.dart';
 import 'package:mobile/features/statistics/presentation/widgets/category_donut_chart.dart';
 import 'package:mobile/features/statistics/presentation/widgets/category_ranking_tile.dart';
-import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/refresh_snap_back.dart';
 import 'package:mobile/shared/widgets/app_refresh_indicator.dart';
 import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
+import 'package:mobile/shared/widgets/sliding_segmented_control.dart';
 
 class IncomeExpenseTab extends StatefulWidget {
   const IncomeExpenseTab({
@@ -119,7 +119,7 @@ class _IncomeExpenseTabState extends State<IncomeExpenseTab> {
           ),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
               child: _buildSegmentedControl(context),
             ),
           ),
@@ -167,71 +167,15 @@ class _IncomeExpenseTabState extends State<IncomeExpenseTab> {
   }
 
   Widget _buildSegmentedControl(BuildContext context) {
-    final theme = Theme.of(context);
     final expenseColor = EntryTypeColors.forType(context, EntryType.expense);
     final incomeColor = EntryTypeColors.forType(context, EntryType.income);
 
-    return Container(
-      padding: const EdgeInsets.all(5),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          const margin = 4.0;
-          final segmentWidth = constraints.maxWidth / 2;
-          final indicatorLeft = margin + (_isExpense ? 0 : 1) * segmentWidth;
-
-          return Stack(
-            children: [
-              AnimatedPositioned(
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.easeInOutCubic,
-                left: indicatorLeft,
-                top: margin,
-                bottom: margin,
-                width: segmentWidth - margin * 2,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    borderRadius: BorderRadius.circular(8),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.shadow.withValues(alpha: 0.06),
-                        blurRadius: 4,
-                        offset: const Offset(0, 1),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: _SlidingSegmentOption(
-                      label: '支出',
-                      selected: _isExpense,
-                      activeColor: expenseColor,
-                      onTap: () => _onSegmentChanged(true),
-                    ),
-                  ),
-                  Expanded(
-                    child: _SlidingSegmentOption(
-                      label: '收入',
-                      selected: !_isExpense,
-                      activeColor: incomeColor,
-                      onTap: () => _onSegmentChanged(false),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          );
-        },
-      ),
+    return SlidingSegmentedControl(
+      segmentLabels: const ['支出', '收入'],
+      selectedIndex: _isExpense ? 0 : 1,
+      onSelected: (index) => _onSegmentChanged(index == 0),
+      thumbDecoration: slidingSegmentElevatedThumb(context),
+      selectedLabelColor: (index) => index == 0 ? expenseColor : incomeColor,
     );
   }
 
@@ -267,60 +211,6 @@ class _IncomeExpenseTabState extends State<IncomeExpenseTab> {
           },
         );
       },
-    );
-  }
-}
-
-class _SlidingSegmentOption extends StatefulWidget {
-  const _SlidingSegmentOption({
-    required this.label,
-    required this.selected,
-    required this.activeColor,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final Color activeColor;
-  final VoidCallback onTap;
-
-  @override
-  State<_SlidingSegmentOption> createState() => _SlidingSegmentOptionState();
-}
-
-class _SlidingSegmentOptionState extends State<_SlidingSegmentOption> {
-  bool _pressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final color = widget.selected
-        ? widget.activeColor
-        : theme.colorScheme.onSurfaceVariant;
-
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) => setState(() => _pressed = false),
-      onTapCancel: () => setState(() => _pressed = false),
-      onTap: widget.onTap,
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedScale(
-        scale: _pressed ? 0.95 : 1.0,
-        duration: const Duration(milliseconds: 120),
-        curve: Curves.easeInOut,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: AnimatedDefaultTextStyle(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeInOut,
-            style: theme.textStyles.sectionLabel.copyWith(
-              color: color,
-              fontWeight: widget.selected ? FontWeight.w600 : FontWeight.normal,
-            ),
-            child: Text(widget.label, textAlign: TextAlign.center),
-          ),
-        ),
-      ),
     );
   }
 }

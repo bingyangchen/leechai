@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/features/entry/presentation/widgets/month_picker.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
 import 'package:mobile/shared/widgets/date_time_picker_sheet.dart';
 
@@ -24,24 +25,30 @@ class JournalTopBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Row(
         children: [
-          MonthPicker(
-            month: selectedMonth,
-            onTap: () async {
-              final picked = await showAppBottomSheet<DateTime>(
-                context,
-                mode: AppBottomSheetMode.static,
-                builder: (ctx) => DateTimePickerSheet(
-                  initial: selectedMonth,
-                  monthOnly: true,
-                  onConfirm: (v, {fromDrag = false}) {
-                    if (fromDrag) onMonthSelected(v);
-                    if (!fromDrag) Navigator.of(ctx).pop(v);
-                  },
-                  onCancel: () => Navigator.of(ctx).pop(),
-                ),
-              );
-              if (picked != null) onMonthSelected(picked);
-            },
+          SizedBox(
+            height: AppTheme.topBarControlSlotHeight,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: MonthPicker(
+                month: selectedMonth,
+                onTap: () async {
+                  final picked = await showAppBottomSheet<DateTime>(
+                    context,
+                    mode: AppBottomSheetMode.static,
+                    builder: (ctx) => DateTimePickerSheet(
+                      initial: selectedMonth,
+                      monthOnly: true,
+                      onConfirm: (v, {fromDrag = false}) {
+                        if (fromDrag) onMonthSelected(v);
+                        if (!fromDrag) Navigator.of(ctx).pop(v);
+                      },
+                      onCancel: () => Navigator.of(ctx).pop(),
+                    ),
+                  );
+                  if (picked != null) onMonthSelected(picked);
+                },
+              ),
+            ),
           ),
           const Spacer(),
           IconButton(
@@ -53,7 +60,9 @@ class JournalTopBar extends StatelessWidget {
             ),
             icon: Icon(
               privacyMode ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-              color: theme.colorScheme.onSurface,
+              color: privacyMode
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurfaceVariant,
             ),
             onPressed: onPrivacyModeToggle,
             tooltip: privacyMode ? '關閉隱私模式' : '隱私模式',
