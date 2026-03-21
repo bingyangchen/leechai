@@ -35,17 +35,8 @@ async def get_current_user(
         payload = jwt_decode(
             token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
         )
-    except InvalidTokenError:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"},
-        ) from None
-
-    user_id_str = payload.get("sub")
-    try:
-        user_id = UUID(user_id_str)
-    except TypeError, ValueError:
+        user_id = UUID(payload.get("sub"))
+    except InvalidTokenError, TypeError, ValueError:
         raise HTTPException(
             status_code=401,
             detail="Invalid token",

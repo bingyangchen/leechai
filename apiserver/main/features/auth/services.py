@@ -1,3 +1,4 @@
+import asyncio
 import time
 from typing import Annotated
 from uuid import UUID
@@ -72,7 +73,7 @@ class AuthService:
         return user
 
     async def login_with_google(self, id_token: str) -> tuple[User, str]:
-        claims = self._verify_google_id_token(id_token)
+        claims = await asyncio.to_thread(self._verify_google_id_token, id_token)
         user = await self._get_or_create_user(claims, OAuthProvider.GOOGLE)
         token = self._create_access_token(user.id)
         return user, token
