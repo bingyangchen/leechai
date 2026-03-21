@@ -1,4 +1,7 @@
+import 'dart:ui' show lerpDouble;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:mobile/features/account/domain/account.dart';
 import 'package:mobile/features/entry/domain/entry_type.dart';
@@ -6,7 +9,7 @@ import 'package:mobile/features/entry/presentation/constants/entry_type_colors.d
 import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 
-class EntryRow extends StatelessWidget {
+class EntryRow extends StatefulWidget {
   const EntryRow({
     super.key,
     required this.entry,
@@ -28,17 +31,38 @@ class EntryRow extends StatelessWidget {
   final VoidCallback onCopy;
   final String? perspectiveAccountId;
 
+  static const double _actionPaneExtentRatio = 0.25;
+
+  @override
+  State<EntryRow> createState() => _EntryRowState();
+}
+
+class _EntryRowState extends State<EntryRow> with SingleTickerProviderStateMixin {
+  late final SlidableController _slidableController;
+
+  @override
+  void initState() {
+    super.initState();
+    _slidableController = SlidableController(this);
+  }
+
+  @override
+  void dispose() {
+    _slidableController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final typeStr = entry['type'] as String? ?? 'expense';
+    final typeStr = widget.entry['type'] as String? ?? 'expense';
     final type = EntryType.values.asNameMap()[typeStr] ?? EntryType.expense;
-    final amount = (entry['amount'] as num?)?.toDouble() ?? 0.0;
-    final memo = entry['memo'] as String?;
-    final debitId = entry['debit_account_id'] as String? ?? '';
-    final creditId = entry['credit_account_id'] as String? ?? '';
-    final debitAccount = accounts[debitId];
-    final creditAccount = accounts[creditId];
+    final amount = (widget.entry['amount'] as num?)?.toDouble() ?? 0.0;
+    final memo = widget.entry['memo'] as String?;
+    final debitId = widget.entry['debit_account_id'] as String? ?? '';
+    final creditId = widget.entry['credit_account_id'] as String? ?? '';
+    final debitAccount = widget.accounts[debitId];
+    final creditAccount = widget.accounts[creditId];
 
     String title;
     if (memo != null && memo.trim().isNotEmpty) {
@@ -49,16 +73,16 @@ class EntryRow extends StatelessWidget {
     }
 
     final accountLabel = _accountLabel(type, debitAccount, creditAccount);
-    final entryId = entry['id'] as String? ?? '';
-    final tagTitles = entryTagTitles[entryId] ?? [];
+    final entryId = widget.entry['id'] as String? ?? '';
+    final tagTitles = widget.entryTagTitles[entryId] ?? [];
 
-    final color = type == EntryType.adjustment && perspectiveAccountId != null
+    final color = type == EntryType.adjustment && widget.perspectiveAccountId != null
         ? EntryTypeColors.forAdjustment(
             context,
-            isGain: perspectiveAccountId == debitId,
+            isGain: widget.perspectiveAccountId == debitId,
           )
         : EntryTypeColors.forType(context, type);
-    final amountText = privacyMode
+    final amountText = widget.privacyMode
         ? '****'
         : (type == EntryType.income
               ? '+${formatAmountForDisplay(amount)}'
@@ -70,37 +94,40 @@ class EntryRow extends StatelessWidget {
 
     final showCopyAction = type != EntryType.adjustment;
     return Slidable(
-      key: ValueKey(entry['id']),
+      key: ValueKey(widget.entry['id']),
+      controller: _slidableController,
       endActionPane: ActionPane(
         motion: const DrawerMotion(),
-        extentRatio: 0.25,
+        extentRatio: EntryRow._actionPaneExtentRatio,
         children: [
-          SlidableAction(
-            onPressed: (_) => onDelete(),
+          _SlidableIconAction(
+            controller: _slidableController,
+            isStartPane: false,
+            icon: Icons.delete_outline,
             backgroundColor: theme.colorScheme.error,
             foregroundColor: theme.colorScheme.onError,
-            icon: Icons.delete_outline,
-            label: '刪除',
+            onPressed: widget.onDelete,
           ),
         ],
       ),
       startActionPane: showCopyAction
           ? ActionPane(
               motion: const DrawerMotion(),
-              extentRatio: 0.25,
+              extentRatio: EntryRow._actionPaneExtentRatio,
               children: [
-                SlidableAction(
-                  onPressed: (_) => onCopy(),
+                _SlidableIconAction(
+                  controller: _slidableController,
+                  isStartPane: true,
+                  icon: Icons.copy,
                   backgroundColor: theme.colorScheme.primaryContainer,
                   foregroundColor: theme.colorScheme.onPrimaryContainer,
-                  icon: Icons.copy,
-                  label: '複製',
+                  onPressed: widget.onCopy,
                 ),
               ],
             )
           : null,
       child: ListTile(
-        onTap: onTap,
+        onTap: widget.onTap,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         leading: Container(
           width: 44,
@@ -159,8 +186,12 @@ class EntryRow extends StatelessWidget {
   }
 
   String _adjustmentAmountText(double amount, String debitId, String creditId) {
-    if (perspectiveAccountId == debitId) return '+${formatAmountForDisplay(amount)}';
-    if (perspectiveAccountId == creditId) return '-${formatAmountForDisplay(amount)}';
+    if (widget.perspectiveAccountId == debitId) {
+      return '+${formatAmountForDisplay(amount)}';
+    }
+    if (widget.perspectiveAccountId == creditId) {
+      return '-${formatAmountForDisplay(amount)}';
+    }
     return formatAmountForDisplay(amount);
   }
 
@@ -214,5 +245,132 @@ class EntryRow extends StatelessWidget {
       case EntryType.adjustment:
         return null;
     }
+  }
+}
+
+class _SlidableIconAction extends StatefulWidget {
+  const _SlidableIconAction({
+    required this.controller,
+    required this.isStartPane,
+    required this.icon,
+    required this.backgroundColor,
+    required this.foregroundColor,
+    required this.onPressed,
+  });
+
+  final SlidableController controller;
+  final bool isStartPane;
+  final IconData icon;
+  final Color backgroundColor;
+  final Color foregroundColor;
+  final VoidCallback onPressed;
+
+  @override
+  State<_SlidableIconAction> createState() => _SlidableIconActionState();
+}
+
+class _SlidableIconActionState extends State<_SlidableIconAction>
+    with SingleTickerProviderStateMixin {
+  static const double _minIconSize = 16;
+  static const double _maxIconSize = 24;
+  static const double _iconOvershootCap = 1.15;
+  static const double _popTriggerProgress = 0.65;
+
+  late final AnimationController _popController;
+  late final CurvedAnimation _popCurved;
+  double? _previousProgress;
+
+  @override
+  void initState() {
+    super.initState();
+    _popController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _popCurved = CurvedAnimation(
+      parent: _popController,
+      curve: Curves.elasticOut,
+      reverseCurve: Curves.elasticIn,
+    );
+    _popController.addListener(_onPopTick);
+    widget.controller.animation.addListener(_onSlidableTick);
+  }
+
+  @override
+  void didUpdateWidget(covariant _SlidableIconAction oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller.animation.removeListener(_onSlidableTick);
+      widget.controller.animation.addListener(_onSlidableTick);
+      _previousProgress = null;
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.controller.animation.removeListener(_onSlidableTick);
+    _popController.removeListener(_onPopTick);
+    _popCurved.dispose();
+    _popController.dispose();
+    super.dispose();
+  }
+
+  void _onPopTick() {
+    if (mounted) setState(() {});
+  }
+
+  void _onSlidableTick() {
+    if (!mounted) return;
+    final progress = _progress();
+    final previous = _previousProgress;
+    if (previous != null) {
+      final expandThreshold = _popTriggerProgress;
+      final shrinkThreshold = 1.0 - _popTriggerProgress;
+      final crossedExpandUp = progress >= expandThreshold && previous < expandThreshold;
+      final crossedShrinkDown =
+          progress < shrinkThreshold && previous >= shrinkThreshold;
+      if (crossedExpandUp) {
+        HapticFeedback.lightImpact();
+        _popController.forward();
+      } else if (crossedShrinkDown) {
+        HapticFeedback.lightImpact();
+        _popController.reverse();
+      }
+    }
+    _previousProgress = progress;
+    setState(() {});
+  }
+
+  double _progress() {
+    if (widget.isStartPane) {
+      final ratio = widget.controller.ratio;
+      if (ratio <= 0) return 0;
+      final extent = widget.controller.startActionPaneExtentRatio;
+      if (extent <= 0) return 0;
+      return (ratio / extent).clamp(0.0, 1.0);
+    }
+    final ratio = widget.controller.ratio;
+    if (ratio >= 0) return 0;
+    final extent = widget.controller.endActionPaneExtentRatio;
+    if (extent <= 0) return 0;
+    return ((-ratio) / extent).clamp(0.0, 1.0);
+  }
+
+  double _iconSize() {
+    final u = _popCurved.value.clamp(0.0, _iconOvershootCap);
+    return lerpDouble(_minIconSize, _maxIconSize, u)!;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomSlidableAction(
+      onPressed: (_) => widget.onPressed(),
+      backgroundColor: widget.backgroundColor,
+      foregroundColor: widget.foregroundColor,
+      padding: EdgeInsets.zero,
+      child: Center(
+        child: Icon(widget.icon, size: _iconSize(), color: widget.foregroundColor),
+      ),
+    );
   }
 }
