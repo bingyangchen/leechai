@@ -289,16 +289,40 @@ class _DateTimePickerSheetState extends State<DateTimePickerSheet> {
     );
   }
 
+  void _animateWheelToIndex(FixedExtentScrollController controller, int targetIndex) {
+    void run() {
+      if (!controller.hasClients) return;
+      final from = controller.selectedItem;
+      if (targetIndex == from) return;
+      final delta = (targetIndex - from).abs();
+      final milliseconds = (140 + delta * 48).clamp(240, 720).round();
+      controller.animateToItem(
+        targetIndex,
+        duration: Duration(milliseconds: milliseconds),
+        curve: Curves.easeOutCubic,
+      );
+    }
+
+    if (controller.hasClients) {
+      run();
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        run();
+      });
+    }
+  }
+
   Widget _buildWheel<T>({
     required List<T> items,
     required T value,
     required String Function(T) format,
-    required ScrollController controller,
+    required FixedExtentScrollController controller,
     required ValueChanged<T> onChanged,
   }) {
     final theme = Theme.of(context);
-    final index = items.indexOf(value);
-    if (index < 0) return const SizedBox.shrink();
+    final selectedIndex = items.indexOf(value);
+    if (selectedIndex < 0) return const SizedBox.shrink();
     return ListWheelScrollView.useDelegate(
       controller: controller,
       itemExtent: _wheelItemHeight,
@@ -313,8 +337,18 @@ class _DateTimePickerSheetState extends State<DateTimePickerSheet> {
       childDelegate: ListWheelChildBuilderDelegate(
         childCount: items.length,
         builder: (context, i) {
-          return Center(
-            child: Text(format(items[i]), style: theme.textStyles.titleEmphasis),
+          return GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              final centered = controller.hasClients
+                  ? i == controller.selectedItem
+                  : i == selectedIndex;
+              if (centered) return;
+              _animateWheelToIndex(controller, i);
+            },
+            child: Center(
+              child: Text(format(items[i]), style: theme.textStyles.titleEmphasis),
+            ),
           );
         },
       ),
