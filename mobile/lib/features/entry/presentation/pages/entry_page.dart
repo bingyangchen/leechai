@@ -53,6 +53,8 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
   List<Account> _categoryIncomeAccounts = [];
   int _selectedExpenseCategoryIndex = 0;
   int _selectedIncomeCategoryIndex = 0;
+  bool _entryTypePageChangeHapticEnabled = false;
+  int? _previousEntryTypePageIndex;
 
   String? _originalAmountDisplay;
   DateTime? _originalDate;
@@ -113,6 +115,10 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadInitialData();
       if (!_isEditMode) _amountFocusNode.requestFocus();
+      if (!_isEditMode && mounted) {
+        _entryTypePageChangeHapticEnabled = true;
+        _previousEntryTypePageIndex = 0;
+      }
     });
   }
 
@@ -210,6 +216,11 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
     });
     _tabController.animateTo(typeIndex);
     _pageController.jumpToPage(typeIndex);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _entryTypePageChangeHapticEnabled = true;
+      _previousEntryTypePageIndex = typeIndex;
+    });
   }
 
   void _syncEntryTypeFromTab() {
@@ -224,6 +235,12 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
   }
 
   void _onPageChanged(int index) {
+    if (_entryTypePageChangeHapticEnabled &&
+        _previousEntryTypePageIndex != null &&
+        index != _previousEntryTypePageIndex) {
+      HapticFeedback.selectionClick();
+    }
+    _previousEntryTypePageIndex = index;
     if (_tabController.index != index) {
       _tabController.animateTo(index);
     }
