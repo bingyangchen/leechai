@@ -6,10 +6,8 @@ import 'package:mobile/core/auth/auth_session_events.dart';
 import 'package:mobile/features/auth/data/repositories/auth.dart';
 
 class ApiClient {
-  ApiClient({
-    this.baseUrl = 'https://b2e1-1-161-12-66.ngrok-free.app',
-    http.Client? httpClient,
-  }) : _httpClient = httpClient ?? http.Client();
+  ApiClient({this.baseUrl = 'https://api.leechai.app', http.Client? httpClient})
+    : _httpClient = httpClient ?? http.Client();
 
   final String baseUrl;
   final http.Client _httpClient;
