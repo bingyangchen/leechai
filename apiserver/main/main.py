@@ -4,7 +4,7 @@ import logging.config
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from main.config import settings
+from main.config import Environment, settings
 from main.features.auth.routes import router as auth_router
 from main.features.sync.routes import router as sync_router
 
@@ -51,7 +51,13 @@ logging.config.dictConfig(
 )
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Leechai API Server")
+_openapi_public = settings.ENVIRONMENT != Environment.production
+app = FastAPI(
+    title="Leechai API Server",
+    docs_url="/docs" if _openapi_public else None,
+    redoc_url="/redoc" if _openapi_public else None,
+    openapi_url="/openapi.json" if _openapi_public else None,
+)
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
 app.include_router(sync_router, prefix="/sync", tags=["sync"])
 

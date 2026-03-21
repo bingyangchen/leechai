@@ -1,7 +1,8 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import Depends, Header, HTTPException
+from fastapi import Depends, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import InvalidTokenError
 from jwt import decode as jwt_decode
 from sqlalchemy import select
@@ -11,21 +12,18 @@ from main.config import Settings, get_settings
 from main.core.db import get_session
 from main.features.auth.models import User
 
-
-def _extract_bearer_token(authorization: str | None) -> str | None:
-    if not authorization or not authorization.strip():
-        return None
-    if not authorization.strip().lower().startswith("bearer "):
-        return None
-    return authorization.strip()[7:].strip() or None
+bearer_scheme = HTTPBearer(auto_error=False)
 
 
 async def get_current_user(
     db_session: Annotated[AsyncSession, Depends(get_session)],
     settings: Annotated[Settings, Depends(get_settings)],
-    authorization: Annotated[str | None, Header(alias="Authorization")] = None,
+    credentials: Annotated[
+        HTTPAuthorizationCredentials | None,
+        Depends(bearer_scheme),
+    ],
 ) -> User:
-    token = _extract_bearer_token(authorization)
+    token = credentials.credentials.strip() if credentials else None
     if not token:
         raise HTTPException(
             status_code=401,
@@ -37,17 +35,10 @@ async def get_current_user(
         payload = jwt_decode(
             token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
         )
-    except InvalidTokenError:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"},
-        ) from None
-
-    user_id_str = payload.get("sub")
-    try:
-        user_id = UUID(user_id_str)
-    except TypeError, ValueError:
+        if payload.get("token_type") != "access":
+            raise InvalidTokenError("wrong token type")
+        user_id = UUID(payload.get("sub"))
+    except InvalidTokenError, TypeError, ValueError:
         raise HTTPException(
             status_code=401,
             detail="Invalid token",

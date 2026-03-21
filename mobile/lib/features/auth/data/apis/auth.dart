@@ -4,7 +4,8 @@ import 'package:mobile/core/network/api_client.dart';
 
 class LoginResponse {
   const LoginResponse({
-    required this.token,
+    required this.accessToken,
+    required this.refreshToken,
     required this.userId,
     required this.displayName,
     required this.email,
@@ -13,7 +14,8 @@ class LoginResponse {
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
     return LoginResponse(
-      token: json['token'] as String,
+      accessToken: json['access_token'] as String,
+      refreshToken: json['refresh_token'] as String,
       userId: json['user_id'] as String,
       displayName: json['display_name'] as String,
       email: json['email'] as String,
@@ -21,7 +23,8 @@ class LoginResponse {
     );
   }
 
-  final String token;
+  final String accessToken;
+  final String refreshToken;
   final String userId;
   final String displayName;
   final String email;
@@ -34,8 +37,8 @@ class AuthApi {
   final ApiClient _client;
 
   Future<LoginResponse> loginWithGoogle(String idToken) async {
-    final response = await _client.post(
-      '/auth/login/google',
+    final response = await _client.postAnonymous(
+      path: '/auth/login/google',
       body: jsonEncode({'id_token': idToken}),
     );
 
@@ -45,5 +48,12 @@ class AuthApi {
     } else {
       throw Exception('後端登入失敗: ${response.statusCode}');
     }
+  }
+
+  Future<void> logout(String refreshToken) async {
+    await _client.postAnonymous(
+      path: '/auth/logout',
+      body: jsonEncode({'refresh_token': refreshToken}),
+    );
   }
 }

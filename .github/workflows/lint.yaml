@@ -55,7 +55,8 @@ jobs:
     name: Lint mobile with Flutter Analyze
     needs: detect-changes
     if: ${{ needs.detect-changes.outputs.mobile == 'true' }}
-    runs-on: ubuntu-24.04-arm
+    # flutter-action cannot resolve stable on Linux arm64 (subosito/flutter-action#345).
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
