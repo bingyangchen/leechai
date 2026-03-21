@@ -10,6 +10,7 @@ import 'package:mobile/features/profile/presentation/pages/notification_settings
 import 'package:mobile/features/tag/presentation/pages/tag_management_page.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/theme/theme_mode_scope.dart';
+import 'package:mobile/shared/utils/snackbar.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -138,7 +139,7 @@ class ProfileSettingsSection extends StatelessWidget {
     );
     if (!hasNetwork) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('請檢查網路連線後再試')));
+      showReplacingSnackBar(context, SnackBar(content: Text('請檢查網路連線後再試')));
       return;
     }
     if (!context.mounted) return;
@@ -235,7 +236,8 @@ class ProfileSettingsSection extends StatelessWidget {
       await inAppReview.requestReview();
       if (!context.mounted) return;
       final theme = Theme.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
+      showReplacingSnackBar(
+        context,
         SnackBar(
           persist: false,
           content: Text(
@@ -294,15 +296,11 @@ App 版本：${packageInfo.version} (${packageInfo.buildNumber})
       );
       final launched = await launchUrl(uri);
       if (!launched && context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('目前無法開啟郵件，請稍後再試')));
+        showReplacingSnackBar(context, SnackBar(content: Text('目前無法開啟郵件，請稍後再試')));
       }
     } catch (_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('目前無法開啟郵件，請稍後再試')));
+        showReplacingSnackBar(context, SnackBar(content: Text('目前無法開啟郵件，請稍後再試')));
       }
     }
   }
@@ -313,7 +311,8 @@ App 版本：${packageInfo.version} (${packageInfo.buildNumber})
       final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
       if (!launched && context.mounted) {
         final theme = Theme.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
+        showReplacingSnackBar(
+          context,
           SnackBar(
             content: Text(
               '目前無法開啟連結，請稍後再試',
@@ -326,7 +325,8 @@ App 版本：${packageInfo.version} (${packageInfo.buildNumber})
     } catch (_) {
       if (context.mounted) {
         final theme = Theme.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
+        showReplacingSnackBar(
+          context,
           SnackBar(
             content: Text(
               '目前無法開啟連結，請稍後再試',

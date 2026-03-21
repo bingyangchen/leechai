@@ -7,6 +7,7 @@ import 'package:mobile/features/profile/domain/profile_page_data.dart';
 import 'package:mobile/features/profile/presentation/widgets/user_stats_card_back.dart';
 import 'package:mobile/features/profile/presentation/widgets/user_stats_card_front.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
+import 'package:mobile/shared/utils/snackbar.dart';
 import 'package:screen_brightness/screen_brightness.dart';
 
 class UserStatsCard extends StatefulWidget {
@@ -377,7 +378,8 @@ class _UserStatsCardState extends State<UserStatsCard>
     }
     if (!_carrierRegex.hasMatch(trimmed)) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        showReplacingSnackBar(
+          context,
           const SnackBar(content: Text('請輸入正確格式：/ 開頭加 7 碼（大寫英文、數字或 + - .）')),
         );
       }

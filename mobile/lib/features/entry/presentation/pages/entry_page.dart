@@ -18,6 +18,7 @@ import 'package:mobile/features/entry/presentation/widgets/date_chip_row.dart';
 import 'package:mobile/features/entry/presentation/widgets/notes_section.dart';
 import 'package:mobile/features/entry/presentation/widgets/tags_section.dart';
 import 'package:mobile/features/profile/data/services/achievement.dart';
+import 'package:mobile/shared/utils/snackbar.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
 import 'package:mobile/shared/widgets/confirm_delete_dialog.dart';
@@ -140,7 +141,8 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         final theme = Theme.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
+        showReplacingSnackBar(
+          context,
           SnackBar(
             content: Text('這是系統自動調整的紀錄，無法編輯唷！'),
             backgroundColor: theme.colorScheme.error,
@@ -426,7 +428,8 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
     if (accounts == null) {
       if (mounted) {
         final theme = Theme.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
+        showReplacingSnackBar(
+          context,
           SnackBar(
             content: Text('記得選擇帳戶與分類唷！'),
             backgroundColor: theme.colorScheme.error,

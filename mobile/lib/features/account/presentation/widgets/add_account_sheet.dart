@@ -8,6 +8,7 @@ import 'package:mobile/features/account/domain/liability_type.dart';
 import 'package:mobile/features/profile/data/services/achievement.dart';
 import 'package:mobile/shared/scopes/data_refresh.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
+import 'package:mobile/shared/utils/snackbar.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
 import 'package:mobile/shared/widgets/discard_changes_dialog.dart';
@@ -221,7 +222,8 @@ class _AddAccountFormState extends State<_AddAccountForm> {
     widget.onSuccess();
     if (!context.mounted) return;
     DataRefreshScope.notify(context);
-    ScaffoldMessenger.of(context).showSnackBar(
+    showReplacingSnackBar(
+      context,
       SnackBar(
         content: Text(_isEdit ? '帳戶更新成功！' : '帳戶建立成功！'),
         duration: Duration(milliseconds: 1500),

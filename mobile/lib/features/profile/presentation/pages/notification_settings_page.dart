@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
+import 'package:mobile/shared/utils/snackbar.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../data/repositories/notification_settings.dart';
@@ -71,7 +72,8 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage>
     if (!mounted) return;
     if (!success) {
       setState(() => _settings = previous);
-      ScaffoldMessenger.of(context).showSnackBar(
+      showReplacingSnackBar(
+        context,
         SnackBar(
           content: const Text('設定更新失敗，請稍後再試'),
           backgroundColor: Theme.of(context).colorScheme.error,

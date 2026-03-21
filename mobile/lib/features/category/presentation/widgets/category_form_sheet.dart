@@ -7,6 +7,7 @@ import 'package:mobile/features/category/presentation/constants/category_icon_op
 import 'package:mobile/features/entry/data/repositories/entry.dart'
     show EntryRepository;
 import 'package:mobile/shared/theme/app_theme.dart';
+import 'package:mobile/shared/utils/snackbar.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
 import 'package:mobile/shared/widgets/confirm_delete_dialog.dart';
 
@@ -110,7 +111,8 @@ class _CategoryFormSheetState extends State<_CategoryFormSheet> {
       final accountId = account.id;
       final messenger = ScaffoldMessenger.of(context);
       widget.onSuccess();
-      messenger.showSnackBar(
+      showReplacingSnackBarForMessenger(
+        messenger,
         SnackBar(
           content: const Text('分類已刪除'),
           duration: const Duration(seconds: 4),
@@ -120,8 +122,10 @@ class _CategoryFormSheetState extends State<_CategoryFormSheet> {
             onPressed: () async {
               await AccountRepository.restore(accountId);
               widget.onRestore?.call();
-              messenger.hideCurrentSnackBar();
-              messenger.showSnackBar(const SnackBar(content: Text('已復原')));
+              showReplacingSnackBarForMessenger(
+                messenger,
+                const SnackBar(content: Text('已復原')),
+              );
             },
           ),
         ),
@@ -164,7 +168,8 @@ class _CategoryFormSheetState extends State<_CategoryFormSheet> {
     if (!_isEdit) HapticFeedback.mediumImpact();
     widget.onSuccess();
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
+    showReplacingSnackBar(
+      context,
       SnackBar(
         content: Text(_isEdit ? '分類更新成功！' : '分類建立成功！'),
         duration: Duration(milliseconds: 1500),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile/features/entry/data/repositories/tag.dart' show TagRepository;
+import 'package:mobile/shared/utils/snackbar.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
 import 'package:mobile/shared/widgets/confirm_delete_dialog.dart';
 
@@ -79,7 +80,8 @@ class _TagFormSheetState extends State<_TagFormSheet> {
     if (!mounted) return;
     final messenger = ScaffoldMessenger.of(context);
     widget.onSuccess();
-    messenger.showSnackBar(
+    showReplacingSnackBarForMessenger(
+      messenger,
       SnackBar(
         content: const Text('標籤已刪除'),
         duration: const Duration(seconds: 4),
@@ -89,8 +91,10 @@ class _TagFormSheetState extends State<_TagFormSheet> {
           onPressed: () async {
             await TagRepository.restore(id);
             widget.onRestore?.call();
-            messenger.hideCurrentSnackBar();
-            messenger.showSnackBar(const SnackBar(content: Text('已復原')));
+            showReplacingSnackBarForMessenger(
+              messenger,
+              const SnackBar(content: Text('已復原')),
+            );
           },
         ),
       ),
@@ -136,7 +140,8 @@ class _TagFormSheetState extends State<_TagFormSheet> {
     HapticFeedback.mediumImpact();
     widget.onSuccess();
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
+    showReplacingSnackBar(
+      context,
       SnackBar(
         content: Text(_isEdit ? '標籤更新成功！' : '標籤建立成功！'),
         duration: Duration(milliseconds: 1500),

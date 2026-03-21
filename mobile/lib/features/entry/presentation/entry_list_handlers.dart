@@ -7,6 +7,7 @@ import 'package:mobile/features/entry/presentation/pages/entry_page.dart';
 import 'package:mobile/features/profile/data/services/achievement.dart';
 import 'package:mobile/shared/scopes/data_refresh.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
+import 'package:mobile/shared/utils/snackbar.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
 import 'package:mobile/shared/widgets/confirm_delete_dialog.dart';
@@ -38,7 +39,8 @@ class EntryListHandlers {
             DataRefreshScope.notify(context);
             final messenger = ScaffoldMessenger.of(context);
             final overlayContext = Navigator.of(context).overlay?.context;
-            messenger.showSnackBar(
+            showReplacingSnackBarForMessenger(
+              messenger,
               SnackBar(
                 content: const Text('紀錄已刪除'),
                 duration: const Duration(seconds: 4),
@@ -51,8 +53,10 @@ class EntryListHandlers {
                     if (overlayContext != null && overlayContext.mounted) {
                       DataRefreshScope.notify(overlayContext);
                     }
-                    messenger.hideCurrentSnackBar();
-                    messenger.showSnackBar(const SnackBar(content: Text('已復原')));
+                    showReplacingSnackBarForMessenger(
+                      messenger,
+                      const SnackBar(content: Text('已復原')),
+                    );
                   },
                 ),
               ),
@@ -136,7 +140,8 @@ class EntryListHandlers {
       DataRefreshScope.notify(context);
       final messenger = ScaffoldMessenger.of(context);
       final overlayContext = Navigator.of(context).overlay?.context;
-      messenger.showSnackBar(
+      showReplacingSnackBarForMessenger(
+        messenger,
         SnackBar(
           content: const Text('紀錄已刪除'),
           duration: const Duration(seconds: 4),
@@ -149,8 +154,10 @@ class EntryListHandlers {
               if (overlayContext != null && overlayContext.mounted) {
                 DataRefreshScope.notify(overlayContext);
               }
-              messenger.hideCurrentSnackBar();
-              messenger.showSnackBar(const SnackBar(content: Text('已復原')));
+              showReplacingSnackBarForMessenger(
+                messenger,
+                const SnackBar(content: Text('已復原')),
+              );
             },
           ),
         ),
@@ -180,7 +187,8 @@ class EntryListHandlers {
         HapticFeedback.mediumImpact();
         onCopied();
         DataRefreshScope.notify(context);
-        ScaffoldMessenger.of(context).showSnackBar(
+        showReplacingSnackBar(
+          context,
           const SnackBar(
             content: Text('複製成功！'),
             duration: Duration(milliseconds: 1500),
@@ -190,7 +198,8 @@ class EntryListHandlers {
     } catch (_) {
       if (context.mounted) {
         final theme = Theme.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
+        showReplacingSnackBar(
+          context,
           SnackBar(
             content: Text(
               '複製時發生錯誤，請再試一次',
