@@ -28,7 +28,7 @@ class _ShellState extends State<Shell> {
       refreshTrigger: widget.refreshTrigger,
       isPageVisible: _currentIndex == 1,
     ),
-    AssetsPage(refreshTrigger: widget.refreshTrigger),
+    AccountPage(refreshTrigger: widget.refreshTrigger),
     ProfilePage(
       refreshTrigger: widget.refreshTrigger,
       isPageVisible: _currentIndex == 3,

@@ -16,15 +16,15 @@ import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
 import 'package:mobile/shared/widgets/app_refresh_indicator.dart';
 import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
 
-class AssetsPage extends StatefulWidget {
-  const AssetsPage({super.key, this.refreshTrigger});
+class AccountPage extends StatefulWidget {
+  const AccountPage({super.key, this.refreshTrigger});
   final ValueListenable<int>? refreshTrigger;
 
   @override
-  State<AssetsPage> createState() => _AssetsPageState();
+  State<AccountPage> createState() => _AssetsPageState();
 }
 
-class _AssetsPageState extends State<AssetsPage> {
+class _AssetsPageState extends State<AccountPage> {
   bool _privacyMode = false;
   late Future<_AccountPageData> _future;
   final ScrollController _scrollController = ScrollController();
@@ -37,7 +37,7 @@ class _AssetsPageState extends State<AssetsPage> {
   }
 
   @override
-  void didUpdateWidget(AssetsPage oldWidget) {
+  void didUpdateWidget(AccountPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.refreshTrigger != widget.refreshTrigger) {
       oldWidget.refreshTrigger?.removeListener(_onRefresh);
