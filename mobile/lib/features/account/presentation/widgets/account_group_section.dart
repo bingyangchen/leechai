@@ -31,46 +31,66 @@ class AccountGroupSection extends StatelessWidget {
     final displayTotal = kind.isLiability ? total.abs() : total;
     final totalStr = privacyMode ? '****' : formatAmountForDisplay(displayTotal);
 
-    return ExpansionTile(
-      initiallyExpanded: true,
-      controlAffinity: ListTileControlAffinity.leading,
-      tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      childrenPadding: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
-      title: Row(
-        children: [
-          Icon(kind.sectionIcon, color: _sectionColor(context), size: 24),
-          const SizedBox(width: 12),
-          Expanded(child: Text(kind.title, style: theme.textStyles.titleEmphasis)),
-          if (kind == AccountGroupKind.creditCard)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: Text('未繳金額', style: theme.textStyles.bodySmallMuted),
-            ),
-          if (kind == AccountGroupKind.investments)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: Text('市值', style: theme.textStyles.bodySmallMuted),
-            ),
-          Text(
-            '\$$totalStr',
-            style: theme.textStyles.titleEmphasis.copyWith(
-              color: kind.isLiability ? _liabilityAmountColor(context) : null,
-            ),
+    final cardRadius = BorderRadius.circular(12);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: Material(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: cardRadius,
+        clipBehavior: Clip.antiAlias,
+        child: Theme(
+          data: theme.copyWith(
+            dividerColor: theme.colorScheme.outline.withValues(alpha: 0.1),
           ),
-        ],
-      ),
-      children: [
-        ...accounts.map(
-          (a) => _AccountListTile(
-            account: a,
-            balance: balances[a.id] ?? 0,
-            isLiability: kind.isLiability,
-            privacyMode: privacyMode,
-            onTap: () => onTapAccount(a),
+          child: ExpansionTile(
+            initiallyExpanded: true,
+            controlAffinity: ListTileControlAffinity.leading,
+            tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            childrenPadding: const EdgeInsets.only(left: 12, right: 12, bottom: 8),
+            shape: RoundedRectangleBorder(borderRadius: cardRadius),
+            collapsedShape: RoundedRectangleBorder(borderRadius: cardRadius),
+            backgroundColor: theme.colorScheme.surface.withValues(alpha: 0),
+            collapsedBackgroundColor: theme.colorScheme.surface.withValues(alpha: 0),
+            title: Row(
+              children: [
+                Icon(kind.sectionIcon, color: _sectionColor(context), size: 24),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(kind.title, style: theme.textStyles.titleEmphasis),
+                ),
+                if (kind == AccountGroupKind.creditCard)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Text('未繳金額', style: theme.textStyles.bodySmallMuted),
+                  ),
+                if (kind == AccountGroupKind.investments)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Text('市值', style: theme.textStyles.bodySmallMuted),
+                  ),
+                Text(
+                  '\$$totalStr',
+                  style: theme.textStyles.titleEmphasis.copyWith(
+                    color: kind.isLiability ? _liabilityAmountColor(context) : null,
+                  ),
+                ),
+              ],
+            ),
+            children: [
+              ...accounts.map(
+                (a) => _AccountListTile(
+                  account: a,
+                  balance: balances[a.id] ?? 0,
+                  isLiability: kind.isLiability,
+                  privacyMode: privacyMode,
+                  onTap: () => onTapAccount(a),
+                ),
+              ),
+              _AddAccountListTile(label: kind.addButtonLabel, onTap: onAdd),
+            ],
           ),
         ),
-        _AddAccountListTile(label: kind.addButtonLabel, onTap: onAdd),
-      ],
+      ),
     );
   }
 
@@ -109,9 +129,9 @@ class _AddAccountListTile extends StatelessWidget {
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: Colors.transparent,
+          color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: theme.dividerColor, width: 1.5),
+          border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.35)),
         ),
         child: Icon(Icons.add, color: theme.colorScheme.onSurfaceVariant, size: 24),
       ),
@@ -149,7 +169,7 @@ class _AccountListTile extends StatelessWidget {
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest,
+          color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(icon, color: theme.colorScheme.primary, size: 24),

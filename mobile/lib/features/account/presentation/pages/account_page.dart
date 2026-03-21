@@ -11,6 +11,7 @@ import 'package:mobile/features/account/presentation/pages/account_detail_page.d
 import 'package:mobile/features/account/presentation/widgets/account_group_section.dart';
 import 'package:mobile/features/account/presentation/widgets/add_account_sheet.dart';
 import 'package:mobile/features/account/presentation/widgets/net_worth_header.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/refresh_snap_back.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
 import 'package:mobile/shared/widgets/app_refresh_indicator.dart';
@@ -278,7 +279,7 @@ class _AssetsPageState extends State<AccountPage> {
                           onPrivacyToggle: () =>
                               setState(() => _privacyMode = !_privacyMode),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 16),
                         AccountGroupSection(
                           kind: AccountGroupKind.currentAssets,
                           accounts: currentAssets,
@@ -336,18 +337,29 @@ class _TypeChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
+    final theme = Theme.of(context);
+    final outlineSoft = theme.colorScheme.outline.withValues(alpha: 0.28);
+    return Material(
+      color: theme.colorScheme.surfaceContainerHighest,
       borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          border: Border.all(color: Theme.of(context).colorScheme.outline),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [Icon(icon, size: 22), const SizedBox(width: 8), Text(label)],
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: outlineSoft),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 20, color: theme.colorScheme.onSurfaceVariant),
+              const SizedBox(width: 10),
+              Text(label, style: theme.textStyles.title),
+            ],
+          ),
         ),
       ),
     );
