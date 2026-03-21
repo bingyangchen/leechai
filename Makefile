@@ -55,4 +55,4 @@ cert:
 
 .PHONY: deploy
 deploy:
-	$(SHELL) ./scripts/prod/deploy.sh
+	$(SHELL) ./scripts/prod/deploy.sh "$(image_tag)"

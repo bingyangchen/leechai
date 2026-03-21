@@ -15,7 +15,7 @@ services:
     command: ["nginx", "-g", "daemon off;"]
 
   apiserver:
-    image: leechaiapp/apiserver:prod
+    image: ${DOCKER_USERNAME}/apiserver:${image_tag}
     env_file:
       - .env
     depends_on:

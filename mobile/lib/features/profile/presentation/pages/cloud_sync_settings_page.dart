@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -507,7 +509,7 @@ class _LinkedAccountTile extends StatelessWidget {
   }
 }
 
-class _SyncStatusPanel extends StatelessWidget {
+class _SyncStatusPanel extends StatefulWidget {
   const _SyncStatusPanel({
     required this.status,
     required this.lastSyncText,
@@ -519,10 +521,37 @@ class _SyncStatusPanel extends StatelessWidget {
   final VoidCallback onSyncTap;
 
   @override
+  State<_SyncStatusPanel> createState() => _SyncStatusPanelState();
+}
+
+class _SyncStatusPanelState extends State<_SyncStatusPanel> {
+  static const Duration _syncTapCooldown = Duration(seconds: 3);
+
+  bool _onCooldown = false;
+  Timer? _cooldownTimer;
+
+  @override
+  void dispose() {
+    _cooldownTimer?.cancel();
+    super.dispose();
+  }
+
+  void _onSyncButtonPressed() {
+    if (widget.status == CloudSyncStatus.syncing || _onCooldown) return;
+    widget.onSyncTap();
+    setState(() => _onCooldown = true);
+    _cooldownTimer?.cancel();
+    _cooldownTimer = Timer(_syncTapCooldown, () {
+      if (mounted) setState(() => _onCooldown = false);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final textStyles = theme.textStyles;
+    final status = widget.status;
 
     String title;
     IconData icon;
@@ -541,6 +570,8 @@ class _SyncStatusPanel extends StatelessWidget {
         icon = Icons.cloud_off;
         iconColor = colorScheme.error;
     }
+
+    final syncButtonDisabled = status == CloudSyncStatus.syncing || _onCooldown;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -561,17 +592,17 @@ class _SyncStatusPanel extends StatelessWidget {
               children: [
                 Text(title, style: textStyles.titleEmphasis),
                 const SizedBox(height: 4),
-                Text(lastSyncText, style: textStyles.bodyMuted),
+                Text(widget.lastSyncText, style: textStyles.bodyMuted),
               ],
             ),
           ),
           const SizedBox(width: 8),
           TextButton(
-            onPressed: status == CloudSyncStatus.syncing ? null : onSyncTap,
+            onPressed: syncButtonDisabled ? null : _onSyncButtonPressed,
             child: Text(
               '立即同步',
               style: textStyles.labelEmphasis.copyWith(
-                color: status == CloudSyncStatus.syncing
+                color: syncButtonDisabled
                     ? colorScheme.primary.withValues(alpha: 0.4)
                     : colorScheme.primary,
               ),
