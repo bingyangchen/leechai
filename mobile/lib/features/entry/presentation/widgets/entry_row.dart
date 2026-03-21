@@ -6,8 +6,8 @@ import 'package:mobile/features/entry/presentation/constants/entry_type_colors.d
 import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 
-class TransactionRow extends StatelessWidget {
-  const TransactionRow({
+class EntryRow extends StatelessWidget {
+  const EntryRow({
     super.key,
     required this.entry,
     required this.accounts,

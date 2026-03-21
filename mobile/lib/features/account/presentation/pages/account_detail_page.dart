@@ -14,9 +14,9 @@ import 'package:mobile/features/entry/data/repositories/tag.dart' show TagReposi
 import 'package:mobile/features/entry/domain/entry_aggregation.dart';
 import 'package:mobile/features/entry/domain/entry_type.dart';
 import 'package:mobile/features/entry/presentation/entry_list_handlers.dart';
+import 'package:mobile/features/entry/presentation/widgets/entry_row.dart';
 import 'package:mobile/features/entry/presentation/widgets/sticky_date_header.dart'
     show buildDateHeaderSection;
-import 'package:mobile/features/entry/presentation/widgets/transaction_row.dart';
 import 'package:mobile/features/profile/data/services/achievement.dart';
 import 'package:mobile/shared/scopes/data_refresh.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
@@ -346,7 +346,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
                     onRefresh: () =>
                         runRefreshWithSnapBack(_scrollController, () async {
                           // NOTE: placebo effect
-                          await Future.delayed(const Duration(seconds: 1));
+                          await Future.delayed(const Duration(milliseconds: 800));
                           _onRefresh();
                           await _future;
                         }),
@@ -386,7 +386,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
                 appSliverRefreshControl(
                   onRefresh: () => runRefreshWithSnapBack(_scrollController, () async {
                     // NOTE: placebo effect
-                    await Future.delayed(const Duration(seconds: 1));
+                    await Future.delayed(const Duration(milliseconds: 800));
                     _onRefresh();
                     await _future;
                   }),
@@ -403,7 +403,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
                   SliverList(
                     delegate: SliverChildBuilderDelegate((context, index) {
                       final row = e.value[index];
-                      return TransactionRow(
+                      return EntryRow(
                         entry: row,
                         accounts: data.accounts,
                         entryTagTitles: data.entryTagTitles,

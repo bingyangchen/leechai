@@ -10,12 +10,12 @@ import 'package:mobile/features/entry/domain/entry_aggregation.dart';
 import 'package:mobile/features/entry/domain/entry_type.dart';
 import 'package:mobile/features/entry/presentation/entry_list_handlers.dart';
 import 'package:mobile/features/entry/presentation/widgets/collapsed_summary_bar.dart';
+import 'package:mobile/features/entry/presentation/widgets/entry_row.dart';
 import 'package:mobile/features/entry/presentation/widgets/journal_empty_state.dart';
 import 'package:mobile/features/entry/presentation/widgets/journal_top_bar.dart';
 import 'package:mobile/features/entry/presentation/widgets/month_summary_card.dart';
 import 'package:mobile/features/entry/presentation/widgets/sticky_date_header.dart'
     show buildDateHeaderSection, DateHeaderContent;
-import 'package:mobile/features/entry/presentation/widgets/transaction_row.dart';
 import 'package:mobile/features/profile/data/services/achievement.dart';
 import 'package:mobile/shared/utils/refresh_snap_back.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
@@ -170,7 +170,7 @@ class _JournalPageState extends State<JournalPage> with SingleTickerProviderStat
 
   Future<void> _onRefresh() async {
     await runRefreshWithSnapBack(_scrollController, () async {
-      await Future.delayed(const Duration(seconds: 1)); // NOTE: placebo effect
+      await Future.delayed(const Duration(milliseconds: 800)); // NOTE: placebo effect
       setState(() {
         _future = _loadData();
       });
@@ -289,7 +289,7 @@ class _JournalPageState extends State<JournalPage> with SingleTickerProviderStat
                                           index,
                                         ) {
                                           final row = e.value[index];
-                                          return TransactionRow(
+                                          return EntryRow(
                                             entry: row,
                                             accounts: data.accounts,
                                             entryTagTitles: data.entryTagTitles,
@@ -379,7 +379,6 @@ class _JournalPageState extends State<JournalPage> with SingleTickerProviderStat
       } else if (type == EntryType.expense) {
         expense += amount;
       }
-      // transfer/borrow/repay: could add to expense/income by design; here we only count expense & income
     }
     return _MonthSummary(income: income, expense: expense, balance: income - expense);
   }

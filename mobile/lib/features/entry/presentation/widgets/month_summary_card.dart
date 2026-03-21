@@ -64,7 +64,7 @@ class MonthSummaryCard extends StatelessWidget {
                   ),
                   Center(
                     child: Container(
-                      width: 1,
+                      width: 2,
                       height: 28,
                       margin: const EdgeInsets.symmetric(horizontal: 8),
                       color: dividerColor,

@@ -7,7 +7,7 @@ import 'package:mobile/features/entry/data/repositories/entry.dart'
 import 'package:mobile/features/entry/data/repositories/tag.dart' show TagRepository;
 import 'package:mobile/features/entry/domain/entry_type.dart';
 import 'package:mobile/features/entry/presentation/entry_list_handlers.dart';
-import 'package:mobile/features/entry/presentation/widgets/transaction_row.dart';
+import 'package:mobile/features/entry/presentation/widgets/entry_row.dart';
 import 'package:mobile/features/statistics/data/services/statistics.dart';
 import 'package:mobile/features/statistics/domain/date_range_preset.dart';
 import 'package:mobile/features/statistics/presentation/constants/category_colors.dart';
@@ -193,7 +193,7 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> {
                 SliverList(
                   delegate: SliverChildBuilderDelegate((context, index) {
                     final entry = data.entries[index];
-                    return TransactionRow(
+                    return EntryRow(
                       entry: entry,
                       accounts: data.accounts,
                       entryTagTitles: data.entryTagTitles,

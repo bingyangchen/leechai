@@ -112,7 +112,7 @@ class _IncomeExpenseTabState extends State<IncomeExpenseTab> {
           appSliverRefreshControl(
             onRefresh: () => runRefreshWithSnapBack(_scrollController, () async {
               // NOTE: placebo effect
-              await Future.delayed(const Duration(seconds: 1));
+              await Future.delayed(const Duration(milliseconds: 800));
               _onRefresh();
               await _future;
             }),
