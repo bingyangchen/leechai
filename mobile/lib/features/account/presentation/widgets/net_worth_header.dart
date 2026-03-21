@@ -36,6 +36,13 @@ class NetWorthHeader extends StatelessWidget {
           bottomLeft: Radius.circular(24),
           bottomRight: Radius.circular(24),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.shadow.withValues(alpha: 0.07),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -45,13 +52,21 @@ class NetWorthHeader extends StatelessWidget {
             children: [
               Text('總淨資產', style: theme.textStyles.sectionLabel),
               IconButton(
+                style: IconButton.styleFrom(
+                  minimumSize: const Size(44, 44),
+                  fixedSize: const Size(44, 44),
+                  padding: EdgeInsets.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
                 onPressed: onPrivacyToggle,
                 icon: Icon(
                   privacyMode
                       ? Icons.visibility_off_outlined
                       : Icons.visibility_outlined,
                   size: 22,
-                  color: theme.colorScheme.onSurfaceVariant,
+                  color: privacyMode
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.onSurfaceVariant,
                 ),
                 tooltip: privacyMode ? '顯示金額' : '隱藏金額',
               ),
@@ -97,30 +112,25 @@ class _SparklinePainter extends CustomPainter {
     final min = points.reduce((a, b) => a < b ? a : b);
     final max = points.reduce((a, b) => a > b ? a : b);
     final range = (max - min).clamp(1.0, double.infinity);
-    final w = size.width / (points.length - 1).clamp(1, points.length);
-    final path = Path();
+    final step = size.width / (points.length - 1).clamp(1, points.length);
+    final offsets = <Offset>[];
     for (var i = 0; i < points.length; i++) {
-      final x = i * w;
+      final x = i * step;
       final y = size.height - (points[i] - min) / range * (size.height - 4) - 2;
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
+      offsets.add(Offset(x, y));
     }
+    final strokePath = _smoothSparklinePath(offsets, size, closeToBottom: false);
     if (fill) {
-      path.lineTo(size.width, size.height);
-      path.lineTo(0, size.height);
-      path.close();
+      final fillPath = _smoothSparklinePath(offsets, size, closeToBottom: true);
       canvas.drawPath(
-        path,
+        fillPath,
         Paint()
           ..color = color.withValues(alpha: 0.15)
           ..style = PaintingStyle.fill,
       );
     }
     canvas.drawPath(
-      path,
+      strokePath,
       Paint()
         ..color = color
         ..style = PaintingStyle.stroke
@@ -133,4 +143,26 @@ class _SparklinePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _SparklinePainter old) =>
       old.points != points || old.color != color;
+}
+
+Path _smoothSparklinePath(List<Offset> pts, Size size, {required bool closeToBottom}) {
+  if (pts.length < 2) return Path();
+  final path = Path()..moveTo(pts[0].dx, pts[0].dy);
+  for (var i = 0; i < pts.length - 1; i++) {
+    final p0 = i == 0 ? pts[0] : pts[i - 1];
+    final p1 = pts[i];
+    final p2 = pts[i + 1];
+    final p3 = i + 2 < pts.length ? pts[i + 2] : pts[i + 1];
+    final cp1x = p1.dx + (p2.dx - p0.dx) / 6;
+    final cp1y = p1.dy + (p2.dy - p0.dy) / 6;
+    final cp2x = p2.dx - (p3.dx - p1.dx) / 6;
+    final cp2y = p2.dy - (p3.dy - p1.dy) / 6;
+    path.cubicTo(cp1x, cp1y, cp2x, cp2y, p2.dx, p2.dy);
+  }
+  if (closeToBottom) {
+    path.lineTo(size.width, size.height);
+    path.lineTo(0, size.height);
+    path.close();
+  }
+  return path;
 }

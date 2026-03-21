@@ -6,6 +6,8 @@ import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 
 const List<String> _weekdays = ['一', '二', '三', '四', '五', '六', '日'];
 
+const double kDateHeaderBarExtent = 70;
+
 class DateHeaderContent extends StatelessWidget {
   const DateHeaderContent({
     super.key,
@@ -13,12 +15,15 @@ class DateHeaderContent extends StatelessWidget {
     required this.dayExpense,
     required this.dayIncome,
     required this.privacyMode,
+    this.pinned = false,
   });
 
   final DateTime date;
   final double dayExpense;
   final double dayIncome;
   final bool privacyMode;
+
+  final bool pinned;
 
   @override
   Widget build(BuildContext context) {
@@ -28,28 +33,94 @@ class DateHeaderContent extends StatelessWidget {
     final weekday = _weekdays[date.weekday - 1];
     final expenseStr = privacyMode ? '****' : formatAmountForDisplay(dayExpense);
     final incomeStr = privacyMode ? '****' : formatAmountForDisplay(dayIncome);
-    return Container(
+    final outlineAlpha = pinned ? 0.14 : 0.12;
+    final bottomLineColor = theme.colorScheme.outline.withValues(alpha: outlineAlpha);
+    final expenseColor = EntryTypeColors.forType(context, EntryType.expense);
+    final incomeColor = EntryTypeColors.forType(context, EntryType.income);
+
+    return ColoredBox(
       color: theme.colorScheme.surface,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      alignment: Alignment.centerLeft,
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('$dateStr ($weekday)', style: theme.textStyles.titleSmallEmphasis),
-          const SizedBox(width: 12),
-          Text(
-            '支出 \$$expenseStr',
-            style: theme.textStyles.bodySmallMuted.copyWith(
-              color: EntryTypeColors.forType(context, EntryType.expense),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '$dateStr (週$weekday)',
+                  style: theme.textStyles.sectionLabel.copyWith(
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    _DaySummaryChip(
+                      label: '支出',
+                      amount: expenseStr,
+                      amountColor: expenseColor,
+                    ),
+                    _DaySummaryChip(
+                      label: '收入',
+                      amount: incomeStr,
+                      amountColor: incomeColor,
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          const SizedBox(width: 12),
-          Text(
-            '收入 \$$incomeStr',
-            style: theme.textStyles.bodySmallMuted.copyWith(
-              color: EntryTypeColors.forType(context, EntryType.income),
-            ),
-          ),
+          SizedBox(height: 1, child: ColoredBox(color: bottomLineColor)),
         ],
+      ),
+    );
+  }
+}
+
+class _DaySummaryChip extends StatelessWidget {
+  const _DaySummaryChip({
+    required this.label,
+    required this.amount,
+    required this.amountColor,
+  });
+
+  final String label;
+  final String amount;
+  final Color amountColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(label, style: theme.textStyles.bodySmallMuted),
+            const SizedBox(width: 4),
+            Text(
+              '\$$amount',
+              style: theme.textTheme.titleSmall!.copyWith(
+                fontWeight: FontWeight.w600,
+                color: amountColor,
+                height: 1.2,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -104,10 +175,10 @@ class _StickyDateDelegate extends SliverPersistentHeaderDelegate {
   final bool privacyMode;
 
   @override
-  double get minExtent => 44;
+  double get minExtent => kDateHeaderBarExtent;
 
   @override
-  double get maxExtent => 44;
+  double get maxExtent => kDateHeaderBarExtent;
 
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
@@ -116,6 +187,7 @@ class _StickyDateDelegate extends SliverPersistentHeaderDelegate {
       dayExpense: dayExpense,
       dayIncome: dayIncome,
       privacyMode: privacyMode,
+      pinned: true,
     );
   }
 

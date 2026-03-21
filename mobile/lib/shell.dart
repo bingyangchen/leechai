@@ -5,6 +5,7 @@ import 'package:mobile/features/entry/presentation/pages/journal_page.dart';
 import 'package:mobile/features/profile/presentation/pages/profile_page.dart';
 import 'package:mobile/features/statistics/presentation/pages/statistics_page.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
+import 'package:mobile/shared/utils/snackbar.dart';
 
 class Shell extends StatefulWidget {
   const Shell({super.key, required this.refreshTrigger});
@@ -27,7 +28,7 @@ class _ShellState extends State<Shell> {
       refreshTrigger: widget.refreshTrigger,
       isPageVisible: _currentIndex == 1,
     ),
-    AssetsPage(refreshTrigger: widget.refreshTrigger),
+    AccountPage(refreshTrigger: widget.refreshTrigger),
     ProfilePage(
       refreshTrigger: widget.refreshTrigger,
       isPageVisible: _currentIndex == 3,
@@ -49,7 +50,8 @@ class _ShellState extends State<Shell> {
                 if (!context.mounted) return;
                 if (added == true) {
                   widget.refreshTrigger.value++;
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  showReplacingSnackBar(
+                    context,
                     const SnackBar(
                       content: Text('紀錄新增成功！'),
                       duration: Duration(milliseconds: 1500),

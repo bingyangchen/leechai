@@ -12,6 +12,7 @@ import 'package:mobile/features/auth/presentation/widgets/user_avatar.dart';
 import 'package:mobile/features/profile/data/services/cloud_sync.dart';
 import 'package:mobile/features/profile/presentation/widgets/google_link_button.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
+import 'package:mobile/shared/utils/snackbar.dart';
 
 class CloudSyncSettingsPage extends StatefulWidget {
   const CloudSyncSettingsPage({super.key});
@@ -142,7 +143,8 @@ class _UnauthenticatedViewState extends State<_UnauthenticatedView>
         !(results.length == 1 && results.contains(ConnectivityResult.none));
     if (!hasConnection) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      showReplacingSnackBar(
+        context,
         SnackBar(
           content: Text(
             '無法連線，請檢查網路設定後再試。',
@@ -168,7 +170,8 @@ class _UnauthenticatedViewState extends State<_UnauthenticatedView>
       final message = error is Exception
           ? error.toString().replaceFirst('Exception: ', '')
           : error.toString();
-      ScaffoldMessenger.of(context).showSnackBar(
+      showReplacingSnackBar(
+        context,
         SnackBar(
           content: Text(
             message,

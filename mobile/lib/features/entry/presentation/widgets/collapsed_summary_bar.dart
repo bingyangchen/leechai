@@ -26,7 +26,14 @@ class CollapsedSummaryBar extends StatelessWidget {
           width: double.infinity,
           height: height,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          color: theme.colorScheme.surfaceContainerHighest,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest,
+            border: Border(
+              bottom: BorderSide(
+                color: theme.colorScheme.outline.withValues(alpha: 0.12),
+              ),
+            ),
+          ),
           child: Text(
             text,
             style: theme.textStyles.titleEmphasis.copyWith(

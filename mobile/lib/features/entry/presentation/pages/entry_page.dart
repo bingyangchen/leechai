@@ -18,6 +18,7 @@ import 'package:mobile/features/entry/presentation/widgets/date_chip_row.dart';
 import 'package:mobile/features/entry/presentation/widgets/notes_section.dart';
 import 'package:mobile/features/entry/presentation/widgets/tags_section.dart';
 import 'package:mobile/features/profile/data/services/achievement.dart';
+import 'package:mobile/shared/utils/snackbar.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
 import 'package:mobile/shared/widgets/confirm_delete_dialog.dart';
@@ -52,6 +53,8 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
   List<Account> _categoryIncomeAccounts = [];
   int _selectedExpenseCategoryIndex = 0;
   int _selectedIncomeCategoryIndex = 0;
+  bool _entryTypePageChangeHapticEnabled = false;
+  int? _previousEntryTypePageIndex;
 
   String? _originalAmountDisplay;
   DateTime? _originalDate;
@@ -112,6 +115,10 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadInitialData();
       if (!_isEditMode) _amountFocusNode.requestFocus();
+      if (!_isEditMode && mounted) {
+        _entryTypePageChangeHapticEnabled = true;
+        _previousEntryTypePageIndex = 0;
+      }
     });
   }
 
@@ -140,7 +147,8 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         final theme = Theme.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
+        showReplacingSnackBar(
+          context,
           SnackBar(
             content: Text('這是系統自動調整的紀錄，無法編輯唷！'),
             backgroundColor: theme.colorScheme.error,
@@ -208,6 +216,11 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
     });
     _tabController.animateTo(typeIndex);
     _pageController.jumpToPage(typeIndex);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _entryTypePageChangeHapticEnabled = true;
+      _previousEntryTypePageIndex = typeIndex;
+    });
   }
 
   void _syncEntryTypeFromTab() {
@@ -222,6 +235,12 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
   }
 
   void _onPageChanged(int index) {
+    if (_entryTypePageChangeHapticEnabled &&
+        _previousEntryTypePageIndex != null &&
+        index != _previousEntryTypePageIndex) {
+      HapticFeedback.selectionClick();
+    }
+    _previousEntryTypePageIndex = index;
     if (_tabController.index != index) {
       _tabController.animateTo(index);
     }
@@ -426,7 +445,8 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
     if (accounts == null) {
       if (mounted) {
         final theme = Theme.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
+        showReplacingSnackBar(
+          context,
           SnackBar(
             content: Text('記得選擇帳戶與分類唷！'),
             backgroundColor: theme.colorScheme.error,

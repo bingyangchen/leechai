@@ -11,20 +11,21 @@ import 'package:mobile/features/account/presentation/pages/account_detail_page.d
 import 'package:mobile/features/account/presentation/widgets/account_group_section.dart';
 import 'package:mobile/features/account/presentation/widgets/add_account_sheet.dart';
 import 'package:mobile/features/account/presentation/widgets/net_worth_header.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/refresh_snap_back.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
 import 'package:mobile/shared/widgets/app_refresh_indicator.dart';
 import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
 
-class AssetsPage extends StatefulWidget {
-  const AssetsPage({super.key, this.refreshTrigger});
+class AccountPage extends StatefulWidget {
+  const AccountPage({super.key, this.refreshTrigger});
   final ValueListenable<int>? refreshTrigger;
 
   @override
-  State<AssetsPage> createState() => _AssetsPageState();
+  State<AccountPage> createState() => _AssetsPageState();
 }
 
-class _AssetsPageState extends State<AssetsPage> {
+class _AssetsPageState extends State<AccountPage> {
   bool _privacyMode = false;
   late Future<_AccountPageData> _future;
   final ScrollController _scrollController = ScrollController();
@@ -37,7 +38,7 @@ class _AssetsPageState extends State<AssetsPage> {
   }
 
   @override
-  void didUpdateWidget(AssetsPage oldWidget) {
+  void didUpdateWidget(AccountPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.refreshTrigger != widget.refreshTrigger) {
       oldWidget.refreshTrigger?.removeListener(_onRefresh);
@@ -260,7 +261,7 @@ class _AssetsPageState extends State<AssetsPage> {
                     onRefresh: () =>
                         runRefreshWithSnapBack(_scrollController, () async {
                           // NOTE: placebo effect
-                          await Future.delayed(const Duration(seconds: 1));
+                          await Future.delayed(const Duration(milliseconds: 800));
                           _onRefresh();
                           await _future;
                         }),
@@ -278,7 +279,7 @@ class _AssetsPageState extends State<AssetsPage> {
                           onPrivacyToggle: () =>
                               setState(() => _privacyMode = !_privacyMode),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 16),
                         AccountGroupSection(
                           kind: AccountGroupKind.currentAssets,
                           accounts: currentAssets,
@@ -336,18 +337,29 @@ class _TypeChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
+    final theme = Theme.of(context);
+    final outlineSoft = theme.colorScheme.outline.withValues(alpha: 0.28);
+    return Material(
+      color: theme.colorScheme.surfaceContainerHighest,
       borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          border: Border.all(color: Theme.of(context).colorScheme.outline),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [Icon(icon, size: 22), const SizedBox(width: 8), Text(label)],
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: outlineSoft),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 20, color: theme.colorScheme.onSurfaceVariant),
+              const SizedBox(width: 10),
+              Text(label, style: theme.textStyles.title),
+            ],
+          ),
         ),
       ),
     );

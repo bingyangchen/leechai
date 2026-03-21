@@ -14,13 +14,14 @@ import 'package:mobile/features/entry/data/repositories/tag.dart' show TagReposi
 import 'package:mobile/features/entry/domain/entry_aggregation.dart';
 import 'package:mobile/features/entry/domain/entry_type.dart';
 import 'package:mobile/features/entry/presentation/entry_list_handlers.dart';
+import 'package:mobile/features/entry/presentation/widgets/entry_row.dart';
 import 'package:mobile/features/entry/presentation/widgets/sticky_date_header.dart'
     show buildDateHeaderSection;
-import 'package:mobile/features/entry/presentation/widgets/transaction_row.dart';
 import 'package:mobile/features/profile/data/services/achievement.dart';
 import 'package:mobile/shared/scopes/data_refresh.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/refresh_snap_back.dart';
+import 'package:mobile/shared/utils/snackbar.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
 import 'package:mobile/shared/widgets/app_refresh_indicator.dart';
@@ -147,7 +148,8 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
     if (mounted) {
       _onRefresh();
       DataRefreshScope.notify(context);
-      ScaffoldMessenger.of(context).showSnackBar(
+      showReplacingSnackBar(
+        context,
         SnackBar(
           content: Text('已記錄未實現損益 \$${formatAmountForDisplay(diff)}'),
           duration: Duration(milliseconds: 1500),
@@ -236,7 +238,8 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
       final accountId = data.account.id;
       final messenger = ScaffoldMessenger.of(context);
       final overlayContext = Navigator.of(context).overlay?.context;
-      messenger.showSnackBar(
+      showReplacingSnackBarForMessenger(
+        messenger,
         SnackBar(
           content: const Text('帳戶已刪除'),
           duration: const Duration(seconds: 4),
@@ -248,8 +251,10 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
               if (overlayContext != null && overlayContext.mounted) {
                 DataRefreshScope.notify(overlayContext);
               }
-              messenger.hideCurrentSnackBar();
-              messenger.showSnackBar(const SnackBar(content: Text('已復原')));
+              showReplacingSnackBarForMessenger(
+                messenger,
+                const SnackBar(content: Text('已復原')),
+              );
             },
           ),
         ),
@@ -257,7 +262,8 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
       Navigator.of(context).pop();
     } else {
       final theme = Theme.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
+      showReplacingSnackBar(
+        context,
         SnackBar(
           content: Text(
             '此帳戶已有交易紀錄，無法刪除',
@@ -340,7 +346,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
                     onRefresh: () =>
                         runRefreshWithSnapBack(_scrollController, () async {
                           // NOTE: placebo effect
-                          await Future.delayed(const Duration(seconds: 1));
+                          await Future.delayed(const Duration(milliseconds: 800));
                           _onRefresh();
                           await _future;
                         }),
@@ -380,7 +386,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
                 appSliverRefreshControl(
                   onRefresh: () => runRefreshWithSnapBack(_scrollController, () async {
                     // NOTE: placebo effect
-                    await Future.delayed(const Duration(seconds: 1));
+                    await Future.delayed(const Duration(milliseconds: 800));
                     _onRefresh();
                     await _future;
                   }),
@@ -397,7 +403,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
                   SliverList(
                     delegate: SliverChildBuilderDelegate((context, index) {
                       final row = e.value[index];
-                      return TransactionRow(
+                      return EntryRow(
                         entry: row,
                         accounts: data.accounts,
                         entryTagTitles: data.entryTagTitles,

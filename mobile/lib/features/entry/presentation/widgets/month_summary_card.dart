@@ -29,14 +29,16 @@ class MonthSummaryCard extends StatelessWidget {
     final incomeStr = privacyMode ? '****' : formatAmountForDisplay(income);
     final expenseStr = privacyMode ? '****' : formatAmountForDisplay(expense);
     final balanceStr = privacyMode ? '****' : _formatBalance(balance);
+    final dividerColor = theme.colorScheme.outline.withValues(alpha: 0.12);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      child: Card(
-        elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        color: theme.colorScheme.surfaceContainerHighest,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(20),
+        ),
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -45,31 +47,42 @@ class MonthSummaryCard extends StatelessWidget {
               Text(balanceStr, style: theme.textStyles.headlineEmphasis),
               const SizedBox(height: 16),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  Column(
-                    children: [
-                      Text('本月支出', style: theme.textStyles.bodySmallMuted),
-                      const SizedBox(height: 2),
-                      Text(
-                        expenseStr,
-                        style: theme.textStyles.titleEmphasis.copyWith(
-                          color: EntryTypeColors.forType(context, EntryType.expense),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Text('本月支出', style: theme.textStyles.bodySmallMuted),
+                        const SizedBox(height: 2),
+                        Text(
+                          expenseStr,
+                          style: theme.textStyles.titleEmphasis.copyWith(
+                            color: EntryTypeColors.forType(context, EntryType.expense),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                  Column(
-                    children: [
-                      Text('本月收入', style: theme.textStyles.bodySmallMuted),
-                      const SizedBox(height: 2),
-                      Text(
-                        incomeStr,
-                        style: theme.textStyles.titleEmphasis.copyWith(
-                          color: EntryTypeColors.forType(context, EntryType.income),
+                  Center(
+                    child: Container(
+                      width: 2,
+                      height: 28,
+                      margin: const EdgeInsets.symmetric(horizontal: 8),
+                      color: dividerColor,
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Text('本月收入', style: theme.textStyles.bodySmallMuted),
+                        const SizedBox(height: 2),
+                        Text(
+                          incomeStr,
+                          style: theme.textStyles.titleEmphasis.copyWith(
+                            color: EntryTypeColors.forType(context, EntryType.income),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),
