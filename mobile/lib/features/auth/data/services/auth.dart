@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:mobile/core/auth/auth_session_events.dart';
 import 'package:mobile/core/network/api_client.dart';
 import 'package:mobile/features/auth/data/apis/auth.dart';
 import 'package:mobile/features/auth/data/repositories/auth.dart';
@@ -29,6 +30,21 @@ class AuthService {
   Future<void> ensureLoaded() async {
     if (_loaded) return;
     await GoogleSignIn.instance.initialize(serverClientId: _webClientId);
+    AuthSessionEvents.onTokensRefreshed = (accessToken, refreshToken) {
+      final user = currentUser.value;
+      if (user == null) return;
+      currentUser.value = AuthState(
+        userId: user.userId,
+        displayName: user.displayName,
+        email: user.email,
+        avatarUrl: user.avatarUrl,
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+      );
+    };
+    AuthSessionEvents.onSessionInvalidated = () {
+      currentUser.value = null;
+    };
     final state = await AuthRepository.load();
     currentUser.value = state;
     _loaded = true;
@@ -57,7 +73,8 @@ class AuthService {
         displayName: login.displayName,
         email: login.email,
         avatarUrl: login.avatarUrl,
-        appToken: login.token,
+        accessToken: login.accessToken,
+        refreshToken: login.refreshToken,
       );
       throw AccountConflictException(
         previousUserId: lastLinkedId,
@@ -71,7 +88,8 @@ class AuthService {
       displayName: login.displayName,
       email: login.email,
       avatarUrl: login.avatarUrl,
-      appToken: login.token,
+      accessToken: login.accessToken,
+      refreshToken: login.refreshToken,
     );
   }
 
@@ -84,7 +102,8 @@ class AuthService {
       displayName: pending.displayName,
       email: pending.email,
       avatarUrl: pending.avatarUrl,
-      appToken: pending.appToken,
+      accessToken: pending.accessToken,
+      refreshToken: pending.refreshToken,
     );
   }
 
@@ -93,7 +112,13 @@ class AuthService {
   }
 
   Future<void> signOut() async {
+    final refresh = currentUser.value?.refreshToken;
     await GoogleSignIn.instance.signOut();
+    if (refresh != null && refresh.isNotEmpty) {
+      try {
+        await _authApi.logout(refresh);
+      } catch (_) {}
+    }
     await AuthRepository.clear();
     currentUser.value = null;
   }
@@ -103,14 +128,16 @@ class AuthService {
     required String displayName,
     required String email,
     String? avatarUrl,
-    required String appToken,
+    required String accessToken,
+    required String refreshToken,
   }) async {
     final state = AuthState(
       userId: userId,
       displayName: displayName,
       email: email,
       avatarUrl: avatarUrl,
-      appToken: appToken,
+      accessToken: accessToken,
+      refreshToken: refreshToken,
     );
     await AuthRepository.save(state);
     currentUser.value = state;
@@ -124,12 +151,14 @@ class _PendingSignIn {
     required this.displayName,
     required this.email,
     this.avatarUrl,
-    required this.appToken,
+    required this.accessToken,
+    required this.refreshToken,
   });
 
   final String userId;
   final String displayName;
   final String email;
   final String? avatarUrl;
-  final String appToken;
+  final String accessToken;
+  final String refreshToken;
 }
