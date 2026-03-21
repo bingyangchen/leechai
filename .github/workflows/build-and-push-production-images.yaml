@@ -19,6 +19,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
       - name: Build
+        env:
+          image_tag: ${{ github.sha }}
         run: make build-prod
       - name: Push
+        env:
+          image_tag: ${{ github.sha }}
         run: make push-images-prod

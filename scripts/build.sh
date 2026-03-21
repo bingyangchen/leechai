@@ -19,8 +19,15 @@ fi
 for service in apiserver; do
     echo "Building $service..."
     cd ./$service
-    docker build -t "$DOCKER_USERNAME/$service:$1" --build-arg BUILDER_VARIANT="$1" \
-        --target final -f ./Dockerfile --platform "$platform" .
+    if [ "$1" == "prod" ]; then
+        image_tag="${image_tag:-$(git rev-parse HEAD)}"
+        docker build -t "$DOCKER_USERNAME/$service:$image_tag" \
+            --build-arg BUILDER_VARIANT="$1" --target final -f ./Dockerfile \
+            --platform "$platform" .
+    else
+        docker build -t "$DOCKER_USERNAME/$service:$1" --build-arg BUILDER_VARIANT="$1" \
+            --target final -f ./Dockerfile --platform "$platform" .
+    fi
     cd ..
     echo
 done

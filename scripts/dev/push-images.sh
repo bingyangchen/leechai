@@ -14,7 +14,8 @@ fi
 echo "$DOCKER_ACCESS_TOKEN" | docker login --username "$DOCKER_USERNAME" --password-stdin
 
 if [ "$1" == "prod" ]; then
-    local_images=("$DOCKER_USERNAME/apiserver:$1")
+    image_tag="${image_tag:-$(git rev-parse HEAD)}"
+    local_images=("$DOCKER_USERNAME/apiserver:$image_tag")
 else
     local_images=("$DOCKER_USERNAME/apiserver:$1")
 fi
