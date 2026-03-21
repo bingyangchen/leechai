@@ -45,6 +45,12 @@ class JournalTopBar extends StatelessWidget {
           ),
           const Spacer(),
           IconButton(
+            style: IconButton.styleFrom(
+              minimumSize: const Size(44, 44),
+              fixedSize: const Size(44, 44),
+              padding: EdgeInsets.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
             icon: Icon(
               privacyMode ? Icons.visibility_off_outlined : Icons.visibility_outlined,
               color: theme.colorScheme.onSurface,

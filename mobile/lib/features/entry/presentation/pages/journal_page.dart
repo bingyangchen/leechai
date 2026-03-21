@@ -31,12 +31,14 @@ class JournalPage extends StatefulWidget {
   State<JournalPage> createState() => _JournalPageState();
 }
 
-class _JournalPageState extends State<JournalPage> {
+class _JournalPageState extends State<JournalPage> with SingleTickerProviderStateMixin {
   DateTime _selectedMonth = DateTime.now();
   bool _privacyMode = false;
   final ScrollController _scrollController = ScrollController();
   static const double _summaryCardHeight = 140;
   bool _showCollapsedSummary = false;
+  late AnimationController _collapsedBarController;
+  late CurvedAnimation _collapsedBarAnimation;
   late Future<_JournalData> _future;
   DateTime? _currentStickyDate;
   double _currentStickyExpense = 0;
@@ -48,6 +50,14 @@ class _JournalPageState extends State<JournalPage> {
   @override
   void initState() {
     super.initState();
+    _collapsedBarController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 220),
+    );
+    _collapsedBarAnimation = CurvedAnimation(
+      parent: _collapsedBarController,
+      curve: Curves.easeOutCubic,
+    );
     _future = _loadData();
     _scrollController.addListener(_onScroll);
     widget.refreshTrigger?.addListener(_onRefreshTrigger);
@@ -72,6 +82,8 @@ class _JournalPageState extends State<JournalPage> {
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    _collapsedBarAnimation.dispose();
+    _collapsedBarController.dispose();
     widget.refreshTrigger?.removeListener(_onRefreshTrigger);
     super.dispose();
   }
@@ -83,7 +95,10 @@ class _JournalPageState extends State<JournalPage> {
     if (show != _showCollapsedSummary) {
       setState(() => _showCollapsedSummary = show);
       if (show) {
+        _collapsedBarController.forward();
         WidgetsBinding.instance.addPostFrameCallback((_) => _updateCurrentStickyDate());
+      } else {
+        _collapsedBarController.reverse();
       }
     } else if (show) {
       _updateCurrentStickyDate();
@@ -237,101 +252,113 @@ class _JournalPageState extends State<JournalPage> {
                             (grouped.keys.isNotEmpty ? grouped.keys.first : null);
                         final showStickyBar =
                             _showCollapsedSummary && dateToShow != null;
-                        return Stack(
-                          children: [
-                            CustomScrollView(
-                              controller: _scrollController,
-                              physics: const AlwaysScrollableScrollPhysics(),
-                              slivers: [
-                                appSliverRefreshControl(onRefresh: _onRefresh),
-                                SliverToBoxAdapter(
-                                  child: MonthSummaryCard(
-                                    income: summary.income,
-                                    expense: summary.expense,
-                                    balance: summary.balance,
-                                    privacyMode: _privacyMode,
-                                  ),
+                        return AnimatedBuilder(
+                          animation: _collapsedBarAnimation,
+                          builder: (context, _) {
+                            final collapsedTop =
+                                CollapsedSummaryBar.height *
+                                _collapsedBarAnimation.value;
+                            return Stack(
+                              children: [
+                                CustomScrollView(
+                                  controller: _scrollController,
+                                  physics: const AlwaysScrollableScrollPhysics(),
+                                  slivers: [
+                                    appSliverRefreshControl(onRefresh: _onRefresh),
+                                    SliverToBoxAdapter(
+                                      child: MonthSummaryCard(
+                                        income: summary.income,
+                                        expense: summary.expense,
+                                        balance: summary.balance,
+                                        privacyMode: _privacyMode,
+                                      ),
+                                    ),
+                                    for (final e in grouped.entries) ...[
+                                      SliverToBoxAdapter(
+                                        child: buildDateHeaderSection(
+                                          key: _headerKeys[e.key],
+                                          date: e.key,
+                                          dayExpense: dayExpense(e.value),
+                                          dayIncome: dayIncome(e.value),
+                                          privacyMode: _privacyMode,
+                                        ),
+                                      ),
+                                      SliverList(
+                                        delegate: SliverChildBuilderDelegate((
+                                          context,
+                                          index,
+                                        ) {
+                                          final row = e.value[index];
+                                          return TransactionRow(
+                                            entry: row,
+                                            accounts: data.accounts,
+                                            entryTagTitles: data.entryTagTitles,
+                                            privacyMode: _privacyMode,
+                                            onTap: () => EntryListHandlers.openEntry(
+                                              context,
+                                              row,
+                                              _onRefreshTrigger,
+                                            ),
+                                            onDelete: () =>
+                                                EntryListHandlers.deleteEntry(
+                                                  context,
+                                                  row,
+                                                  _onRefreshTrigger,
+                                                ),
+                                            onCopy: () => EntryListHandlers.copyEntry(
+                                              context,
+                                              row,
+                                              _onRefreshTrigger,
+                                            ),
+                                          );
+                                        }, childCount: e.value.length),
+                                      ),
+                                    ],
+                                    const SliverPadding(
+                                      padding: EdgeInsets.only(bottom: 88),
+                                    ),
+                                  ],
                                 ),
-                                for (final e in grouped.entries) ...[
-                                  SliverToBoxAdapter(
-                                    child: buildDateHeaderSection(
-                                      key: _headerKeys[e.key],
-                                      date: e.key,
-                                      dayExpense: dayExpense(e.value),
-                                      dayIncome: dayIncome(e.value),
+                                if (showStickyBar)
+                                  Positioned(
+                                    top: collapsedTop,
+                                    left: 0,
+                                    right: 0,
+                                    key: _stickyBarKey,
+                                    child: DateHeaderContent(
+                                      date: dateToShow,
+                                      dayExpense: dateToShow == _currentStickyDate
+                                          ? _currentStickyExpense
+                                          : dayExpense(grouped[dateToShow]!),
+                                      dayIncome: dateToShow == _currentStickyDate
+                                          ? _currentStickyIncome
+                                          : dayIncome(grouped[dateToShow]!),
                                       privacyMode: _privacyMode,
+                                      pinned: true,
                                     ),
                                   ),
-                                  SliverList(
-                                    delegate: SliverChildBuilderDelegate((
-                                      context,
-                                      index,
-                                    ) {
-                                      final row = e.value[index];
-                                      return TransactionRow(
-                                        entry: row,
-                                        accounts: data.accounts,
-                                        entryTagTitles: data.entryTagTitles,
-                                        privacyMode: _privacyMode,
-                                        onTap: () => EntryListHandlers.openEntry(
-                                          context,
-                                          row,
-                                          _onRefreshTrigger,
-                                        ),
-                                        onDelete: () => EntryListHandlers.deleteEntry(
-                                          context,
-                                          row,
-                                          _onRefreshTrigger,
-                                        ),
-                                        onCopy: () => EntryListHandlers.copyEntry(
-                                          context,
-                                          row,
-                                          _onRefreshTrigger,
-                                        ),
-                                      );
-                                    }, childCount: e.value.length),
-                                  ),
-                                ],
-                                const SliverPadding(
-                                  padding: EdgeInsets.only(bottom: 88),
-                                ),
                               ],
-                            ),
-                            if (showStickyBar)
-                              Positioned(
-                                top: _showCollapsedSummary
-                                    ? CollapsedSummaryBar.height
-                                    : 0,
-                                left: 0,
-                                right: 0,
-                                key: _stickyBarKey,
-                                child: DateHeaderContent(
-                                  date: dateToShow,
-                                  dayExpense: dateToShow == _currentStickyDate
-                                      ? _currentStickyExpense
-                                      : dayExpense(grouped[dateToShow]!),
-                                  dayIncome: dateToShow == _currentStickyDate
-                                      ? _currentStickyIncome
-                                      : dayIncome(grouped[dateToShow]!),
-                                  privacyMode: _privacyMode,
-                                ),
-                              ),
-                          ],
+                            );
+                          },
                         );
                       },
                     ),
                   ),
-                  if (_showCollapsedSummary)
-                    Positioned(
-                      top: 0,
-                      left: 0,
-                      right: 0,
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: SizeTransition(
+                      sizeFactor: _collapsedBarAnimation,
+                      axis: Axis.vertical,
+                      axisAlignment: -1,
                       child: CollapsedSummaryBar(
                         future: _future,
                         getSummaryText: (data) =>
                             '本月結餘 ${_privacyMode ? '****' : _formatBalance(_computeSummary((data as _JournalData).entries).balance)}',
                       ),
                     ),
+                  ),
                 ],
               ),
             ),
