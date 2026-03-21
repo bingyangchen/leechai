@@ -21,7 +21,8 @@ class Settings(BaseSettings):
     GOOGLE_ANDROID_CLIENT_ID: str
     JWT_SECRET: str
     JWT_ALGORITHM: str = "HS256"
-    JWT_EXPIRE_SECONDS: int = 7 * 24 * 3600
+    JWT_ACCESS_TOKEN_EXPIRE_SECONDS: int = 300
+    JWT_REFRESH_TOKEN_EXPIRE_SECONDS: int = 365 * 24 * 3600
     LOG_LEVEL: str = "INFO"
     SQL_LOG: bool = False
 

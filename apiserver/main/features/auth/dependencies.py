@@ -35,6 +35,8 @@ async def get_current_user(
         payload = jwt_decode(
             token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
         )
+        if payload.get("token_type") != "access":
+            raise InvalidTokenError("wrong token type")
         user_id = UUID(payload.get("sub"))
     except InvalidTokenError, TypeError, ValueError:
         raise HTTPException(

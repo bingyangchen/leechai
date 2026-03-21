@@ -1,8 +1,8 @@
 """init
 
-Revision ID: f7d03582e8a0
+Revision ID: 12b2e0be90d3
 Revises:
-Create Date: 2026-03-18 00:28:33.392713+00:00
+Create Date: 2026-03-21 08:06:23.940714+00:00
 
 """
 
@@ -11,7 +11,7 @@ from collections.abc import Sequence
 import sqlalchemy as sa
 from alembic import op
 
-revision: str = "f7d03582e8a0"
+revision: str = "12b2e0be90d3"
 down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -161,6 +161,30 @@ def upgrade() -> None:
         unique=False,
     )
     op.create_table(
+        "refresh_token",
+        sa.Column("id", sa.UUID(), nullable=False),
+        sa.Column("user_id", sa.UUID(), nullable=False),
+        sa.Column("token_hash", sa.String(length=64), nullable=False),
+        sa.Column("family_id", sa.UUID(), nullable=False),
+        sa.Column("expires_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("revoked_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.ForeignKeyConstraint(["user_id"], ["user.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("token_hash"),
+    )
+    op.create_index(
+        op.f("ix_refresh_token_family_id"), "refresh_token", ["family_id"], unique=False
+    )
+    op.create_index(
+        op.f("ix_refresh_token_user_id"), "refresh_token", ["user_id"], unique=False
+    )
+    op.create_table(
         "tag",
         sa.Column("user_id", sa.UUID(), nullable=False),
         sa.Column("id", sa.String(length=36), nullable=False),
@@ -193,6 +217,9 @@ def downgrade() -> None:
     op.drop_index("ix_tag_user_id_server_updated_at", table_name="tag")
     op.drop_index(op.f("ix_tag_updated_at"), table_name="tag")
     op.drop_table("tag")
+    op.drop_index(op.f("ix_refresh_token_user_id"), table_name="refresh_token")
+    op.drop_index(op.f("ix_refresh_token_family_id"), table_name="refresh_token")
+    op.drop_table("refresh_token")
     op.drop_index("ix_entry_tag_user_id_server_updated_at", table_name="entry_tag")
     op.drop_index(op.f("ix_entry_tag_updated_at"), table_name="entry_tag")
     op.drop_table("entry_tag")
