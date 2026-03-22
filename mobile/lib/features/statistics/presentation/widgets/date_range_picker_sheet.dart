@@ -131,6 +131,7 @@ class _DateRangePickerContentState extends State<_DateRangePickerContent> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final outlineGhost = theme.colorScheme.outline.withValues(alpha: 0.22);
     return SingleChildScrollView(
       controller: widget.scrollController,
       child: Padding(
@@ -145,10 +146,36 @@ class _DateRangePickerContentState extends State<_DateRangePickerContent> {
                 for (final p in DateRangePreset.values)
                   if (p != DateRangePreset.custom)
                     FilterChip(
+                      showCheckmark: false,
                       label: Text(p.label),
+                      labelStyle: _preset == p
+                          ? theme.textStyles.titleSmallEmphasis.copyWith(
+                              color: theme.colorScheme.onPrimary,
+                            )
+                          : theme.textStyles.sectionLabel.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant.withValues(
+                                alpha: 0.85,
+                              ),
+                              fontWeight: FontWeight.w400,
+                            ),
                       selected: _preset == p,
-                      onSelected: (_) => _selectPreset(p),
-                      side: BorderSide(color: theme.colorScheme.outline),
+                      onSelected: (selectedValue) {
+                        if (selectedValue) {
+                          _selectPreset(p);
+                        }
+                      },
+                      color: WidgetStateProperty.resolveWith((states) {
+                        if (states.contains(WidgetState.selected)) {
+                          return theme.colorScheme.primary;
+                        }
+                        return theme.colorScheme.surface.withValues(alpha: 0);
+                      }),
+                      side: WidgetStateBorderSide.resolveWith((states) {
+                        if (states.contains(WidgetState.selected)) {
+                          return BorderSide(color: theme.colorScheme.primary);
+                        }
+                        return BorderSide(color: outlineGhost);
+                      }),
                     ),
               ],
             ),
