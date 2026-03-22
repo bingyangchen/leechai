@@ -1,5 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:mobile/features/budget/presentation/pages/budget_page.dart';
+import 'package:mobile/features/budget/presentation/widgets/budget_non_month_hint.dart';
+import 'package:mobile/features/budget/presentation/widgets/budget_progress_card.dart';
 import 'package:mobile/features/entry/domain/entry_type.dart';
 import 'package:mobile/features/entry/presentation/constants/entry_type_colors.dart';
 import 'package:mobile/features/statistics/data/services/statistics.dart';
@@ -9,13 +12,15 @@ import 'package:mobile/features/statistics/presentation/constants/category_color
 import 'package:mobile/features/statistics/presentation/pages/category_detail_page.dart';
 import 'package:mobile/features/statistics/presentation/widgets/category_donut_chart.dart';
 import 'package:mobile/features/statistics/presentation/widgets/category_ranking_tile.dart';
+import 'package:mobile/features/statistics/presentation/widgets/net_worth_trend.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/refresh_snap_back.dart';
 import 'package:mobile/shared/widgets/app_refresh_indicator.dart';
 import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
 import 'package:mobile/shared/widgets/sliding_segmented_control.dart';
 
-class IncomeExpenseTab extends StatefulWidget {
-  const IncomeExpenseTab({
+class StatisticsDashboardBody extends StatefulWidget {
+  const StatisticsDashboardBody({
     super.key,
     required this.dateRange,
     this.preset,
@@ -33,10 +38,10 @@ class IncomeExpenseTab extends StatefulWidget {
   final int rankingAnimationTrigger;
 
   @override
-  State<IncomeExpenseTab> createState() => _IncomeExpenseTabState();
+  State<StatisticsDashboardBody> createState() => _StatisticsDashboardBodyState();
 }
 
-class _IncomeExpenseTabState extends State<IncomeExpenseTab> {
+class _StatisticsDashboardBodyState extends State<StatisticsDashboardBody> {
   bool _isExpense = true;
   int? _touchedIndex;
   late Future<_TabData> _future;
@@ -50,7 +55,7 @@ class _IncomeExpenseTabState extends State<IncomeExpenseTab> {
   }
 
   @override
-  void didUpdateWidget(IncomeExpenseTab oldWidget) {
+  void didUpdateWidget(StatisticsDashboardBody oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.refreshTrigger != widget.refreshTrigger) {
       oldWidget.refreshTrigger?.removeListener(_onRefresh);
@@ -92,6 +97,36 @@ class _IncomeExpenseTabState extends State<IncomeExpenseTab> {
     );
   }
 
+  Widget _buildBudgetSection(BuildContext context) {
+    final now = DateTime.now();
+    final isThisMonth = widget.dateRange.isThisMonthView(now);
+    if (!isThisMonth) {
+      return BudgetNonMonthHint(
+        onViewThisMonth: () => navigateDateRangeToThisMonth(widget.onDateRangeChanged),
+      );
+    }
+    return BudgetProgressCard(
+      privacyMode: widget.privacyMode,
+      refreshTrigger: widget.refreshTrigger,
+      rankingAnimationTrigger: widget.rankingAnimationTrigger,
+      showTitleRow: false,
+      onOpenSettings: () async {
+        final saved = await Navigator.of(context).push<bool>(
+          MaterialPageRoute<bool>(
+            builder: (_) => BudgetPage(refreshTrigger: widget.refreshTrigger),
+          ),
+        );
+        if (!context.mounted) return;
+        if (saved == true) {
+          (widget.refreshTrigger as ValueNotifier<int>?)?.value++;
+          setState(() {
+            _future = _loadData();
+          });
+        }
+      },
+    );
+  }
+
   void _onSegmentChanged(bool isExpense) {
     if (_isExpense != isExpense) {
       setState(() {
@@ -100,6 +135,24 @@ class _IncomeExpenseTabState extends State<IncomeExpenseTab> {
         _future = _loadData();
       });
     }
+  }
+
+  Widget _dashboardSectionTitle(
+    BuildContext context,
+    String title, {
+    double topPadding = 0,
+  }) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16, topPadding, 16, 10),
+      child: Text(title, style: Theme.of(context).textStyles.sectionLabel),
+    );
+  }
+
+  Widget _dashboardSectionDivider(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Divider(height: 1, thickness: 1, color: Theme.of(context).dividerColor),
+    );
   }
 
   @override
@@ -118,9 +171,32 @@ class _IncomeExpenseTabState extends State<IncomeExpenseTab> {
             }),
           ),
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-              child: _buildSegmentedControl(context),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _dashboardSectionTitle(context, '淨值趨勢', topPadding: 8),
+                NetWorthTrendSection(
+                  dateRange: widget.dateRange,
+                  privacyMode: widget.privacyMode,
+                  refreshTrigger: widget.refreshTrigger,
+                ),
+                const SizedBox(height: 28),
+                _dashboardSectionDivider(context),
+                const SizedBox(height: 20),
+                _dashboardSectionTitle(context, '本月預算'),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: _buildBudgetSection(context),
+                ),
+                const SizedBox(height: 28),
+                _dashboardSectionDivider(context),
+                const SizedBox(height: 20),
+                _dashboardSectionTitle(context, '收支結構'),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: _buildSegmentedControl(context),
+                ),
+              ],
             ),
           ),
           SliverToBoxAdapter(

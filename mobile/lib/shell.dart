@@ -86,7 +86,7 @@ class _ShellState extends State<Shell> {
               BottomNavigationBarItem(
                 icon: Icon(Icons.bar_chart_outlined),
                 activeIcon: Icon(Icons.bar_chart_rounded),
-                label: '統計',
+                label: '總覽',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.account_balance_wallet_outlined),

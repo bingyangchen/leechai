@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:mobile/features/account/data/repositories/account.dart'
     show AccountRepository;
 import 'package:mobile/features/account/domain/account.dart';
+import 'package:mobile/features/account/domain/constants.dart';
 import 'package:mobile/features/entry/data/repositories/entry.dart'
     show EntryRepository;
 import 'package:mobile/features/entry/data/repositories/tag.dart' show TagRepository;
@@ -17,7 +18,9 @@ import 'package:mobile/features/entry/presentation/widgets/category_section.dart
 import 'package:mobile/features/entry/presentation/widgets/date_chip_row.dart';
 import 'package:mobile/features/entry/presentation/widgets/notes_section.dart';
 import 'package:mobile/features/entry/presentation/widgets/tags_section.dart';
+import 'package:mobile/features/entry/presentation/widgets/transfer_fee_section.dart';
 import 'package:mobile/features/profile/data/services/achievement.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/snackbar.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
@@ -36,6 +39,7 @@ class EntryPage extends StatefulWidget {
 class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
+  final _transferFeeController = TextEditingController();
   final _amountFocusNode = FocusNode();
   final _tagInputController = TextEditingController();
   final _notesController = TextEditingController();
@@ -94,6 +98,7 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
       return false;
     }
     return _amountController.text.trim().isNotEmpty ||
+        _transferFeeController.text.trim().isNotEmpty ||
         _tags.isNotEmpty ||
         _tagInputController.text.trim().isNotEmpty ||
         _notesController.text.trim().isNotEmpty;
@@ -109,6 +114,7 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
     );
     _pageController = PageController(initialPage: 0);
     _amountController.addListener(() => setState(() {}));
+    _transferFeeController.addListener(() => setState(() {}));
     _tagInputController.addListener(() => setState(() {}));
     _notesController.addListener(() => setState(() {}));
     _tabController.addListener(_syncEntryTypeFromTab);
@@ -256,6 +262,7 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
     _tabController.dispose();
     _pageController.dispose();
     _amountController.dispose();
+    _transferFeeController.dispose();
     _amountFocusNode.dispose();
     _tagInputController.dispose();
     _notesController.dispose();
@@ -304,6 +311,13 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
         _categoryIncomeAccounts = incomeAccounts;
       });
     }
+  }
+
+  String _transferFeeExpenseMemo({
+    required String fromAccountName,
+    required String toAccountName,
+  }) {
+    return '【轉帳手續費】$fromAccountName → $toAccountName';
   }
 
   void _applyDefaultAccounts() {
@@ -441,6 +455,26 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
     if (_isSubmitting) return;
     if (!_formKey.currentState!.validate()) return;
 
+    if (_entryType == EntryType.transfer) {
+      final feeRaw = stripAmount(_transferFeeController.text);
+      if (feeRaw.isNotEmpty) {
+        final fee = double.tryParse(feeRaw);
+        if (fee == null || fee < 0) {
+          if (mounted) {
+            final theme = Theme.of(context);
+            showReplacingSnackBar(
+              context,
+              SnackBar(
+                content: Text('請輸入有效的手續費金額'),
+                backgroundColor: theme.colorScheme.error,
+              ),
+            );
+          }
+          return;
+        }
+      }
+    }
+
     final accounts = _getDebitCreditAccountIds();
     if (accounts == null) {
       if (mounted) {
@@ -485,6 +519,15 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
           occurredAt: _selectedDate,
         );
       } else {
+        double? transferFeeAmount;
+        if (_entryType == EntryType.transfer) {
+          final feeRaw = stripAmount(_transferFeeController.text);
+          final parsedFee = feeRaw.isEmpty ? 0.0 : (double.tryParse(feeRaw) ?? 0.0);
+          if (parsedFee > 0) {
+            transferFeeAmount = parsedFee;
+          }
+        }
+
         await EntryRepository.insert(
           type: _entryType.name,
           debitAccountId: accounts.debit,
@@ -500,6 +543,31 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
           tagIds: tagIds,
           amount: amount,
         );
+
+        if (transferFeeAmount != null) {
+          await AccountRepository.ensureTransferFeeExpenseAccountExists();
+          final fromName = _accountName(_selectedAccountFromId) ?? '轉出帳戶';
+          final toName = _accountName(_selectedAccountToId) ?? '轉入帳戶';
+          final feeMemo = _transferFeeExpenseMemo(
+            fromAccountName: fromName,
+            toAccountName: toName,
+          );
+          await EntryRepository.insert(
+            type: EntryType.expense.name,
+            debitAccountId: defaultExpenseTransferFeeId,
+            creditAccountId: _selectedAccountFromId!,
+            amount: transferFeeAmount,
+            tagIds: tagIds,
+            memo: feeMemo,
+            occurredAt: _selectedDate,
+          );
+          await AchievementService.evaluateAfterEntryInserted(
+            type: EntryType.expense.name,
+            occurredAt: _selectedDate,
+            tagIds: tagIds,
+            amount: transferFeeAmount,
+          );
+        }
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -512,6 +580,8 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
     final typeColor = EntryTypeColors.forType(context, _entryType);
     return PopScope(
       canPop: !_hasUnsavedChanges,
@@ -522,10 +592,7 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
         appBar: AppBar(
           toolbarHeight: kToolbarHeight,
           title: Text(_isEditMode ? '編輯紀錄' : '新增紀錄'),
-          leading: TextButton(
-            onPressed: _isSubmitting ? null : _requestClose,
-            child: const Text('捨棄'),
-          ),
+          leading: BackButton(onPressed: _isSubmitting ? null : () => _requestClose()),
           actions: [
             if (_isEditMode)
               IconButton(
@@ -543,7 +610,15 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
                 ),
               )
             else
-              TextButton(onPressed: _submit, child: const Text('送出')),
+              TextButton(
+                onPressed: _submit,
+                child: Text(
+                  '送出',
+                  style: theme.textStyles.labelLargeEmphasis.copyWith(
+                    color: cs.primary,
+                  ),
+                ),
+              ),
           ],
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(48),
@@ -660,6 +735,14 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
                                 _selectedIncomeCategoryIndex = index;
                               }
                             }),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                  SliverToBoxAdapter(
+                    child: pageType == EntryType.transfer && !_isEditMode
+                        ? TransferFeeSection(
+                            controller: _transferFeeController,
+                            enabled: !_isSubmitting,
                           )
                         : const SizedBox.shrink(),
                   ),

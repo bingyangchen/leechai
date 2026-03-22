@@ -176,7 +176,7 @@ class NetWorthLineChart extends StatelessWidget {
           ),
         ],
       ),
-      duration: const Duration(milliseconds: 200),
+      duration: Duration.zero,
     );
   }
 }

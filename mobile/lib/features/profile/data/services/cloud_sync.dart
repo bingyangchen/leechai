@@ -17,6 +17,8 @@ const List<({String table, List<String> primaryKey})> _syncedTables = [
   (table: 'achievement', primaryKey: ['id']),
   (table: 'tag', primaryKey: ['id']),
   (table: 'entry_tag', primaryKey: ['entry_id', 'tag_id']),
+  (table: 'budget', primaryKey: ['id']),
+  (table: 'category_budget', primaryKey: ['id']),
 ];
 
 class CloudSyncService {

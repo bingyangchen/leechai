@@ -1,8 +1,8 @@
 """init
 
-Revision ID: 12b2e0be90d3
+Revision ID: 091c1bc3cca3
 Revises:
-Create Date: 2026-03-21 08:06:23.940714+00:00
+Create Date: 2026-03-22 09:16:14.059594+00:00
 
 """
 
@@ -11,7 +11,7 @@ from collections.abc import Sequence
 import sqlalchemy as sa
 from alembic import op
 
-revision: str = "12b2e0be90d3"
+revision: str = "091c1bc3cca3"
 down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -103,6 +103,68 @@ def upgrade() -> None:
     op.create_index(
         "ix_achievement_user_id_server_updated_at",
         "achievement",
+        ["user_id", "server_updated_at"],
+        unique=False,
+    )
+    op.create_table(
+        "budget",
+        sa.Column("user_id", sa.UUID(), nullable=False),
+        sa.Column("id", sa.String(length=36), nullable=False),
+        sa.Column("year", sa.Integer(), nullable=False),
+        sa.Column("month", sa.Integer(), nullable=False),
+        sa.Column("total_amount", sa.Float(), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column(
+            "server_updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.ForeignKeyConstraint(["user_id"], ["user.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("user_id", "id"),
+        sa.UniqueConstraint("user_id", "year", "month"),
+    )
+    op.create_index(
+        op.f("ix_budget_updated_at"), "budget", ["updated_at"], unique=False
+    )
+    op.create_index(
+        "ix_budget_user_id_server_updated_at",
+        "budget",
+        ["user_id", "server_updated_at"],
+        unique=False,
+    )
+    op.create_table(
+        "category_budget",
+        sa.Column("user_id", sa.UUID(), nullable=False),
+        sa.Column("id", sa.String(length=36), nullable=False),
+        sa.Column("year", sa.Integer(), nullable=False),
+        sa.Column("month", sa.Integer(), nullable=False),
+        sa.Column("sub_type", sa.String(length=255), nullable=False),
+        sa.Column("amount", sa.Float(), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column(
+            "server_updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.ForeignKeyConstraint(["user_id"], ["user.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("user_id", "id"),
+        sa.UniqueConstraint("user_id", "year", "month", "sub_type"),
+    )
+    op.create_index(
+        op.f("ix_category_budget_updated_at"),
+        "category_budget",
+        ["updated_at"],
+        unique=False,
+    )
+    op.create_index(
+        "ix_category_budget_user_id_server_updated_at",
+        "category_budget",
         ["user_id", "server_updated_at"],
         unique=False,
     )
@@ -226,6 +288,14 @@ def downgrade() -> None:
     op.drop_index("ix_entry_user_id_server_updated_at", table_name="entry")
     op.drop_index(op.f("ix_entry_updated_at"), table_name="entry")
     op.drop_table("entry")
+    op.drop_index(
+        "ix_category_budget_user_id_server_updated_at", table_name="category_budget"
+    )
+    op.drop_index(op.f("ix_category_budget_updated_at"), table_name="category_budget")
+    op.drop_table("category_budget")
+    op.drop_index("ix_budget_user_id_server_updated_at", table_name="budget")
+    op.drop_index(op.f("ix_budget_updated_at"), table_name="budget")
+    op.drop_table("budget")
     op.drop_index("ix_achievement_user_id_server_updated_at", table_name="achievement")
     op.drop_index(op.f("ix_achievement_updated_at"), table_name="achievement")
     op.drop_table("achievement")

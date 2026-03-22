@@ -328,12 +328,7 @@ class AppTheme {
         weight: w600,
         color: onSurface,
       ),
-      headline: merge(
-        textTheme.headlineMedium,
-        size: _headlineSize,
-        // weight: w400,
-        color: onSurface,
-      ),
+      headline: merge(textTheme.headlineMedium, size: _headlineSize, color: onSurface),
       headlineEmphasis: merge(
         textTheme.headlineMedium,
         size: _headlineSize,

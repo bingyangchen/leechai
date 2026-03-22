@@ -56,9 +56,32 @@ class AchievementChange(BaseDataModel):
     updated_at: datetime
 
 
+class BudgetChange(BaseDataModel):
+    id: str
+    year: int
+    month: int
+    total_amount: float
+    created_at: datetime
+    updated_at: datetime
+    deleted_at: datetime | None
+
+
+class CategoryBudgetChange(BaseDataModel):
+    id: str
+    year: int
+    month: int
+    sub_type: str
+    amount: float
+    created_at: datetime
+    updated_at: datetime
+    deleted_at: datetime | None
+
+
 class Changes(BaseDataModel):
     entry: list[EntryChange] = []
     account: list[AccountChange] = []
     achievement: list[AchievementChange] = []
     tag: list[TagChange] = []
     entry_tag: list[EntryTagChange] = []
+    budget: list[BudgetChange] = []
+    category_budget: list[CategoryBudgetChange] = []

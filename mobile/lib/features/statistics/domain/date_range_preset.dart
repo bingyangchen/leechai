@@ -67,9 +67,9 @@ class DateRange {
 
   String toRangeLabel() {
     if (start.year == end.year && start.month == end.month) {
-      return '${start.year} 年 ${start.month.toString().padLeft(2, '0')} 月';
+      return '${start.year}/${start.month.toString().padLeft(2, '0')}';
     }
-    return '${start.year} 年 ${start.month.toString().padLeft(2, '0')} 月 - ${end.year} 年 ${end.month.toString().padLeft(2, '0')} 月';
+    return '${start.year}/${start.month.toString().padLeft(2, '0')} - ${end.year}/${end.month.toString().padLeft(2, '0')}';
   }
 
   String toShortLabel([DateRangePreset? preset]) {
@@ -84,5 +84,16 @@ class DateRange {
     final s = DateTime(start.year, start.month, 1);
     final e = DateTime(end.year, end.month, 1);
     return !m.isBefore(s) && !m.isAfter(e);
+  }
+
+  bool isThisMonthView(DateTime anchor) {
+    final expectedStart = DateTime(anchor.year, anchor.month, 1);
+    final lastDay = DateTime(anchor.year, anchor.month + 1, 0);
+    final startDay = DateTime(start.year, start.month, start.day);
+    final endDay = DateTime(end.year, end.month, end.day);
+    return startDay == expectedStart &&
+        endDay.year == lastDay.year &&
+        endDay.month == lastDay.month &&
+        endDay.day == lastDay.day;
   }
 }

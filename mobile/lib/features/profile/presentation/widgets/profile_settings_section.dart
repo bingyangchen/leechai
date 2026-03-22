@@ -5,12 +5,14 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:in_app_review/in_app_review.dart';
+import 'package:mobile/features/budget/presentation/pages/budget_page.dart';
 import 'package:mobile/features/category/presentation/pages/category_management_page.dart';
 import 'package:mobile/features/profile/presentation/pages/notification_settings_page.dart';
 import 'package:mobile/features/tag/presentation/pages/tag_management_page.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/theme/theme_mode_scope.dart';
 import 'package:mobile/shared/utils/snackbar.dart';
+import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -53,18 +55,25 @@ class ProfileSettingsSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _SectionHeader(title: '記帳設定'),
-          // _SectionHeader(title: '財務管理'),
           _TileGroup(
             children: [
-              // TODO: Implement budget setting
-              // _SettingsTile(
-              //   icon: Icons.account_balance_wallet_outlined,
-              //   title: '預算設定',
-              //   trailing: totalBudgetSummary != null
-              //       ? '\$${formatAmountForDisplay(totalBudgetSummary!)}'
-              //       : null,
-              //   onTap: () => _pushPlaceholderPage(context, '預算設定'),
-              // ),
+              _SettingsTile(
+                icon: Icons.account_balance_wallet_outlined,
+                title: '預算',
+                trailing: totalBudgetSummary != null && totalBudgetSummary! > 0
+                    ? '\$${formatAmountForDisplay(totalBudgetSummary!)}'
+                    : '未設定',
+                onTap: () async {
+                  final saved = await Navigator.of(context).push<bool>(
+                    MaterialPageRoute<bool>(
+                      builder: (_) => BudgetPage(refreshTrigger: refreshTrigger),
+                    ),
+                  );
+                  if (saved == true && context.mounted) {
+                    (refreshTrigger as ValueNotifier<int>?)?.value++;
+                  }
+                },
+              ),
               _SettingsTile(
                 icon: Icons.category_outlined,
                 title: '分類管理',
