@@ -10,10 +10,20 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from main.core.db import get_session
-from main.features.sync.models import Account, Achievement, Entry, EntryTag, Tag
+from main.features.sync.models import (
+    Account,
+    Achievement,
+    Budget,
+    CategoryBudget,
+    Entry,
+    EntryTag,
+    Tag,
+)
 from main.features.sync.schema.base import (
     AccountChange,
     AchievementChange,
+    BudgetChange,
+    CategoryBudgetChange,
     Changes,
     EntryChange,
     EntryTagChange,
@@ -26,6 +36,8 @@ MODEL_TO_CHANGE = {
     Achievement: AchievementChange,
     Tag: TagChange,
     EntryTag: EntryTagChange,
+    Budget: BudgetChange,
+    CategoryBudget: CategoryBudgetChange,
 }
 
 
@@ -42,7 +54,15 @@ class SyncService:
     ) -> tuple[Changes, datetime]:
         changes = Changes()
         async with self._db_session.begin():
-            for model in (Entry, Account, Achievement, Tag, EntryTag):
+            for model in (
+                Entry,
+                Account,
+                Achievement,
+                Tag,
+                EntryTag,
+                Budget,
+                CategoryBudget,
+            ):
                 statement = select(model).where(model.user_id == user_id)
                 if last_synced_at is not None:
                     statement = statement.where(
@@ -163,6 +183,47 @@ class SyncService:
                     ],
                     set_=update_columns,
                     where=statement.excluded.updated_at > EntryTag.updated_at,
+                )
+                await self._db_session.execute(statement)
+
+            if budget_rows := changes.budget:
+                values = [{**r.model_dump(), "user_id": user_id} for r in budget_rows]
+                statement = insert(Budget).values(values)
+                update_columns = {
+                    "year": statement.excluded.year,
+                    "month": statement.excluded.month,
+                    "total_amount": statement.excluded.total_amount,
+                    "created_at": statement.excluded.created_at,
+                    "updated_at": statement.excluded.updated_at,
+                    "deleted_at": statement.excluded.deleted_at,
+                    "server_updated_at": _utc_now(),
+                }
+                statement = statement.on_conflict_do_update(
+                    index_elements=[Budget.user_id, Budget.id],
+                    set_=update_columns,
+                    where=statement.excluded.updated_at > Budget.updated_at,
+                )
+                await self._db_session.execute(statement)
+
+            if category_budget_rows := changes.category_budget:
+                values = [
+                    {**r.model_dump(), "user_id": user_id} for r in category_budget_rows
+                ]
+                statement = insert(CategoryBudget).values(values)
+                update_columns = {
+                    "year": statement.excluded.year,
+                    "month": statement.excluded.month,
+                    "sub_type": statement.excluded.sub_type,
+                    "amount": statement.excluded.amount,
+                    "created_at": statement.excluded.created_at,
+                    "updated_at": statement.excluded.updated_at,
+                    "deleted_at": statement.excluded.deleted_at,
+                    "server_updated_at": _utc_now(),
+                }
+                statement = statement.on_conflict_do_update(
+                    index_elements=[CategoryBudget.user_id, CategoryBudget.id],
+                    set_=update_columns,
+                    where=statement.excluded.updated_at > CategoryBudget.updated_at,
                 )
                 await self._db_session.execute(statement)
 

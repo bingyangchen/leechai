@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import Index, String, UniqueConstraint, func
+from sqlalchemy import Index, Integer, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.schema import ForeignKey, PrimaryKeyConstraint
 
@@ -92,6 +92,57 @@ class EntryTag(BaseDbModel):
     )
     entry_id: Mapped[str] = mapped_column(String(36))
     tag_id: Mapped[str] = mapped_column(String(36))
+    updated_at: Mapped[datetime] = mapped_column(nullable=False, index=True)
+    deleted_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    server_updated_at: Mapped[datetime] = mapped_column(
+        nullable=False, server_default=func.now()
+    )
+
+
+class Budget(BaseDbModel):
+    __tablename__ = "budget"
+    __table_args__ = (
+        PrimaryKeyConstraint("user_id", "id"),
+        UniqueConstraint("user_id", "year", "month"),
+        Index("ix_budget_user_id_server_updated_at", "user_id", "server_updated_at"),
+    )
+
+    user_id: Mapped[UUID] = mapped_column(
+        ForeignKey("user.id", ondelete="CASCADE"), nullable=False
+    )
+    id: Mapped[str] = mapped_column(String(36))
+    year: Mapped[int] = mapped_column(Integer(), nullable=False)
+    month: Mapped[int] = mapped_column(Integer(), nullable=False)
+    total_amount: Mapped[float] = mapped_column(nullable=False)
+    created_at: Mapped[datetime] = mapped_column(nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(nullable=False, index=True)
+    deleted_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    server_updated_at: Mapped[datetime] = mapped_column(
+        nullable=False, server_default=func.now()
+    )
+
+
+class CategoryBudget(BaseDbModel):
+    __tablename__ = "category_budget"
+    __table_args__ = (
+        PrimaryKeyConstraint("user_id", "id"),
+        UniqueConstraint("user_id", "year", "month", "sub_type"),
+        Index(
+            "ix_category_budget_user_id_server_updated_at",
+            "user_id",
+            "server_updated_at",
+        ),
+    )
+
+    user_id: Mapped[UUID] = mapped_column(
+        ForeignKey("user.id", ondelete="CASCADE"), nullable=False
+    )
+    id: Mapped[str] = mapped_column(String(36))
+    year: Mapped[int] = mapped_column(Integer(), nullable=False)
+    month: Mapped[int] = mapped_column(Integer(), nullable=False)
+    sub_type: Mapped[str] = mapped_column(String(255), nullable=False)
+    amount: Mapped[float] = mapped_column(nullable=False)
+    created_at: Mapped[datetime] = mapped_column(nullable=False)
     updated_at: Mapped[datetime] = mapped_column(nullable=False, index=True)
     deleted_at: Mapped[datetime | None] = mapped_column(nullable=True)
     server_updated_at: Mapped[datetime] = mapped_column(
