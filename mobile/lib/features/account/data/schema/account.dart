@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/features/account/domain/constants.dart';
+import 'package:mobile/features/account/domain/constants.dart'
+    show defaultEquityUnrealizedGainId, defaultExpenseTransferFeeId;
 import 'package:sqflite/sqflite.dart';
 
 Future<void> run(Database db) async {
@@ -75,6 +76,7 @@ Future<void> seedDefaults(Database db) async {
     ('default_expense_3', '娛樂', Icons.movie.codePoint.toString()),
     ('default_expense_4', '購物', Icons.shopping_bag.codePoint.toString()),
     ('default_expense_5', '其他', Icons.more_horiz.codePoint.toString()),
+    (defaultExpenseTransferFeeId, '手續費', Icons.payments.codePoint.toString()),
   ];
   for (final (id, subType, icon) in expenseAccounts) {
     await db.insert('account', {

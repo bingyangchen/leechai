@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:mobile/core/database/app_database.dart';
 import 'package:mobile/features/account/domain/account.dart';
 import 'package:mobile/features/account/domain/account_icon.dart';
+import 'package:mobile/features/account/domain/constants.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
 class AccountRepository {
@@ -34,6 +36,36 @@ class AccountRepository {
       orderBy: 'last_used_at DESC',
     );
     return rows.map(_rowToAccount).toList();
+  }
+
+  static Future<String> ensureTransferFeeExpenseAccountExists() async {
+    final id = defaultExpenseTransferFeeId;
+    final existing = await getById(id);
+    if (existing != null) return id;
+
+    final db = await AppDatabase.database;
+    final deletedRow = await db.query(
+      _table,
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (deletedRow.isNotEmpty) {
+      await restore(id);
+      return id;
+    }
+
+    final now = DateTime.now().toUtc().toIso8601String();
+    await db.insert(_table, {
+      'id': id,
+      'type': AccountType.expense.name,
+      'sub_type': '手續費',
+      'icon': iconToCodePoint(Icons.payments),
+      'last_used_at': now,
+      'created_at': now,
+      'updated_at': now,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    return (await getById(id))?.id ?? id;
   }
 
   static Future<Account?> getById(String id) async {
