@@ -14,7 +14,9 @@ class AuthService {
 
   static final AuthService instance = AuthService._();
 
-  final AuthApi _authApi = AuthApi(client: ApiClient());
+  final AuthApi _authApi = AuthApi(
+    client: ApiClient(credentialStore: const AuthRepositoryCredentials()),
+  );
 
   final ValueNotifier<AuthState?> currentUser = ValueNotifier<AuthState?>(null);
 
@@ -24,12 +26,12 @@ class AuthService {
 
   _PendingSignIn? _pendingSignIn;
 
-  static const String _webClientId =
+  static const String _googleOauthWebClientId =
       '1039175482663-b22bnh80h3jd78dae683bm93f1qit2fe.apps.googleusercontent.com';
 
   Future<void> ensureLoaded() async {
     if (_loaded) return;
-    await GoogleSignIn.instance.initialize(serverClientId: _webClientId);
+    await GoogleSignIn.instance.initialize(serverClientId: _googleOauthWebClientId);
     AuthSessionEvents.onTokensRefreshed = (accessToken, refreshToken) {
       final user = currentUser.value;
       if (user == null) return;

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:mobile/core/database/app_database.dart';
 import 'package:mobile/core/network/api_client.dart';
+import 'package:mobile/features/auth/data/repositories/auth.dart';
 import 'package:mobile/features/auth/data/services/auth.dart';
 import 'package:mobile/features/profile/data/apis/sync.dart';
 import 'package:mobile/features/profile/data/repositories/cloud_sync.dart';
@@ -23,7 +24,9 @@ class CloudSyncService {
 
   static final CloudSyncService instance = CloudSyncService._();
   static const _periodicInterval = Duration(seconds: 30);
-  final SyncApi _syncApi = SyncApi(client: ApiClient());
+  final SyncApi _syncApi = SyncApi(
+    client: ApiClient(credentialStore: const AuthRepositoryCredentials()),
+  );
   final ValueNotifier<CloudSyncStatus> status = ValueNotifier(CloudSyncStatus.synced);
 
   ValueNotifier<DateTime?> get lastSyncAt => LastSyncRepository.lastSyncAt;

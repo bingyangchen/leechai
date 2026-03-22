@@ -1,3 +1,4 @@
+import 'package:mobile/core/auth/credential_store.dart';
 import 'package:mobile/features/auth/domain/auth_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -74,4 +75,32 @@ class AuthRepository {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_keyLastLinkedUserId);
   }
+}
+
+class AuthRepositoryCredentials implements AuthCredentialStore {
+  const AuthRepositoryCredentials();
+
+  @override
+  Future<AuthCredentials?> load() async {
+    final state = await AuthRepository.load();
+    if (state == null) return null;
+    return AuthCredentials(
+      accessToken: state.accessToken,
+      refreshToken: state.refreshToken,
+    );
+  }
+
+  @override
+  Future<void> updateTokens({
+    required String accessToken,
+    required String refreshToken,
+  }) {
+    return AuthRepository.updateTokens(
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+    );
+  }
+
+  @override
+  Future<void> clear() => AuthRepository.clear();
 }
