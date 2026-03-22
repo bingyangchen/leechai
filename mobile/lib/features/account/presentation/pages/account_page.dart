@@ -22,10 +22,10 @@ class AccountPage extends StatefulWidget {
   final ValueListenable<int>? refreshTrigger;
 
   @override
-  State<AccountPage> createState() => _AssetsPageState();
+  State<AccountPage> createState() => _AccountPageState();
 }
 
-class _AssetsPageState extends State<AccountPage> {
+class _AccountPageState extends State<AccountPage> {
   bool _privacyMode = false;
   late Future<_AccountPageData> _future;
   final ScrollController _scrollController = ScrollController();

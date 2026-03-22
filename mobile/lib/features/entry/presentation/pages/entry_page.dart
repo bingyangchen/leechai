@@ -18,6 +18,7 @@ import 'package:mobile/features/entry/presentation/widgets/date_chip_row.dart';
 import 'package:mobile/features/entry/presentation/widgets/notes_section.dart';
 import 'package:mobile/features/entry/presentation/widgets/tags_section.dart';
 import 'package:mobile/features/profile/data/services/achievement.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/snackbar.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
@@ -512,6 +513,8 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
     final typeColor = EntryTypeColors.forType(context, _entryType);
     return PopScope(
       canPop: !_hasUnsavedChanges,
@@ -522,10 +525,7 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
         appBar: AppBar(
           toolbarHeight: kToolbarHeight,
           title: Text(_isEditMode ? '編輯紀錄' : '新增紀錄'),
-          leading: TextButton(
-            onPressed: _isSubmitting ? null : _requestClose,
-            child: const Text('捨棄'),
-          ),
+          leading: BackButton(onPressed: _isSubmitting ? null : () => _requestClose()),
           actions: [
             if (_isEditMode)
               IconButton(
@@ -543,7 +543,15 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
                 ),
               )
             else
-              TextButton(onPressed: _submit, child: const Text('送出')),
+              TextButton(
+                onPressed: _submit,
+                child: Text(
+                  '送出',
+                  style: theme.textStyles.labelLargeEmphasis.copyWith(
+                    color: cs.primary,
+                  ),
+                ),
+              ),
           ],
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(48),

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile/features/auth/data/services/auth.dart';
+import 'package:mobile/features/budget/data/repositories/budget.dart';
 import 'package:mobile/features/entry/data/repositories/entry.dart';
 import 'package:mobile/features/profile/data/repositories/achievement.dart';
 import 'package:mobile/features/profile/data/services/cloud_sync.dart';
@@ -82,6 +83,10 @@ class _ProfilePageState extends State<ProfilePage> {
       achievementRows,
       achievementDefinitions,
     );
+    final totalBudgetSummary = await BudgetRepository.getTotalForMonth(
+      now.year,
+      now.month,
+    );
     return ProfilePageData(
       consecutiveActiveDays: consecutiveActiveDays,
       totalEntries: totalEntries,
@@ -89,7 +94,7 @@ class _ProfilePageState extends State<ProfilePage> {
       entriesThisMonth: monthEntries.length,
       noSpendDaysThisWeek: 0,
       achievements: achievements,
-      totalBudgetSummary: 20000,
+      totalBudgetSummary: totalBudgetSummary,
     );
   }
 

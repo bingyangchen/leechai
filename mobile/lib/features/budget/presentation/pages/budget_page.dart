@@ -1,0 +1,623 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:mobile/features/account/data/repositories/account.dart';
+import 'package:mobile/features/account/domain/account.dart';
+import 'package:mobile/features/budget/data/repositories/budget.dart';
+import 'package:mobile/features/budget/data/services/budget.dart';
+import 'package:mobile/features/budget/presentation/widgets/add_category_budget_sheet.dart';
+import 'package:mobile/features/statistics/data/services/statistics.dart';
+import 'package:mobile/features/statistics/presentation/constants/category_colors.dart';
+import 'package:mobile/shared/theme/app_theme.dart';
+import 'package:mobile/shared/utils/snackbar.dart';
+import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
+
+class BudgetPage extends StatefulWidget {
+  const BudgetPage({super.key, this.refreshTrigger});
+
+  final ValueListenable<int>? refreshTrigger;
+
+  @override
+  State<BudgetPage> createState() => _BudgetPageState();
+}
+
+class _BudgetPageState extends State<BudgetPage> {
+  final TextEditingController _totalController = TextEditingController();
+  late Map<String, double> _categoryAmounts;
+  late Map<String, double> _initialCategoryAmounts;
+  double? _initialTotal;
+  bool _loading = true;
+  late Future<_Suggestions> _suggestionsFuture;
+  late Future<double> _spentExpenseFuture;
+
+  int get _year => DateTime.now().year;
+  int get _month => DateTime.now().month;
+
+  @override
+  void initState() {
+    super.initState();
+    _suggestionsFuture = _loadSuggestions();
+    _spentExpenseFuture = _spentExpenseThisMonth();
+    _load();
+  }
+
+  Future<_Suggestions> _loadSuggestions() async {
+    final now = DateTime.now();
+    final avg = await BudgetService.averageExpenseLastThreeFullMonths(now);
+    final prev = await BudgetService.totalBudgetForPreviousMonth(now);
+    return _Suggestions(suggestedFromAverage: avg, lastMonthTotal: prev);
+  }
+
+  Future<void> _load() async {
+    final total = await BudgetRepository.getTotalForMonth(_year, _month);
+    final cats = await BudgetRepository.getCategoryBudgetsForMonth(_year, _month);
+    if (!mounted) return;
+    setState(() {
+      _initialTotal = total;
+      _categoryAmounts = Map<String, double>.from(cats);
+      _initialCategoryAmounts = Map<String, double>.from(cats);
+      _totalController.text = total != null && total > 0
+          ? formatAmountForDisplay(total)
+          : '';
+      _loading = false;
+    });
+  }
+
+  @override
+  void dispose() {
+    _totalController.dispose();
+    super.dispose();
+  }
+
+  bool get _hasUnsavedChanges {
+    if (_loading) return false;
+    if (!_totalMatchesSaved()) return true;
+    if (_categoryAmounts.length != _initialCategoryAmounts.length) return true;
+    for (final entry in _categoryAmounts.entries) {
+      final saved = _initialCategoryAmounts[entry.key];
+      if (saved == null || (saved - entry.value).abs() > 0.01) return true;
+    }
+    for (final key in _initialCategoryAmounts.keys) {
+      if (!_categoryAmounts.containsKey(key)) return true;
+    }
+    return false;
+  }
+
+  bool _totalMatchesSaved() {
+    final parsed = _parseTotal();
+    final saved = _initialTotal;
+    final parsedEmpty = parsed == null || parsed <= 0;
+    final savedEmpty = saved == null || saved <= 0;
+    if (parsedEmpty && savedEmpty) return true;
+    if (parsedEmpty != savedEmpty) return false;
+    if (parsed == null || saved == null) return false;
+    return (parsed - saved).abs() < 0.01;
+  }
+
+  Future<double> _spentExpenseThisMonth() async {
+    final start = DateTime(_year, _month, 1);
+    final end = DateTime(_year, _month + 1, 0, 23, 59, 59, 999);
+    final totals = await StatisticsService.getRangeTotals(start, end);
+    return totals.totalExpense;
+  }
+
+  double? _parseTotal() {
+    final raw = stripAmount(_totalController.text);
+    if (raw.isEmpty) return null;
+    return double.tryParse(raw);
+  }
+
+  Future<void> _save() async {
+    final total = _parseTotal();
+    if (total != null && total < 0) {
+      showReplacingSnackBar(context, const SnackBar(content: Text('預算金額不可為負數')));
+      return;
+    }
+    if (total != null && total > 0) {
+      await BudgetRepository.upsertTotalForMonth(_year, _month, total);
+    } else {
+      await BudgetRepository.clearTotalForMonth(_year, _month);
+    }
+
+    final initialKeys = _initialCategoryAmounts.keys.toSet();
+    final currentKeys = _categoryAmounts.keys.toSet();
+    for (final k in initialKeys.difference(currentKeys)) {
+      await BudgetRepository.deleteCategoryBudget(_year, _month, k);
+    }
+    for (final e in _categoryAmounts.entries) {
+      if (e.value > 0) {
+        await BudgetRepository.upsertCategoryBudget(_year, _month, e.key, e.value);
+      } else {
+        await BudgetRepository.deleteCategoryBudget(_year, _month, e.key);
+      }
+    }
+
+    (widget.refreshTrigger as ValueNotifier<int>?)?.value++;
+    if (!mounted) return;
+    showReplacingSnackBar(
+      context,
+      const SnackBar(content: Text('已更新預算'), duration: Duration(milliseconds: 1500)),
+    );
+    Navigator.of(context).pop(true);
+  }
+
+  Color _ratioColor(ColorScheme cs, double ratio) {
+    if (ratio >= 1.0) return cs.error;
+    if (ratio >= 0.8) return cs.secondary;
+    return cs.primary;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
+    return PopScope(
+      canPop: !_hasUnsavedChanges,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final navigator = Navigator.of(context);
+        final discard = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('捨棄變更？'),
+            content: const Text('尚未儲存的變更將會遺失。'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: const Text('取消'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: const Text('捨棄'),
+              ),
+            ],
+          ),
+        );
+        if (discard == true && navigator.mounted) {
+          navigator.pop();
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          toolbarHeight: kToolbarHeight,
+          title: const Text('預算'),
+          actions: [
+            TextButton(
+              onPressed: (_loading || !_hasUnsavedChanges) ? null : _save,
+              child: Text(
+                '完成',
+                style: theme.textStyles.labelLargeEmphasis.copyWith(
+                  color: (_loading || !_hasUnsavedChanges)
+                      ? cs.onSurfaceVariant.withValues(alpha: 0.38)
+                      : cs.primary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        body: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : ListView(
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  8,
+                  16,
+                  32.0 + MediaQuery.viewPaddingOf(context).bottom,
+                ),
+                children: [
+                  Text('本月總預算', style: theme.textStyles.sectionLabel),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _totalController,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    textInputAction: TextInputAction.done,
+                    inputFormatters: [ThousandsSeparatorInputFormatter()],
+                    decoration: InputDecoration(
+                      hintText: '輸入金額',
+                      prefixText: '\$ ',
+                      filled: true,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onChanged: (_) => setState(() {}),
+                    onSubmitted: (_) => FocusManager.instance.primaryFocus?.unfocus(),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildPreview(theme),
+                  const SizedBox(height: 24),
+                  Text('建議預算', style: theme.textStyles.sectionLabel),
+                  const SizedBox(height: 4),
+                  Text('依過去三個月平均支出計算（僅支出類別）', style: theme.textStyles.bodySmallMuted),
+                  const SizedBox(height: 12),
+                  FutureBuilder<_Suggestions>(
+                    future: _suggestionsFuture,
+                    builder: (context, snap) {
+                      if (!snap.hasData) {
+                        return const SizedBox(height: 40);
+                      }
+                      final s = snap.data!;
+                      return Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          if (s.suggestedFromAverage > 0)
+                            ActionChip(
+                              label: Text(
+                                '使用建議 \$${formatAmountForDisplay(s.suggestedFromAverage)}',
+                              ),
+                              onPressed: () {
+                                _totalController.text = formatAmountForDisplay(
+                                  s.suggestedFromAverage,
+                                );
+                                setState(() {});
+                              },
+                            ),
+                          if (s.lastMonthTotal != null && s.lastMonthTotal! > 0)
+                            ActionChip(
+                              label: Text(
+                                '與上月相同 \$${formatAmountForDisplay(s.lastMonthTotal!)}',
+                              ),
+                              onPressed: () {
+                                _totalController.text = formatAmountForDisplay(
+                                  s.lastMonthTotal!,
+                                );
+                                setState(() {});
+                              },
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  _buildCategorySumWarning(theme),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Text('分類預算', style: theme.textStyles.sectionLabel),
+                      const Spacer(),
+                      TextButton.icon(
+                        onPressed: _onAddCategory,
+                        icon: const Icon(Icons.add, size: 20),
+                        label: const Text('新增'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text('僅列出已設定上限的分類', style: theme.textStyles.bodySmallMuted),
+                  const SizedBox(height: 8),
+                  if (_categoryAmounts.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 24),
+                      child: Center(
+                        child: Text('尚未設定分類預算', style: theme.textStyles.bodyMuted),
+                      ),
+                    )
+                  else
+                    ..._buildCategoryRows(theme),
+                ],
+              ),
+      ),
+    );
+  }
+
+  Widget _buildPreview(ThemeData theme) {
+    final cs = theme.colorScheme;
+    final total = _parseTotal();
+    if (total == null || total <= 0) {
+      return Text('預覽：設定總預算後顯示', style: theme.textStyles.bodySmallMuted);
+    }
+    return FutureBuilder<double>(
+      future: _spentExpenseFuture,
+      builder: (context, snap) {
+        final spent = snap.data ?? 0.0;
+        final ratio = (spent / total).clamp(0.0, 1.0);
+        final color = _ratioColor(cs, spent / total);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '已用 \$${formatAmountForDisplay(spent)}',
+              style: theme.textStyles.bodySmallMuted,
+            ),
+            const SizedBox(height: 6),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: Stack(
+                alignment: Alignment.centerLeft,
+                children: [
+                  Container(
+                    height: 9,
+                    width: double.infinity,
+                    color: cs.outline.withValues(alpha: 0.12),
+                  ),
+                  FractionallySizedBox(
+                    widthFactor: ratio,
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      height: 9,
+                      decoration: BoxDecoration(
+                        color: color,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildCategorySumWarning(ThemeData theme) {
+    final total = _parseTotal() ?? 0;
+    final sum = _categoryAmounts.values.fold<double>(0, (a, b) => a + b);
+    if (total <= 0 || sum <= total + 0.01) return const SizedBox.shrink();
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.errorContainer.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        '分類預算合計高於本月總預算，請確認是否為您預期的設定。',
+        style: theme.textStyles.bodySmallMuted.copyWith(
+          color: theme.colorScheme.onErrorContainer,
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildCategoryRows(ThemeData theme) {
+    final spentFuture = BudgetService.expenseAmountsBySubTypeForMonth(_year, _month);
+    return [
+      FutureBuilder<Map<String, double>>(
+        future: spentFuture,
+        builder: (context, snap) {
+          final spentMap = snap.data ?? {};
+          final keys = _categoryAmounts.keys.toList()..sort();
+          return Column(
+            children: [
+              for (var i = 0; i < keys.length; i++)
+                _CategoryBudgetTile(
+                  subType: keys[i],
+                  budgetAmount: _categoryAmounts[keys[i]]!,
+                  spentAmount: spentMap[keys[i]] ?? 0,
+                  index: i,
+                  onAmountChanged: (value) {
+                    setState(() {
+                      _categoryAmounts[keys[i]] = value;
+                    });
+                  },
+                  onDelete: () {
+                    final subType = keys[i];
+                    final amount = _categoryAmounts[subType]!;
+                    HapticFeedback.mediumImpact();
+                    setState(() {
+                      _categoryAmounts.remove(subType);
+                    });
+                    if (!mounted) return;
+                    final messenger = ScaffoldMessenger.of(context);
+                    showReplacingSnackBarForMessenger(
+                      messenger,
+                      SnackBar(
+                        content: Text('已移除「$subType」分類預算'),
+                        duration: const Duration(seconds: 4),
+                        action: SnackBarAction(
+                          label: '復原',
+                          onPressed: () {
+                            if (!mounted) return;
+                            setState(() {
+                              _categoryAmounts[subType] = amount;
+                            });
+                            showReplacingSnackBarForMessenger(
+                              messenger,
+                              const SnackBar(content: Text('已復原')),
+                            );
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                ),
+            ],
+          );
+        },
+      ),
+    ];
+  }
+
+  Future<void> _onAddCategory() async {
+    final accounts = await AccountRepository.getByType(AccountType.expense.name);
+    final subTypes = <String>{};
+    for (final a in accounts) {
+      subTypes.add(a.subType);
+    }
+    for (final k in _categoryAmounts.keys) {
+      subTypes.remove(k);
+    }
+    if (!mounted) return;
+    if (subTypes.isEmpty) {
+      showReplacingSnackBar(context, const SnackBar(content: Text('沒有可新增的分類')));
+      return;
+    }
+    final sorted = subTypes.toList()..sort();
+    final result = await showAddCategoryBudgetSheet(context, subTypes: sorted);
+    if (result == null || !mounted) return;
+    setState(() {
+      _categoryAmounts[result.subType] = result.amount;
+    });
+  }
+}
+
+class _Suggestions {
+  _Suggestions({required this.suggestedFromAverage, this.lastMonthTotal});
+
+  final double suggestedFromAverage;
+  final double? lastMonthTotal;
+}
+
+class _CategoryBudgetTile extends StatefulWidget {
+  const _CategoryBudgetTile({
+    required this.subType,
+    required this.budgetAmount,
+    required this.spentAmount,
+    required this.index,
+    required this.onAmountChanged,
+    required this.onDelete,
+  });
+
+  final String subType;
+  final double budgetAmount;
+  final double spentAmount;
+  final int index;
+  final void Function(double value) onAmountChanged;
+  final VoidCallback onDelete;
+
+  @override
+  State<_CategoryBudgetTile> createState() => _CategoryBudgetTileState();
+}
+
+class _CategoryBudgetTileState extends State<_CategoryBudgetTile> {
+  late final TextEditingController _amountController;
+
+  @override
+  void initState() {
+    super.initState();
+    _amountController = TextEditingController(
+      text: formatAmountForDisplay(widget.budgetAmount),
+    );
+  }
+
+  @override
+  void didUpdateWidget(_CategoryBudgetTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.budgetAmount != widget.budgetAmount) {
+      final next = formatAmountForDisplay(widget.budgetAmount);
+      if (stripAmount(_amountController.text) != stripAmount(next)) {
+        _amountController.text = next;
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final ratio = widget.budgetAmount <= 0
+        ? 0.0
+        : (widget.spentAmount / widget.budgetAmount);
+    final barColor = ratio >= 1.0
+        ? cs.error
+        : ratio >= 0.8
+        ? cs.secondary
+        : cs.primary;
+    final color = colorForSubType(context, widget.subType, widget.index);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Material(
+        color: cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(widget.subType, style: theme.textStyles.bodyLarge),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, size: 22),
+                    onPressed: widget.onDelete,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(999),
+                child: Stack(
+                  alignment: Alignment.centerLeft,
+                  children: [
+                    Container(
+                      height: 4,
+                      width: double.infinity,
+                      color: cs.outline.withValues(alpha: 0.12),
+                    ),
+                    FractionallySizedBox(
+                      widthFactor: ratio.clamp(0.0, 1.0),
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: barColor,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '${formatAmountForDisplay(widget.spentAmount)}／${formatAmountForDisplay(widget.budgetAmount)}',
+                      style: theme.textStyles.bodySmallMuted,
+                    ),
+                  ),
+                  SizedBox(
+                    width: 112,
+                    child: TextField(
+                      controller: _amountController,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      textInputAction: TextInputAction.done,
+                      inputFormatters: [ThousandsSeparatorInputFormatter()],
+                      textAlign: TextAlign.end,
+                      decoration: const InputDecoration(
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 8,
+                        ),
+                        prefixText: '\$ ',
+                      ),
+                      onChanged: (text) {
+                        final v = double.tryParse(stripAmount(text));
+                        if (v != null) widget.onAmountChanged(v);
+                      },
+                      onSubmitted: (_) => FocusManager.instance.primaryFocus?.unfocus(),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
