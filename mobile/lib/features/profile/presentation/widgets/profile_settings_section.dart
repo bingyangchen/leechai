@@ -55,7 +55,6 @@ class ProfileSettingsSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _SectionHeader(title: '記帳設定'),
-          // _SectionHeader(title: '財務管理'),
           _TileGroup(
             children: [
               _SettingsTile(

@@ -55,7 +55,7 @@ class AppDatabase {
   }
 
   static Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // handle schema migration
+    // NOTE: handle schema migration
   }
 
   static Future<void> close() async {
