@@ -35,7 +35,7 @@ class _JournalPageState extends State<JournalPage> with SingleTickerProviderStat
   DateTime _selectedMonth = DateTime.now();
   bool _privacyMode = false;
   final ScrollController _scrollController = ScrollController();
-  static const double _summaryCardHeight = 140;
+  static const double _summaryCardHeight = 152;
   bool _showCollapsedSummary = false;
   late AnimationController _collapsedBarController;
   late CurvedAnimation _collapsedBarAnimation;

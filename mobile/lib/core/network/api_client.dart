@@ -3,12 +3,17 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:mobile/core/auth/auth_session_events.dart';
-import 'package:mobile/features/auth/data/repositories/auth.dart';
+import 'package:mobile/core/auth/credential_store.dart';
 
 class ApiClient {
-  ApiClient({this.baseUrl = 'https://api.leechai.app', http.Client? httpClient})
-    : _httpClient = httpClient ?? http.Client();
+  ApiClient({
+    required AuthCredentialStore credentialStore,
+    this.baseUrl = 'https://api.leechai.app',
+    http.Client? httpClient,
+  }) : _credentialStore = credentialStore,
+       _httpClient = httpClient ?? http.Client();
 
+  final AuthCredentialStore _credentialStore;
   final String baseUrl;
   final http.Client _httpClient;
 
@@ -67,8 +72,8 @@ class ApiClient {
   }
 
   Future<String?> _getAccessToken() async {
-    final state = await AuthRepository.load();
-    return state?.accessToken;
+    final credentials = await _credentialStore.load();
+    return credentials?.accessToken;
   }
 
   Future<bool> _refreshTokensIfNeeded() async {
@@ -78,8 +83,8 @@ class ApiClient {
     final completer = Completer<bool>();
     _refreshCompleter = completer;
     try {
-      final state = await AuthRepository.load();
-      final refresh = state?.refreshToken;
+      final credentials = await _credentialStore.load();
+      final refresh = credentials?.refreshToken;
       if (refresh == null || refresh.isEmpty) {
         if (!completer.isCompleted) {
           completer.complete(false);
@@ -92,7 +97,7 @@ class ApiClient {
         body: jsonEncode({'refresh_token': refresh}),
       );
       if (response.statusCode != 200) {
-        await AuthRepository.clear();
+        await _credentialStore.clear();
         AuthSessionEvents.onSessionInvalidated?.call();
         if (!completer.isCompleted) {
           completer.complete(false);
@@ -102,14 +107,17 @@ class ApiClient {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       final access = data['access_token'] as String;
       final newRefresh = data['refresh_token'] as String;
-      await AuthRepository.updateTokens(accessToken: access, refreshToken: newRefresh);
+      await _credentialStore.updateTokens(
+        accessToken: access,
+        refreshToken: newRefresh,
+      );
       AuthSessionEvents.onTokensRefreshed?.call(access, newRefresh);
       if (!completer.isCompleted) {
         completer.complete(true);
       }
       return true;
     } catch (_) {
-      await AuthRepository.clear();
+      await _credentialStore.clear();
       AuthSessionEvents.onSessionInvalidated?.call();
       if (!completer.isCompleted) {
         completer.complete(false);

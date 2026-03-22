@@ -17,7 +17,7 @@ logging.config.dictConfig(
                 "format": "[%(levelname)s] %(asctime)s (%(name)s:%(lineno)d)\n%(message)s"  # noqa: E501
             },
             "sql": {
-                "format": "[SQL] %(asctime)s | %(message)s",
+                "format": "[SQL] %(asctime)s\n%(message)s",
             },
         },
         "handlers": {

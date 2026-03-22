@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/features/profile/domain/notification_settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../../domain/notification_settings.dart';
 
 const _keyDailyReminderEnabled = 'notification_daily_reminder_enabled';
 const _keyDailyReminderHour = 'notification_daily_reminder_hour';

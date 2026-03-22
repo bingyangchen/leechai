@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:mobile/core/notifications/initialize.dart';
 import 'package:mobile/features/auth/data/services/auth.dart';
 import 'package:mobile/features/profile/data/services/cloud_sync.dart';
 import 'package:mobile/features/profile/data/services/notification_init.dart';
@@ -21,7 +22,8 @@ void main() async {
 
   await AuthService.instance.ensureLoaded();
   await CloudSyncService.instance.ensureLoaded();
-  await initNotificationService();
+  final notificationPlugin = await initializeLocalNotificationsPlugin();
+  await bootstrapProfileNotifications(notificationPlugin);
   runApp(const MainApp());
 }
 

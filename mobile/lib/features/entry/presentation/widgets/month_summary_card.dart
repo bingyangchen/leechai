@@ -31,7 +31,7 @@ class MonthSummaryCard extends StatelessWidget {
     final balanceStr = privacyMode ? '****' : _formatBalance(balance);
     final dividerColor = theme.colorScheme.outline.withValues(alpha: 0.12);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: theme.colorScheme.surfaceContainerHighest,
