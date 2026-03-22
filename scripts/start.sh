@@ -27,6 +27,7 @@ docker compose -f $file_name up -d --force-recreate
 if [ "$RECYCLE" = true ]; then
     printf "\n${BLUE}Removing unused containers, networks and images...${RESET}\n"
     docker system prune -f
+    docker images --filter "reference=leechaiapp/*" -q | while read -r id; do docker rmi "$id" 2>/dev/null || true; done
 fi
 
 printf "${GREEN} ✔ All services is running${RESET}\n"
