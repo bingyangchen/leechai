@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mobile/features/auth/data/services/auth.dart';
 import 'package:mobile/features/entry/data/repositories/entry.dart';
 import 'package:mobile/features/profile/data/repositories/achievement.dart';
@@ -114,6 +115,17 @@ class _ProfilePageState extends State<ProfilePage> {
     return count;
   }
 
+  static SystemUiOverlayStyle _edgeToEdgeStatusBarStyle(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final isDark = brightness == Brightness.dark;
+    return SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+      statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+      systemStatusBarContrastEnforced: false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -123,12 +135,17 @@ class _ProfilePageState extends State<ProfilePage> {
           if (snapshot.hasData) _lastData = snapshot.data;
           if (snapshot.connectionState == ConnectionState.waiting &&
               !snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
+            return const SafeArea(
+              bottom: false,
+              child: Center(child: CircularProgressIndicator()),
+            );
           }
           final data = snapshot.data ?? _lastData;
           if (data == null) return const SizedBox.shrink();
-          return HapticRefreshWrapper(
+          final statusBarInset = MediaQuery.viewPaddingOf(context).top;
+          final scrollBody = HapticRefreshWrapper(
             child: SafeArea(
+              top: false,
               bottom: false,
               child: ValueListenableBuilder<bool>(
                 valueListenable: _cardInteracting,
@@ -149,7 +166,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: const EdgeInsets.only(top: 16),
+                        padding: EdgeInsets.only(top: 16 + statusBarInset),
                         child: UserStatsCard(
                           data: data,
                           isPageVisible: widget.isPageVisible,
@@ -186,6 +203,13 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
           );
+          if (widget.isPageVisible) {
+            return AnnotatedRegion<SystemUiOverlayStyle>(
+              value: _edgeToEdgeStatusBarStyle(context),
+              child: scrollBody,
+            );
+          }
+          return scrollBody;
         },
       ),
     );
