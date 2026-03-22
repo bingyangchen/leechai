@@ -253,66 +253,72 @@ class _AssetsPageState extends State<AccountPage> {
 
               final netWorth = data.totalAssets - data.totalLiabilities;
 
-              return CustomScrollView(
-                controller: _scrollController,
-                physics: const AlwaysScrollableScrollPhysics(),
-                slivers: [
-                  appSliverRefreshControl(
-                    onRefresh: () =>
-                        runRefreshWithSnapBack(_scrollController, () async {
-                          // NOTE: placebo effect
-                          await Future.delayed(const Duration(milliseconds: 800));
-                          _onRefresh();
-                          await _future;
-                        }),
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  NetWorthHeader(
+                    netWorth: netWorth,
+                    totalAssets: data.totalAssets,
+                    totalLiabilities: data.totalLiabilities,
+                    sparklinePoints: data.sparkline,
+                    privacyMode: _privacyMode,
+                    onPrivacyToggle: () => setState(() => _privacyMode = !_privacyMode),
                   ),
-                  SliverToBoxAdapter(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        NetWorthHeader(
-                          netWorth: netWorth,
-                          totalAssets: data.totalAssets,
-                          totalLiabilities: data.totalLiabilities,
-                          sparklinePoints: data.sparkline,
-                          privacyMode: _privacyMode,
-                          onPrivacyToggle: () =>
-                              setState(() => _privacyMode = !_privacyMode),
+                  Expanded(
+                    child: CustomScrollView(
+                      controller: _scrollController,
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      slivers: [
+                        appSliverRefreshControl(
+                          onRefresh: () =>
+                              runRefreshWithSnapBack(_scrollController, () async {
+                                // NOTE: placebo effect
+                                await Future.delayed(const Duration(milliseconds: 800));
+                                _onRefresh();
+                                await _future;
+                              }),
                         ),
-                        const SizedBox(height: 16),
-                        AccountGroupSection(
-                          kind: AccountGroupKind.currentAssets,
-                          accounts: currentAssets,
-                          balances: data.balances,
-                          privacyMode: _privacyMode,
-                          onAdd: _onAddCurrentAssets,
-                          onTapAccount: _onTapAccount,
+                        SliverToBoxAdapter(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const SizedBox(height: 24),
+                              AccountGroupSection(
+                                kind: AccountGroupKind.currentAssets,
+                                accounts: currentAssets,
+                                balances: data.balances,
+                                privacyMode: _privacyMode,
+                                onAdd: _onAddCurrentAssets,
+                                onTapAccount: _onTapAccount,
+                              ),
+                              AccountGroupSection(
+                                kind: AccountGroupKind.creditCard,
+                                accounts: creditCards,
+                                balances: data.balances,
+                                privacyMode: _privacyMode,
+                                onAdd: _onAddCreditCard,
+                                onTapAccount: _onTapAccount,
+                              ),
+                              AccountGroupSection(
+                                kind: AccountGroupKind.investments,
+                                accounts: investments,
+                                balances: data.balances,
+                                privacyMode: _privacyMode,
+                                onAdd: _onAddInvestments,
+                                onTapAccount: _onTapAccount,
+                              ),
+                              AccountGroupSection(
+                                kind: AccountGroupKind.loans,
+                                accounts: loans,
+                                balances: data.balances,
+                                privacyMode: _privacyMode,
+                                onAdd: _onAddLoans,
+                                onTapAccount: _onTapAccount,
+                              ),
+                              const SizedBox(height: 88),
+                            ],
+                          ),
                         ),
-                        AccountGroupSection(
-                          kind: AccountGroupKind.creditCard,
-                          accounts: creditCards,
-                          balances: data.balances,
-                          privacyMode: _privacyMode,
-                          onAdd: _onAddCreditCard,
-                          onTapAccount: _onTapAccount,
-                        ),
-                        AccountGroupSection(
-                          kind: AccountGroupKind.investments,
-                          accounts: investments,
-                          balances: data.balances,
-                          privacyMode: _privacyMode,
-                          onAdd: _onAddInvestments,
-                          onTapAccount: _onTapAccount,
-                        ),
-                        AccountGroupSection(
-                          kind: AccountGroupKind.loans,
-                          accounts: loans,
-                          balances: data.balances,
-                          privacyMode: _privacyMode,
-                          onAdd: _onAddLoans,
-                          onTapAccount: _onTapAccount,
-                        ),
-                        const SizedBox(height: 88),
                       ],
                     ),
                   ),

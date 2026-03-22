@@ -3,6 +3,8 @@ import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 
 class NetWorthHeader extends StatelessWidget {
+  static const double _sparklineHeight = 52;
+
   const NetWorthHeader({
     super.key,
     required this.netWorth,
@@ -29,20 +31,16 @@ class NetWorthHeader extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 26),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
+        color: theme.colorScheme.surface,
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(24),
           bottomRight: Radius.circular(24),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.shadow.withValues(alpha: 0.07),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: Border(
+          bottom: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.14)),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -50,7 +48,7 @@ class NetWorthHeader extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('總淨資產', style: theme.textStyles.sectionLabel),
+              Text('總淨資產', style: theme.textStyles.titleMuted),
               IconButton(
                 style: IconButton.styleFrom(
                   minimumSize: const Size(44, 44),
@@ -72,22 +70,22 @@ class NetWorthHeader extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 10),
           Text('\$$netStr', style: theme.textStyles.headlineLargeEmphasis),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Text(
             '總資產 \$$assetsStr - 總負債 \$$liabStr',
             style: theme.textStyles.bodySmallMuted,
           ),
           if (sparklinePoints.isNotEmpty) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             SizedBox(
-              height: 40,
+              height: _sparklineHeight,
               width: double.infinity,
               child: CustomPaint(
                 painter: _SparklinePainter(
                   points: sparklinePoints,
-                  color: theme.colorScheme.primary.withValues(alpha: 0.6),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.78),
                   fill: true,
                 ),
               ),
@@ -125,7 +123,7 @@ class _SparklinePainter extends CustomPainter {
       canvas.drawPath(
         fillPath,
         Paint()
-          ..color = color.withValues(alpha: 0.15)
+          ..color = color.withValues(alpha: 0.2)
           ..style = PaintingStyle.fill,
       );
     }
