@@ -11,6 +11,7 @@ import 'package:mobile/features/statistics/presentation/constants/category_color
 import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/snackbar.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
+import 'package:mobile/shared/widgets/meta_chip.dart';
 
 class BudgetPage extends StatefulWidget {
   const BudgetPage({super.key, this.refreshTrigger});
@@ -44,8 +45,50 @@ class _BudgetPageState extends State<BudgetPage> {
   Future<_Suggestions> _loadSuggestions() async {
     final now = DateTime.now();
     final avg = await BudgetService.averageExpenseLastThreeFullMonths(now);
-    final prev = await BudgetService.totalBudgetForPreviousMonth(now);
-    return _Suggestions(suggestedFromAverage: avg, lastMonthTotal: prev);
+    final prevMonth = DateTime(now.year, now.month - 1, 1);
+    final prevTotal = await BudgetRepository.getTotalForMonth(
+      prevMonth.year,
+      prevMonth.month,
+    );
+    final prevCategories = await BudgetRepository.getCategoryBudgetsForMonth(
+      prevMonth.year,
+      prevMonth.month,
+    );
+    return _Suggestions(
+      suggestedFromAverage: avg,
+      lastMonthTotal: prevTotal,
+      lastMonthCategoryBudgets: Map<String, double>.from(prevCategories),
+    );
+  }
+
+  Future<void> _confirmApplyLastMonthBudget(_Suggestions suggestions) async {
+    final total = suggestions.lastMonthTotal;
+    if (total == null || total <= 0) return;
+    final approved = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('套用上月預算？'),
+        content: const Text('將套用上一個月的總預算與分類預算至本月，尚未儲存的變更將會被覆寫。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('套用'),
+          ),
+        ],
+      ),
+    );
+    if (approved != true || !mounted) return;
+    _totalController.text = formatAmountForDisplay(total);
+    setState(() {
+      _categoryAmounts = {
+        for (final e in suggestions.lastMonthCategoryBudgets.entries)
+          if (e.value > 0) e.key: e.value,
+      };
+    });
   }
 
   Future<void> _load() async {
@@ -225,49 +268,58 @@ class _BudgetPageState extends State<BudgetPage> {
                     onChanged: (_) => setState(() {}),
                     onSubmitted: (_) => FocusManager.instance.primaryFocus?.unfocus(),
                   ),
-                  const SizedBox(height: 12),
                   _buildPreview(theme),
                   const SizedBox(height: 24),
-                  Text('建議預算', style: theme.textStyles.sectionLabel),
-                  const SizedBox(height: 4),
-                  Text('依過去三個月平均支出計算（僅支出類別）', style: theme.textStyles.bodySmallMuted),
-                  const SizedBox(height: 12),
                   FutureBuilder<_Suggestions>(
                     future: _suggestionsFuture,
                     builder: (context, snap) {
-                      if (!snap.hasData) {
-                        return const SizedBox(height: 40);
+                      Widget child = const SizedBox.shrink();
+                      if (snap.hasData && stripAmount(_totalController.text).isEmpty) {
+                        final s = snap.data!;
+                        final hasSuggestionChips =
+                            s.suggestedFromAverage > 0 ||
+                            (s.lastMonthTotal != null && s.lastMonthTotal! > 0);
+                        if (hasSuggestionChips) {
+                          child = Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text('建議預算', style: theme.textStyles.sectionLabel),
+                              const SizedBox(height: 12),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: [
+                                  if (s.suggestedFromAverage > 0)
+                                    MetaChip(
+                                      icon: Icons.auto_awesome_outlined,
+                                      label:
+                                          '使用建議 \$${formatAmountForDisplay(s.suggestedFromAverage)}',
+                                      onTap: () {
+                                        _totalController.text = formatAmountForDisplay(
+                                          s.suggestedFromAverage,
+                                        );
+                                        setState(() {});
+                                      },
+                                    ),
+                                  if (s.lastMonthTotal != null && s.lastMonthTotal! > 0)
+                                    MetaChip(
+                                      icon: Icons.event_repeat_outlined,
+                                      label:
+                                          '與上月相同 \$${formatAmountForDisplay(s.lastMonthTotal!)}',
+                                      onTap: () => _confirmApplyLastMonthBudget(s),
+                                    ),
+                                ],
+                              ),
+                            ],
+                          );
+                        }
                       }
-                      final s = snap.data!;
-                      return Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          if (s.suggestedFromAverage > 0)
-                            ActionChip(
-                              label: Text(
-                                '使用建議 \$${formatAmountForDisplay(s.suggestedFromAverage)}',
-                              ),
-                              onPressed: () {
-                                _totalController.text = formatAmountForDisplay(
-                                  s.suggestedFromAverage,
-                                );
-                                setState(() {});
-                              },
-                            ),
-                          if (s.lastMonthTotal != null && s.lastMonthTotal! > 0)
-                            ActionChip(
-                              label: Text(
-                                '與上月相同 \$${formatAmountForDisplay(s.lastMonthTotal!)}',
-                              ),
-                              onPressed: () {
-                                _totalController.text = formatAmountForDisplay(
-                                  s.lastMonthTotal!,
-                                );
-                                setState(() {});
-                              },
-                            ),
-                        ],
+                      return AnimatedSize(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOutCubic,
+                        alignment: Alignment.topCenter,
+                        clipBehavior: Clip.hardEdge,
+                        child: child,
                       );
                     },
                   ),
@@ -307,69 +359,100 @@ class _BudgetPageState extends State<BudgetPage> {
     final cs = theme.colorScheme;
     final total = _parseTotal();
     if (total == null || total <= 0) {
-      return Text('預覽：設定總預算後顯示', style: theme.textStyles.bodySmallMuted);
+      return const SizedBox.shrink();
     }
-    return FutureBuilder<double>(
-      future: _spentExpenseFuture,
-      builder: (context, snap) {
-        final spent = snap.data ?? 0.0;
-        final ratio = (spent / total).clamp(0.0, 1.0);
-        final color = _ratioColor(cs, spent / total);
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '已用 \$${formatAmountForDisplay(spent)}',
-              style: theme.textStyles.bodySmallMuted,
-            ),
-            const SizedBox(height: 6),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(999),
-              child: Stack(
-                alignment: Alignment.centerLeft,
-                children: [
-                  Container(
-                    height: 9,
-                    width: double.infinity,
-                    color: cs.outline.withValues(alpha: 0.12),
-                  ),
-                  FractionallySizedBox(
-                    widthFactor: ratio,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: 12),
+        FutureBuilder<double>(
+          future: _spentExpenseFuture,
+          builder: (context, snap) {
+            final spent = snap.data ?? 0.0;
+            final ratio = (spent / total).clamp(0.0, 1.0);
+            final color = _ratioColor(cs, spent / total);
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '已用 \$${formatAmountForDisplay(spent)}',
+                  style: theme.textStyles.bodySmallMuted,
+                ),
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: Stack(
                     alignment: Alignment.centerLeft,
-                    child: Container(
-                      height: 9,
-                      decoration: BoxDecoration(
-                        color: color,
-                        borderRadius: BorderRadius.circular(999),
+                    children: [
+                      Container(
+                        height: 9,
+                        width: double.infinity,
+                        color: cs.outline.withValues(alpha: 0.12),
                       ),
-                    ),
+                      FractionallySizedBox(
+                        widthFactor: ratio,
+                        alignment: Alignment.centerLeft,
+                        child: Container(
+                          height: 9,
+                          decoration: BoxDecoration(
+                            color: color,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
-          ],
-        );
-      },
+                ),
+              ],
+            );
+          },
+        ),
+      ],
     );
   }
 
   Widget _buildCategorySumWarning(ThemeData theme) {
     final total = _parseTotal() ?? 0;
     final sum = _categoryAmounts.values.fold<double>(0, (a, b) => a + b);
-    if (total <= 0 || sum <= total + 0.01) return const SizedBox.shrink();
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.errorContainer.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        '分類預算合計高於本月總預算，請確認是否為您預期的設定。',
-        style: theme.textStyles.bodySmallMuted.copyWith(
-          color: theme.colorScheme.onErrorContainer,
+    final show = total > 0 && sum > total + 0.01;
+    final cs = theme.colorScheme;
+
+    Widget child = const SizedBox.shrink();
+    if (show) {
+      child = Container(
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: cs.outline.withValues(alpha: 0.22)),
         ),
-      ),
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              Icons.info_outline_rounded,
+              size: 20,
+              color: cs.onSurfaceVariant.withValues(alpha: 0.75),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                '分類預算合計高於本月總預算，請確認是否為您預期的設定。',
+                style: theme.textStyles.bodySmallMuted.copyWith(height: 1.4),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOutCubic,
+      alignment: Alignment.topCenter,
+      clipBehavior: Clip.hardEdge,
+      child: child,
     );
   }
 
@@ -408,6 +491,7 @@ class _BudgetPageState extends State<BudgetPage> {
                       SnackBar(
                         content: Text('已移除「$subType」分類預算'),
                         duration: const Duration(seconds: 4),
+                        persist: false,
                         action: SnackBarAction(
                           label: '復原',
                           onPressed: () {
@@ -417,7 +501,10 @@ class _BudgetPageState extends State<BudgetPage> {
                             });
                             showReplacingSnackBarForMessenger(
                               messenger,
-                              const SnackBar(content: Text('已復原')),
+                              const SnackBar(
+                                content: Text('已復原'),
+                                duration: Duration(milliseconds: 1500),
+                              ),
                             );
                           },
                         ),
@@ -456,10 +543,15 @@ class _BudgetPageState extends State<BudgetPage> {
 }
 
 class _Suggestions {
-  _Suggestions({required this.suggestedFromAverage, this.lastMonthTotal});
+  _Suggestions({
+    required this.suggestedFromAverage,
+    this.lastMonthTotal,
+    this.lastMonthCategoryBudgets = const {},
+  });
 
   final double suggestedFromAverage;
   final double? lastMonthTotal;
+  final Map<String, double> lastMonthCategoryBudgets;
 }
 
 class _CategoryBudgetTile extends StatefulWidget {

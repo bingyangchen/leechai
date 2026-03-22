@@ -253,7 +253,10 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
               }
               showReplacingSnackBarForMessenger(
                 messenger,
-                const SnackBar(content: Text('已復原')),
+                const SnackBar(
+                  content: Text('已復原'),
+                  duration: Duration(milliseconds: 1500),
+                ),
               );
             },
           ),

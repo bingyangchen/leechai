@@ -93,7 +93,10 @@ class _TagFormSheetState extends State<_TagFormSheet> {
             widget.onRestore?.call();
             showReplacingSnackBarForMessenger(
               messenger,
-              const SnackBar(content: Text('已復原')),
+              const SnackBar(
+                content: Text('已復原'),
+                duration: Duration(milliseconds: 1500),
+              ),
             );
           },
         ),
