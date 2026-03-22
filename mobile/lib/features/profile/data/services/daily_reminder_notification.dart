@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:mobile/features/profile/domain/notification_settings.dart';
 import 'package:timezone/timezone.dart' as timezone;
-
-import '../../domain/notification_settings.dart';
 
 const int _dailyReminderNotificationId = 1;
 const String _channelId = 'daily_reminder';

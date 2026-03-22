@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mobile/features/profile/data/repositories/notification_settings.dart';
+import 'package:mobile/features/profile/data/services/daily_reminder_notification.dart';
+import 'package:mobile/features/profile/domain/notification_settings.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/snackbar.dart';
 import 'package:permission_handler/permission_handler.dart';
-
-import '../../data/repositories/notification_settings.dart';
-import '../../data/services/daily_reminder_notification.dart';
-import '../../domain/notification_settings.dart';
 
 class NotificationSettingsPage extends StatefulWidget {
   const NotificationSettingsPage({super.key});

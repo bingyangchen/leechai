@@ -1,10 +1,9 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:mobile/features/profile/data/repositories/notification_settings.dart';
+import 'package:mobile/features/profile/data/services/daily_reminder_notification.dart';
 import 'package:timezone/data/latest_all.dart' as timezone_data;
 import 'package:timezone/timezone.dart' as timezone;
-
-import '../repositories/notification_settings.dart';
-import 'daily_reminder_notification.dart';
 
 final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
 
