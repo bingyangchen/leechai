@@ -296,59 +296,66 @@ class _UserStatsCardState extends State<UserStatsCard>
                 clipBehavior: Clip.none,
                 children: [
                   Positioned.fill(
-                    child: Opacity(
-                      opacity: flipT < 0.5 ? 1 : 0,
-                      child: UserStatsCardFront(
-                        data: widget.data,
-                        entranceT: entranceT,
-                        theme: theme,
-                        heroColors: heroColors,
-                        gradient: gradient,
-                        edgeColor: edgeColor,
-                        thicknessOffset: thicknessOffset,
-                        glossCenterX: glossCenterX,
-                        glossCenterY: glossCenterY,
+                    child: IgnorePointer(
+                      ignoring: flipT >= 0.5,
+                      child: Opacity(
+                        opacity: flipT < 0.5 ? 1 : 0,
+                        child: UserStatsCardFront(
+                          data: widget.data,
+                          entranceT: entranceT,
+                          theme: theme,
+                          heroColors: heroColors,
+                          gradient: gradient,
+                          edgeColor: edgeColor,
+                          thicknessOffset: thicknessOffset,
+                          glossCenterX: glossCenterX,
+                          glossCenterY: glossCenterY,
+                        ),
                       ),
                     ),
                   ),
                   Positioned.fill(
-                    child: Opacity(
-                      opacity: flipT >= 0.5 ? 1 : 0,
-                      child: Transform(
-                        alignment: Alignment.center,
-                        transform: Matrix4.rotationX(math.pi),
-                        child: UserStatsCardBack(
-                          theme: theme,
-                          heroColors: heroColors,
-                          edgeColor: edgeColor,
-                          thicknessOffset: thicknessOffset,
-                          carrier: _carrier,
-                          carrierLoaded: _carrierLoaded,
-                          viewState: _backViewState,
-                          editController: _editController,
-                          onRestoreBrightness: _restoreBrightness,
-                          onStartEdit: (String initialValue) {
-                            setState(() {
-                              _backViewState = UserStatsCardBackViewState.edit;
-                              _editText = initialValue;
-                              _editController.text = initialValue;
-                              _editController.selection = TextSelection.collapsed(
-                                offset: initialValue.length,
-                              );
-                            });
-                          },
-                          onCancel: () {
-                            setState(() {
-                              _backViewState = _carrier != null && _carrier!.isNotEmpty
-                                  ? UserStatsCardBackViewState.display
-                                  : UserStatsCardBackViewState.empty;
-                              _editText = _carrier ?? '';
-                              _editController.text = _editText;
-                            });
-                          },
-                          onSave: _saveCarrier,
-                          onEditChanged: (String value) =>
-                              setState(() => _editText = value),
+                    child: IgnorePointer(
+                      ignoring: flipT < 0.5,
+                      child: Opacity(
+                        opacity: flipT >= 0.5 ? 1 : 0,
+                        child: Transform(
+                          alignment: Alignment.center,
+                          transform: Matrix4.rotationX(math.pi),
+                          child: UserStatsCardBack(
+                            theme: theme,
+                            heroColors: heroColors,
+                            edgeColor: edgeColor,
+                            thicknessOffset: thicknessOffset,
+                            carrier: _carrier,
+                            carrierLoaded: _carrierLoaded,
+                            viewState: _backViewState,
+                            editController: _editController,
+                            onRestoreBrightness: _restoreBrightness,
+                            onStartEdit: (String initialValue) {
+                              setState(() {
+                                _backViewState = UserStatsCardBackViewState.edit;
+                                _editText = initialValue;
+                                _editController.text = initialValue;
+                                _editController.selection = TextSelection.collapsed(
+                                  offset: initialValue.length,
+                                );
+                              });
+                            },
+                            onCancel: () {
+                              setState(() {
+                                _backViewState =
+                                    _carrier != null && _carrier!.isNotEmpty
+                                    ? UserStatsCardBackViewState.display
+                                    : UserStatsCardBackViewState.empty;
+                                _editText = _carrier ?? '';
+                                _editController.text = _editText;
+                              });
+                            },
+                            onSave: _saveCarrier,
+                            onEditChanged: (String value) =>
+                                setState(() => _editText = value),
+                          ),
                         ),
                       ),
                     ),
