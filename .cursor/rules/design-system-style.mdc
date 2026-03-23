@@ -10,17 +10,11 @@ When writing or editing code that involves **style** (colors, typography, spacin
 
 ## Source of truth
 
-- **Flutter (mobile)**: `mobile/lib/shared/theme/app_theme.dart`
-  - `AppTheme.light` / `AppTheme.dark` define `ThemeData` with `ColorScheme`, `textStyles`, and theme extensions.
-  - **Typography**: `textTheme` is built from `Typography.material2021(colorScheme)` (Material 2021 type scale). Light theme uses `.black`, dark uses `.white`; colors come from `colorScheme`.
-  - **Semantic text styles**: `Theme.of(context).textStyles` — use these instead of repeating `textTheme`.
+- **Flutter (mobile)**: `mobile/lib/shared/theme/app_theme.dart` is the single source of truth for theming.
 
 ## Do
 
-- **Colors**: Use `Theme.of(context).colorScheme` (e.g. `primary`, `onSurface`, `surfaceContainerHighest`, `onSurfaceVariant`, `outline`, `error`, `onError`). For accounting/chart/hero-card semantics, use the theme extensions:
-  - `AccountingColors.of(context)` → `income`, `expense`, `transfer`, `borrow`, `repay`, `liability`, `neutral`
-  - `ChartPalette.of(context)` → `palette` for charts
-  - `HeroCardColors.of(context)` → `content`, `contentMuted`, `shadowSubtle`
+- **Colors**: Use `Theme.of(context).colorScheme` (e.g. `primary`, `onSurface`, `surfaceContainerHighest`, `onSurfaceVariant`, `outline`, `error`, `onError`).
 - **Typography**: Prefer `AppTextStyles.of(context).sectionLabel` (etc.) for recurring patterns. Otherwise use `Theme.of(context).textTheme` and override only when needed via `copyWith(color: ...)`.
 - **Opacity**: Prefer `colorScheme.onSurfaceVariant.withValues(alpha: 0.5)` (or similar) over hardcoded transparent colors.
 - **New tokens**: Add new colors or semantic tokens in `app_theme.dart` (and to the right extension or `ColorScheme`), then reference them via theme in UI code.
