@@ -10,7 +10,7 @@
 
 其它注意事項：
 
-- 請在 Cursor 的 sandbox 環境下執行指令。
+- `<body>` 請用引號將內容直接寫在 `--body` 的參數裡（多行時以 `\n` 表示換行即可）；不要用 `--body-file`、暫存檔，也不要用 heredoc（`<<EOF` ... `EOF` 這類寫法）。
 - 不要理會沒有 commit 進 repository 的變更（也不要 revert 這些變更）。
 - `<title>` 與 `<body>` 需以英文撰寫。
 - 做完這些事後，在最後提供我 PR 的網址。
