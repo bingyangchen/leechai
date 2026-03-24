@@ -60,7 +60,7 @@ class AccountRepository {
       'id': id,
       'type': AccountType.expense.name,
       'sub_type': '手續費',
-      'icon': iconToCodePoint(Icons.payments),
+      'icon': iconToCodePoint(Icons.more_horiz),
       'last_used_at': now,
       'created_at': now,
       'updated_at': now,
