@@ -1,6 +1,6 @@
 name: mobile
-description: "A new Flutter project."
-publish_to: 'none'
+description: "Leechai mobile app."
+publish_to: "none"
 version: 0.1.0+1
 
 environment:
@@ -50,7 +50,7 @@ flutter:
     - assets/icon/google_logo.webp
 
 names_launcher:
-  name: "Leechai"
+  name: "Leechai 理柴"
   platforms:
     android:
       enable: true
