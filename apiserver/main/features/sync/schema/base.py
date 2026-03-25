@@ -70,7 +70,7 @@ class CategoryBudgetChange(BaseDataModel):
     id: str
     year: int
     month: int
-    sub_type: str
+    account_id: str
     amount: float
     created_at: datetime
     updated_at: datetime

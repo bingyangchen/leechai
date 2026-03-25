@@ -3,6 +3,7 @@ import 'package:mobile/core/database/app_database.dart';
 import 'package:mobile/features/account/domain/account.dart';
 import 'package:mobile/features/account/domain/account_icon.dart';
 import 'package:mobile/features/account/domain/constants.dart';
+import 'package:mobile/features/budget/data/repositories/budget.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
@@ -158,6 +159,7 @@ class AccountRepository {
       where: 'id = ?',
       whereArgs: [accountId],
     );
+    await BudgetRepository.deleteCategoryBudgetsByAccountId(accountId);
     return true;
   }
 

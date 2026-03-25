@@ -3,11 +3,18 @@ import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart'
     show ThousandsSeparatorInputFormatter, stripAmount;
 
-Future<({String subType, double amount})?> showAddCategoryBudgetSheet(
+class CategoryBudgetOption {
+  const CategoryBudgetOption({required this.accountId, required this.label});
+
+  final String accountId;
+  final String label;
+}
+
+Future<({String accountId, double amount})?> showAddCategoryBudgetSheet(
   BuildContext context, {
-  required List<String> subTypes,
+  required List<CategoryBudgetOption> options,
 }) {
-  return showModalBottomSheet<({String subType, double amount})>(
+  return showModalBottomSheet<({String accountId, double amount})>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
@@ -19,7 +26,7 @@ Future<({String subType, double amount})?> showAddCategoryBudgetSheet(
         padding: EdgeInsets.only(bottom: bottomInset),
         child: SizedBox(
           height: maxH,
-          child: _AddCategoryBudgetSheet(subTypes: subTypes),
+          child: _AddCategoryBudgetSheet(options: options),
         ),
       );
     },
@@ -27,16 +34,16 @@ Future<({String subType, double amount})?> showAddCategoryBudgetSheet(
 }
 
 class _AddCategoryBudgetSheet extends StatefulWidget {
-  const _AddCategoryBudgetSheet({required this.subTypes});
+  const _AddCategoryBudgetSheet({required this.options});
 
-  final List<String> subTypes;
+  final List<CategoryBudgetOption> options;
 
   @override
   State<_AddCategoryBudgetSheet> createState() => _AddCategoryBudgetSheetState();
 }
 
 class _AddCategoryBudgetSheetState extends State<_AddCategoryBudgetSheet> {
-  String? _selected;
+  CategoryBudgetOption? _selectedOption;
   final TextEditingController _amountController = TextEditingController();
   final FocusNode _amountFocus = FocusNode();
 
@@ -48,11 +55,11 @@ class _AddCategoryBudgetSheetState extends State<_AddCategoryBudgetSheet> {
   }
 
   void _submit() {
-    final selected = _selected;
-    if (selected == null) return;
+    final selectedOption = _selectedOption;
+    if (selectedOption == null) return;
     final v = double.tryParse(stripAmount(_amountController.text));
     if (v == null || v <= 0) return;
-    Navigator.of(context).pop((subType: selected, amount: v));
+    Navigator.of(context).pop((accountId: selectedOption.accountId, amount: v));
   }
 
   @override
@@ -60,7 +67,7 @@ class _AddCategoryBudgetSheetState extends State<_AddCategoryBudgetSheet> {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
 
-    if (_selected == null) {
+    if (_selectedOption == null) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -75,19 +82,19 @@ class _AddCategoryBudgetSheetState extends State<_AddCategoryBudgetSheet> {
           Expanded(
             child: ListView.separated(
               padding: const EdgeInsets.fromLTRB(8, 0, 8, 24),
-              itemCount: widget.subTypes.length,
+              itemCount: widget.options.length,
               separatorBuilder: (context, index) =>
                   Divider(height: 1, color: cs.outline.withValues(alpha: 0.12)),
               itemBuilder: (context, i) {
-                final s = widget.subTypes[i];
+                final option = widget.options[i];
                 return ListTile(
-                  title: Text(s, style: theme.textStyles.bodyLarge),
+                  title: Text(option.label, style: theme.textStyles.bodyLarge),
                   trailing: Icon(
                     Icons.chevron_right_rounded,
                     color: cs.onSurfaceVariant.withValues(alpha: 0.4),
                   ),
                   onTap: () {
-                    setState(() => _selected = s);
+                    setState(() => _selectedOption = option);
                     WidgetsBinding.instance.addPostFrameCallback((_) {
                       if (mounted) _amountFocus.requestFocus();
                     });
@@ -111,7 +118,7 @@ class _AddCategoryBudgetSheetState extends State<_AddCategoryBudgetSheet> {
                 icon: const Icon(Icons.arrow_back_rounded),
                 onPressed: () {
                   setState(() {
-                    _selected = null;
+                    _selectedOption = null;
                     _amountController.clear();
                   });
                   _amountFocus.unfocus();
@@ -119,7 +126,7 @@ class _AddCategoryBudgetSheetState extends State<_AddCategoryBudgetSheet> {
               ),
               Expanded(
                 child: Text(
-                  _selected!,
+                  _selectedOption!.label,
                   style: theme.textStyles.titleLarge,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

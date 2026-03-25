@@ -43,12 +43,14 @@ class MonthBudgetSnapshot {
 
 class CategoryBudgetRow {
   const CategoryBudgetRow({
+    required this.accountId,
     required this.subType,
     required this.icon,
     required this.budgetAmount,
     required this.spentAmount,
   });
 
+  final String accountId;
   final String subType;
   final IconData icon;
   final double budgetAmount;
@@ -104,19 +106,17 @@ class BudgetService {
     final spentBySubType = {for (final item in breakdown) item.subType: item.amount};
 
     final accounts = await AccountRepository.getByType(AccountType.expense.name);
+    final expenseAccountsById = {for (final account in accounts) account.id: account};
     final rows = <CategoryBudgetRow>[];
     for (final entry in categoryBudgets.entries) {
-      final subType = entry.key;
+      final accountId = entry.key;
       final cap = entry.value;
-      var resolvedIcon = Icons.category;
-      for (final a in accounts) {
-        if (a.subType == subType) {
-          resolvedIcon = a.displayIcon;
-          break;
-        }
-      }
+      final account = expenseAccountsById[accountId];
+      final subType = account?.subType ?? '其他';
+      final resolvedIcon = account?.displayIcon ?? Icons.category;
       rows.add(
         CategoryBudgetRow(
+          accountId: accountId,
           subType: subType,
           icon: resolvedIcon,
           budgetAmount: cap,

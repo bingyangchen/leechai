@@ -69,20 +69,20 @@ class BudgetRepository {
     final db = await AppDatabase.database;
     final rows = await db.query(
       _categoryTable,
-      columns: ['sub_type', 'amount'],
+      columns: ['account_id', 'amount'],
       where: 'year = ? AND month = ? AND deleted_at IS NULL',
       whereArgs: [year, month],
     );
     return {
       for (final row in rows)
-        row['sub_type'] as String: (row['amount'] as num?)?.toDouble() ?? 0,
+        row['account_id'] as String: (row['amount'] as num?)?.toDouble() ?? 0,
     };
   }
 
   static Future<void> upsertCategoryBudget(
     int year,
     int month,
-    String subType,
+    String accountId,
     double amount,
   ) async {
     final db = await AppDatabase.database;
@@ -90,8 +90,8 @@ class BudgetRepository {
     final existing = await db.query(
       _categoryTable,
       columns: ['id'],
-      where: 'year = ? AND month = ? AND sub_type = ?',
-      whereArgs: [year, month, subType],
+      where: 'year = ? AND month = ? AND account_id = ?',
+      whereArgs: [year, month, accountId],
       limit: 1,
     );
     if (existing.isEmpty) {
@@ -99,7 +99,7 @@ class BudgetRepository {
         'id': _uuid.v4(),
         'year': year,
         'month': month,
-        'sub_type': subType,
+        'account_id': accountId,
         'amount': amount,
         'created_at': now,
         'updated_at': now,
@@ -109,20 +109,35 @@ class BudgetRepository {
       await db.update(
         _categoryTable,
         {'amount': amount, 'updated_at': now, 'synced': 0, 'deleted_at': null},
-        where: 'year = ? AND month = ? AND sub_type = ?',
-        whereArgs: [year, month, subType],
+        where: 'year = ? AND month = ? AND account_id = ?',
+        whereArgs: [year, month, accountId],
       );
     }
   }
 
-  static Future<void> deleteCategoryBudget(int year, int month, String subType) async {
+  static Future<void> deleteCategoryBudget(
+    int year,
+    int month,
+    String accountId,
+  ) async {
     final db = await AppDatabase.database;
     final now = DateTime.now().toUtc().toIso8601String();
     await db.update(
       _categoryTable,
       {'deleted_at': now, 'updated_at': now, 'synced': 0},
-      where: 'year = ? AND month = ? AND sub_type = ? AND deleted_at IS NULL',
-      whereArgs: [year, month, subType],
+      where: 'year = ? AND month = ? AND account_id = ? AND deleted_at IS NULL',
+      whereArgs: [year, month, accountId],
+    );
+  }
+
+  static Future<void> deleteCategoryBudgetsByAccountId(String accountId) async {
+    final db = await AppDatabase.database;
+    final now = DateTime.now().toUtc().toIso8601String();
+    await db.update(
+      _categoryTable,
+      {'deleted_at': now, 'updated_at': now, 'synced': 0},
+      where: 'account_id = ? AND deleted_at IS NULL',
+      whereArgs: [accountId],
     );
   }
 }

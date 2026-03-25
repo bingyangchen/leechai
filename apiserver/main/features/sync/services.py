@@ -213,7 +213,7 @@ class SyncService:
                 update_columns = {
                     "year": statement.excluded.year,
                     "month": statement.excluded.month,
-                    "sub_type": statement.excluded.sub_type,
+                    "account_id": statement.excluded.account_id,
                     "amount": statement.excluded.amount,
                     "created_at": statement.excluded.created_at,
                     "updated_at": statement.excluded.updated_at,

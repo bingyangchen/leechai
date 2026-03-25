@@ -19,13 +19,13 @@ Future<void> run(Database db) async {
     id TEXT PRIMARY KEY,
     year INTEGER NOT NULL,
     month INTEGER NOT NULL,
-    sub_type TEXT NOT NULL,
+    account_id TEXT NOT NULL,
     amount REAL NOT NULL,
     created_at TEXT NOT NULL DEFAULT (DATETIME('now')),
     updated_at TEXT NOT NULL DEFAULT (DATETIME('now')),
     deleted_at TEXT,
     synced INTEGER NOT NULL DEFAULT 0,
-    UNIQUE (year, month, sub_type)
+    UNIQUE (year, month, account_id)
   );
   ''');
 }

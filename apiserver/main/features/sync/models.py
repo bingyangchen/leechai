@@ -126,7 +126,7 @@ class CategoryBudget(BaseDbModel):
     __tablename__ = "category_budget"
     __table_args__ = (
         PrimaryKeyConstraint("user_id", "id"),
-        UniqueConstraint("user_id", "year", "month", "sub_type"),
+        UniqueConstraint("user_id", "year", "month", "account_id"),
         Index(
             "ix_category_budget_user_id_server_updated_at",
             "user_id",
@@ -140,7 +140,7 @@ class CategoryBudget(BaseDbModel):
     id: Mapped[str] = mapped_column(String(36))
     year: Mapped[int] = mapped_column(Integer(), nullable=False)
     month: Mapped[int] = mapped_column(Integer(), nullable=False)
-    sub_type: Mapped[str] = mapped_column(String(255), nullable=False)
+    account_id: Mapped[str] = mapped_column(String(36), nullable=False)
     amount: Mapped[float] = mapped_column(nullable=False)
     created_at: Mapped[datetime] = mapped_column(nullable=False)
     updated_at: Mapped[datetime] = mapped_column(nullable=False, index=True)
