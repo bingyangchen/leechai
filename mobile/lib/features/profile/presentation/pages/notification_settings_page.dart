@@ -135,8 +135,8 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage>
                 _SettingsGroup(
                   children: [
                     _SwitchTile(
-                      title: '每日記帳提醒',
-                      subtitle: '提醒您記錄今天的收支',
+                      title: '記帳小提醒',
+                      subtitle: '今天也花一分鐘，一起把帳補齊吧！',
                       value: _settings.dailyReminderEnabled,
                       onChanged: (value) => _updateSettings(
                         _settings.copyWith(dailyReminderEnabled: value),
