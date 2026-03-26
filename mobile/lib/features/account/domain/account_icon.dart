@@ -40,6 +40,7 @@ const List<IconData> _supportedAccountIcons = [
   Icons.balance,
   Icons.show_chart,
   Icons.category,
+  Icons.checkroom,
 ];
 
 final Map<String, IconData> _accountIconByCodePoint = {
