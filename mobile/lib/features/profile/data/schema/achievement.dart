@@ -22,13 +22,13 @@ Future<void> run(Database db) async {
 }
 
 Future<void> seedDefaults(Database db) async {
-  final now = DateTime.now().toUtc().toIso8601String();
+  const defaultTimestamp = '1970-01-01T00:00:00.000Z';
   for (final def in achievementDefinitions) {
     await db.insert(_table, {
       'id': def.achievementId.key,
       'target': def.target,
-      'created_at': now,
-      'updated_at': now,
+      'created_at': defaultTimestamp,
+      'updated_at': defaultTimestamp,
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 }
