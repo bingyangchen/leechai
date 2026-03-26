@@ -26,6 +26,7 @@ class _BudgetPageState extends State<BudgetPage> {
   final TextEditingController _totalController = TextEditingController();
   late Map<String, double> _categoryAmounts;
   late Map<String, double> _initialCategoryAmounts;
+  late Map<String, Account> _expenseAccountsById;
   double? _initialTotal;
   bool _loading = true;
   late Future<_Suggestions> _suggestionsFuture;
@@ -94,11 +95,15 @@ class _BudgetPageState extends State<BudgetPage> {
   Future<void> _load() async {
     final total = await BudgetRepository.getTotalForMonth(_year, _month);
     final cats = await BudgetRepository.getCategoryBudgetsForMonth(_year, _month);
+    final expenseAccounts = await AccountRepository.getByType(AccountType.expense.name);
     if (!mounted) return;
     setState(() {
       _initialTotal = total;
       _categoryAmounts = Map<String, double>.from(cats);
       _initialCategoryAmounts = Map<String, double>.from(cats);
+      _expenseAccountsById = {
+        for (final account in expenseAccounts) account.id: account,
+      };
       _totalController.text = total != null && total > 0
           ? formatAmountForDisplay(total)
           : '';
@@ -463,14 +468,20 @@ class _BudgetPageState extends State<BudgetPage> {
         future: spentFuture,
         builder: (context, snap) {
           final spentMap = snap.data ?? {};
-          final keys = _categoryAmounts.keys.toList()..sort();
+          final keys = _categoryAmounts.keys.toList()
+            ..sort((left, right) {
+              final leftName = _expenseAccountsById[left]?.subType ?? left;
+              final rightName = _expenseAccountsById[right]?.subType ?? right;
+              return leftName.compareTo(rightName);
+            });
           return Column(
             children: [
               for (var i = 0; i < keys.length; i++)
                 _CategoryBudgetTile(
-                  subType: keys[i],
+                  categoryName: _expenseAccountsById[keys[i]]?.subType ?? '其他分類',
                   budgetAmount: _categoryAmounts[keys[i]]!,
-                  spentAmount: spentMap[keys[i]] ?? 0,
+                  spentAmount:
+                      spentMap[_expenseAccountsById[keys[i]]?.subType ?? '其他'] ?? 0,
                   index: i,
                   onAmountChanged: (value) {
                     setState(() {
@@ -478,18 +489,20 @@ class _BudgetPageState extends State<BudgetPage> {
                     });
                   },
                   onDelete: () {
-                    final subType = keys[i];
-                    final amount = _categoryAmounts[subType]!;
+                    final accountId = keys[i];
+                    final categoryName =
+                        _expenseAccountsById[accountId]?.subType ?? '其他分類';
+                    final amount = _categoryAmounts[accountId]!;
                     HapticFeedback.mediumImpact();
                     setState(() {
-                      _categoryAmounts.remove(subType);
+                      _categoryAmounts.remove(accountId);
                     });
                     if (!mounted) return;
                     final messenger = ScaffoldMessenger.of(context);
                     showReplacingSnackBarForMessenger(
                       messenger,
                       SnackBar(
-                        content: Text('已移除「$subType」分類預算'),
+                        content: Text('已移除「$categoryName」分類預算'),
                         duration: const Duration(seconds: 4),
                         persist: false,
                         action: SnackBarAction(
@@ -497,7 +510,7 @@ class _BudgetPageState extends State<BudgetPage> {
                           onPressed: () {
                             if (!mounted) return;
                             setState(() {
-                              _categoryAmounts[subType] = amount;
+                              _categoryAmounts[accountId] = amount;
                             });
                             showReplacingSnackBarForMessenger(
                               messenger,
@@ -520,24 +533,26 @@ class _BudgetPageState extends State<BudgetPage> {
   }
 
   Future<void> _onAddCategory() async {
-    final accounts = await AccountRepository.getByType(AccountType.expense.name);
-    final subTypes = <String>{};
-    for (final a in accounts) {
-      subTypes.add(a.subType);
-    }
-    for (final k in _categoryAmounts.keys) {
-      subTypes.remove(k);
-    }
     if (!mounted) return;
-    if (subTypes.isEmpty) {
+    final availableAccounts =
+        _expenseAccountsById.values
+            .where((account) => !_categoryAmounts.containsKey(account.id))
+            .toList()
+          ..sort((left, right) => left.subType.compareTo(right.subType));
+    if (availableAccounts.isEmpty) {
       showReplacingSnackBar(context, const SnackBar(content: Text('沒有可新增的分類')));
       return;
     }
-    final sorted = subTypes.toList()..sort();
-    final result = await showAddCategoryBudgetSheet(context, subTypes: sorted);
+    final options = availableAccounts
+        .map(
+          (account) =>
+              CategoryBudgetOption(accountId: account.id, label: account.subType),
+        )
+        .toList();
+    final result = await showAddCategoryBudgetSheet(context, options: options);
     if (result == null || !mounted) return;
     setState(() {
-      _categoryAmounts[result.subType] = result.amount;
+      _categoryAmounts[result.accountId] = result.amount;
     });
   }
 }
@@ -556,7 +571,7 @@ class _Suggestions {
 
 class _CategoryBudgetTile extends StatefulWidget {
   const _CategoryBudgetTile({
-    required this.subType,
+    required this.categoryName,
     required this.budgetAmount,
     required this.spentAmount,
     required this.index,
@@ -564,7 +579,7 @@ class _CategoryBudgetTile extends StatefulWidget {
     required this.onDelete,
   });
 
-  final String subType;
+  final String categoryName;
   final double budgetAmount;
   final double spentAmount;
   final int index;
@@ -615,7 +630,7 @@ class _CategoryBudgetTileState extends State<_CategoryBudgetTile> {
         : ratio >= 0.8
         ? cs.secondary
         : cs.primary;
-    final color = colorForSubType(context, widget.subType, widget.index);
+    final color = colorForSubType(context, widget.categoryName, widget.index);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -636,7 +651,7 @@ class _CategoryBudgetTileState extends State<_CategoryBudgetTile> {
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(widget.subType, style: theme.textStyles.bodyLarge),
+                    child: Text(widget.categoryName, style: theme.textStyles.bodyLarge),
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete_outline, size: 22),

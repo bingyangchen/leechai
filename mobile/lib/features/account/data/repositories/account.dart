@@ -3,6 +3,7 @@ import 'package:mobile/core/database/app_database.dart';
 import 'package:mobile/features/account/domain/account.dart';
 import 'package:mobile/features/account/domain/account_icon.dart';
 import 'package:mobile/features/account/domain/constants.dart';
+import 'package:mobile/features/budget/data/repositories/budget.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
@@ -60,7 +61,7 @@ class AccountRepository {
       'id': id,
       'type': AccountType.expense.name,
       'sub_type': '手續費',
-      'icon': iconToCodePoint(Icons.payments),
+      'icon': iconToCodePoint(Icons.more_horiz),
       'last_used_at': now,
       'created_at': now,
       'updated_at': now,
@@ -158,6 +159,7 @@ class AccountRepository {
       where: 'id = ?',
       whereArgs: [accountId],
     );
+    await BudgetRepository.deleteCategoryBudgetsByAccountId(accountId);
     return true;
   }
 

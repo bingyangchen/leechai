@@ -116,6 +116,7 @@ class _ScrollableSheetWithResizeState extends State<_ScrollableSheetWithResize>
     const drag = 0.0001;
     final simulation = FrictionSimulation(drag, _currentSize.value, sizeVelocity);
     void listener() {
+      if (!_controller.isAttached) return;
       _controller.jumpTo(
         _flingAnimation.value.clamp(widget.minChildSize, widget.maxChildSize),
       );
@@ -127,14 +128,26 @@ class _ScrollableSheetWithResizeState extends State<_ScrollableSheetWithResize>
     });
   }
 
+  static const int _maxKeyboardExpandFrames = 20;
+
+  void _scheduleJumpToMaxForKeyboard({int attempt = 0}) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (_controller.isAttached) {
+        _controller.jumpTo(widget.maxChildSize);
+        return;
+      }
+      if (attempt >= _maxKeyboardExpandFrames) return;
+      _scheduleJumpToMaxForKeyboard(attempt: attempt + 1);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final viewInsetsBottom = MediaQuery.of(context).viewInsets.bottom;
     if (viewInsetsBottom > 0 && !_hasExpandedForKeyboard) {
       _hasExpandedForKeyboard = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _controller.jumpTo(widget.maxChildSize);
-      });
+      _scheduleJumpToMaxForKeyboard();
     } else if (viewInsetsBottom == 0) {
       _hasExpandedForKeyboard = false;
     }

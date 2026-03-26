@@ -56,3 +56,7 @@ cert:
 .PHONY: deploy
 deploy:
 	$(SHELL) ./scripts/prod/deploy.sh "$(image_tag)"
+
+.PHONY: build-mobile-ios-ipa
+build-mobile-ios-ipa:
+	cd mobile && flutter pub get && flutter build ipa --release

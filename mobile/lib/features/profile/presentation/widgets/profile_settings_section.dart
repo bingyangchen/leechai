@@ -28,7 +28,7 @@ String _themeModeLabel(ThemeMode mode) {
   }
 }
 
-const _appVersion = 'v1.0.0';
+const _appVersion = 'v0.1.1';
 const _privacyPolicyUrl = 'https://bingyangchen.github.io/leechai/privacy-policy/';
 const _termsOfServiceUrl = 'https://bingyangchen.github.io/leechai/terms-of-service/';
 const _openSourceLicensesUrl =
