@@ -101,7 +101,9 @@ class _BudgetPageState extends State<BudgetPage> {
       _initialTotal = total;
       _categoryAmounts = Map<String, double>.from(cats);
       _initialCategoryAmounts = Map<String, double>.from(cats);
-      _expenseAccountsById = {for (final account in expenseAccounts) account.id: account};
+      _expenseAccountsById = {
+        for (final account in expenseAccounts) account.id: account,
+      };
       _totalController.text = total != null && total > 0
           ? formatAmountForDisplay(total)
           : '';
@@ -488,7 +490,8 @@ class _BudgetPageState extends State<BudgetPage> {
                   },
                   onDelete: () {
                     final accountId = keys[i];
-                    final categoryName = _expenseAccountsById[accountId]?.subType ?? '其他分類';
+                    final categoryName =
+                        _expenseAccountsById[accountId]?.subType ?? '其他分類';
                     final amount = _categoryAmounts[accountId]!;
                     HapticFeedback.mediumImpact();
                     setState(() {
@@ -531,16 +534,20 @@ class _BudgetPageState extends State<BudgetPage> {
 
   Future<void> _onAddCategory() async {
     if (!mounted) return;
-    final availableAccounts = _expenseAccountsById.values
-        .where((account) => !_categoryAmounts.containsKey(account.id))
-        .toList()
-      ..sort((left, right) => left.subType.compareTo(right.subType));
+    final availableAccounts =
+        _expenseAccountsById.values
+            .where((account) => !_categoryAmounts.containsKey(account.id))
+            .toList()
+          ..sort((left, right) => left.subType.compareTo(right.subType));
     if (availableAccounts.isEmpty) {
       showReplacingSnackBar(context, const SnackBar(content: Text('沒有可新增的分類')));
       return;
     }
     final options = availableAccounts
-        .map((account) => CategoryBudgetOption(accountId: account.id, label: account.subType))
+        .map(
+          (account) =>
+              CategoryBudgetOption(accountId: account.id, label: account.subType),
+        )
         .toList();
     final result = await showAddCategoryBudgetSheet(context, options: options);
     if (result == null || !mounted) return;
