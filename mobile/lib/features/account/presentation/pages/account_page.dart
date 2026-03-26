@@ -29,12 +29,15 @@ class _AccountPageState extends State<AccountPage> {
   bool _privacyMode = false;
   late Future<_AccountPageData> _future;
   final ScrollController _scrollController = ScrollController();
+  double _headerCollapseProgress = 0;
+  static const double _headerCollapseDistance = 72;
 
   @override
   void initState() {
     super.initState();
     _future = _loadData();
     widget.refreshTrigger?.addListener(_onRefresh);
+    _scrollController.addListener(_onScroll);
   }
 
   @override
@@ -49,6 +52,7 @@ class _AccountPageState extends State<AccountPage> {
   @override
   void dispose() {
     widget.refreshTrigger?.removeListener(_onRefresh);
+    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
   }
@@ -56,6 +60,22 @@ class _AccountPageState extends State<AccountPage> {
   void _onRefresh() {
     setState(() {
       _future = _loadData();
+    });
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) {
+      return;
+    }
+
+    final rawCollapseProgress = (_scrollController.offset / _headerCollapseDistance)
+        .clamp(0.0, 1.0);
+    final nextCollapseProgress = Curves.easeOutCubic.transform(rawCollapseProgress);
+    if ((nextCollapseProgress - _headerCollapseProgress).abs() < 0.001) {
+      return;
+    }
+    setState(() {
+      _headerCollapseProgress = nextCollapseProgress;
     });
   }
 
@@ -261,8 +281,10 @@ class _AccountPageState extends State<AccountPage> {
                     totalAssets: data.totalAssets,
                     totalLiabilities: data.totalLiabilities,
                     sparklinePoints: data.sparkline,
+                    accountCount: data.accounts.length,
                     privacyMode: _privacyMode,
                     onPrivacyToggle: () => setState(() => _privacyMode = !_privacyMode),
+                    collapseProgress: _headerCollapseProgress,
                   ),
                   Expanded(
                     child: CustomScrollView(
