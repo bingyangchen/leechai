@@ -561,12 +561,9 @@ class _SyncStatusPanelState extends State<_SyncStatusPanel> {
     Color iconColor;
     switch (status) {
       case CloudSyncStatus.synced:
+      case CloudSyncStatus.syncing:
         title = '資料已安全備份至雲端';
         icon = Icons.cloud_done;
-        iconColor = colorScheme.primary;
-      case CloudSyncStatus.syncing:
-        title = '同步中...';
-        icon = Icons.cloud_upload_rounded;
         iconColor = colorScheme.primary;
       case CloudSyncStatus.offline:
         title = '離線／未同步';

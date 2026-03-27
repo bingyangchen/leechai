@@ -14,7 +14,7 @@ services:
     command: ["nginx", "-g", "daemon off;"]
 
   apiserver:
-    image: leechaiapp/apiserver:dev
+    image: ${DOCKER_USERNAME}/apiserver:dev
     build:
       context: ./apiserver
       target: final
@@ -27,7 +27,17 @@ services:
     depends_on:
       - db
     restart: unless-stopped
-    command: ["fastapi", "run", "main/main.py", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    command:
+      [
+        "fastapi",
+        "run",
+        "main/main.py",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+        "--reload",
+      ]
 
   db:
     image: postgres:18.1-alpine

@@ -158,20 +158,6 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage>
                   ],
                 ),
                 const SizedBox(height: 8),
-                _SectionHeader(title: '報表與摘要'),
-                _SettingsGroup(
-                  children: [
-                    _SwitchTile(
-                      title: '財務報表通知',
-                      subtitle: '當週報或月報結算完成時發送推播',
-                      value: _settings.reportNotificationEnabled,
-                      onChanged: (value) => _updateSettings(
-                        _settings.copyWith(reportNotificationEnabled: value),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
                 _SectionHeader(title: '系統資訊'),
                 _SettingsGroup(
                   children: [

@@ -28,12 +28,17 @@ String _themeModeLabel(ThemeMode mode) {
   }
 }
 
-const _appVersion = 'v0.1.1';
 const _privacyPolicyUrl = 'https://bingyangchen.github.io/leechai/privacy-policy/';
 const _termsOfServiceUrl = 'https://bingyangchen.github.io/leechai/terms-of-service/';
 const _openSourceLicensesUrl =
     'https://bingyangchen.github.io/leechai/open-source-licenses/';
 const _feedbackEmail = 'leechai.app@gmail.com';
+final Future<String> _appVersionFuture = _readAppVersionLabel();
+
+Future<String> _readAppVersionLabel() async {
+  final packageInfo = await PackageInfo.fromPlatform();
+  return 'v${packageInfo.version} (${packageInfo.buildNumber})';
+}
 
 class ProfileSettingsSection extends StatelessWidget {
   const ProfileSettingsSection({
@@ -127,12 +132,18 @@ class ProfileSettingsSection extends StatelessWidget {
                 showTrailingArrow: false,
                 onTap: () => _onFeedbackTap(context),
               ),
-              _SettingsTile(
-                icon: Icons.info_outline,
-                title: '版本資訊',
-                trailing: _appVersion,
-                showTrailingArrow: false,
-                onTap: () => _showAboutBottomSheet(context),
+              FutureBuilder<String>(
+                future: _appVersionFuture,
+                builder: (context, snapshot) {
+                  final appVersionLabel = snapshot.data ?? '--';
+                  return _SettingsTile(
+                    icon: Icons.info_outline,
+                    title: '版本資訊',
+                    trailing: appVersionLabel,
+                    showTrailingArrow: false,
+                    onTap: () => _showAboutBottomSheet(context),
+                  );
+                },
               ),
             ],
           ),
@@ -486,7 +497,13 @@ App 版本：${packageInfo.version} (${packageInfo.buildNumber})
           const SizedBox(height: 16),
           Text('LeeChai', style: theme.textStyles.headlineSmallEmphasis),
           const SizedBox(height: 4),
-          Text(_appVersion, style: theme.textStyles.bodyMuted),
+          FutureBuilder<String>(
+            future: _appVersionFuture,
+            builder: (context, snapshot) {
+              final appVersionLabel = snapshot.data ?? '--';
+              return Text(appVersionLabel, style: theme.textStyles.bodyMuted);
+            },
+          ),
           const SizedBox(height: 24),
           _AboutSheetTile(
             icon: Icons.description_outlined,
