@@ -1,13 +1,13 @@
 SHELL := /usr/bin/env bash
 .SILENT:
 
-.PHONY: build-dev
-build-dev:
-	$(SHELL) ./scripts/build.sh dev
+.PHONY: build-images-dev
+build-images-dev:
+	$(SHELL) ./scripts/build-images.sh dev
 
-.PHONY: build-prod
-build-prod:
-	$(SHELL) ./scripts/build.sh prod
+.PHONY: build-images-prod
+build-images-prod:
+	$(SHELL) ./scripts/build-images.sh prod
 
 .PHONY: push-images-dev
 push-images-dev:

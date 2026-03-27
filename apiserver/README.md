@@ -21,7 +21,7 @@
 2. Build the images for development:
 
    ```bash
-   make build-dev
+   make build-images-dev
    ```
 
 3. Install Git hooks:
@@ -80,3 +80,4 @@
 
     ```bash
     alembic upgrade head
+    ```
