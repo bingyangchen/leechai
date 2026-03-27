@@ -22,6 +22,7 @@ It helps users record daily money movement, track assets, and understand trends.
 - Supports local-first usage with cloud sync capability
 - Focuses on practical financial clarity instead of heavy financial jargon
 - Emphasizes confidence and continuity in daily tracking behavior
+- Mascot is a Shiba Inu; use it as a warm, friendly brand cue in suitable surfaces and copy
 
 ## Design Style Direction
 
