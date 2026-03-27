@@ -59,4 +59,4 @@ deploy:
 
 .PHONY: build-mobile-ios-ipa
 build-mobile-ios-ipa:
-	cd mobile && flutter pub get && flutter build ipa --release
+	$(SHELL) ./scripts/mobile/build-ios-ipa.sh
