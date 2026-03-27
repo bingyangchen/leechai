@@ -101,9 +101,8 @@ class _AuthenticatedBanner extends StatelessWidget {
     String statusText;
     switch (syncStatus) {
       case CloudSyncStatus.synced:
-        statusText = '已同步至雲端';
       case CloudSyncStatus.syncing:
-        statusText = '同步中...';
+        statusText = '已同步至雲端';
       case CloudSyncStatus.offline:
         statusText = '離線／未同步';
     }
