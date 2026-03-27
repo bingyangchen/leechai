@@ -9,7 +9,7 @@
 
 ## Quick Start
 
-Ensure the backend server is running locally first.
+Ensure that the API server is running locally first.
 
 1. From project root, go to mobile:
 
@@ -29,12 +29,14 @@ Ensure the backend server is running locally first.
    flutter run
    ```
 
-## Dependency Management
+## How to Manage Dependencies
 
-- From the `mobile` directory: `flutter pub add {DEPENDENCY}` or `flutter pub remove {DEPENDENCY}`.
-- For iOS-only dependencies: go to `mobile/ios` and run `pod install`.
+- **Step 1**: From the `mobile` directory: `flutter pub add {DEPENDENCY}` or `flutter pub remove {DEPENDENCY}`.
+- **Step 2**: For iOS-only dependencies: go to `mobile/ios` and run `pod install`.
 
-## Build for iOS
+## Release
+
+### Build for iOS
 
 1. From project root, go to `mobile`:
 

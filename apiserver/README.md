@@ -13,7 +13,7 @@
 1. From project root, create `.env`:
 
    ```bash
-   cp example.env .env
+   cp .env.example .env
    ```
 
    Fill in the values for the environment variables.
@@ -24,37 +24,32 @@
    make build-images-dev
    ```
 
-3. Install Git hooks:
-
-   ```bash
-   make install-git-hooks
-   ```
-
-4. Generate SSL certificates and keys for development:
+3. Generate SSL certificates and keys for development:
 
    ```bash
    make cert-dev
    ```
 
-5. Run the development server:
+4. Run the development server:
 
    ```bash
    make start
-   # To stop: make stop
+   # To stop, run `make stop`
    ```
 
-## Dependency Management
+## How to Manage Dependencies
 
-- Enter the shell of the API server container.
+- Enter the shell of the API server container (run `make shell-apiserver`).
 - Install: `uv add {DEPENDENCY} --no-sync` or remove: `uv remove {DEPENDENCY} --no-sync`
   (`--no-sync` only performs version check, no download.)
-- Exit, rebuild dev images, then restart the API server container.
+- Exit the shell, rebuild dev images, then restart the API server container (run `make start`).
 
-## Environment Variables
+## How to Add Environment Variables
 
-1. Add the variable (no value) in `example.env`.
-2. Add the variable and value in `.env` (at project root).
-3. If used by the API server: add it in `apiserver/main/config.py` and `.github/workflows/lint-and-test.yaml`, and in GitHub Settings > Environments > Test > Variables/Secrets.
+1. Add the variable and value in `.env` (at project root).
+2. Add the variable to the `Settings` class in `apiserver/main/config.py`.
+3. GitHub repository: Settings > Secrets and variables > Actions > Secrets/Variables.
+4. Add the variable name (no value) in `.env.example` for future reference.
 
 ## How to Migrate the Database Schema
 
