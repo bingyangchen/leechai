@@ -1,11 +1,36 @@
 import 'package:flutter/cupertino.dart';
 import 'package:mobile/shared/constants/refresh_trigger.dart';
 
-CupertinoSliverRefreshControl appSliverRefreshControl({RefreshCallback? onRefresh}) {
+CupertinoSliverRefreshControl appSliverRefreshControl({
+  RefreshCallback? onRefresh,
+  double statusBarOverlapInset = 0,
+}) {
+  if (statusBarOverlapInset <= 0) {
+    return CupertinoSliverRefreshControl(
+      refreshTriggerPullDistance: kRefreshTriggerPullDistance,
+      refreshIndicatorExtent: kRefreshIndicatorExtent,
+      builder: buildInstantDismissRefreshIndicator,
+      onRefresh: onRefresh,
+    );
+  }
   return CupertinoSliverRefreshControl(
     refreshTriggerPullDistance: kRefreshTriggerPullDistance,
     refreshIndicatorExtent: kRefreshIndicatorExtent,
-    builder: buildInstantDismissRefreshIndicator,
+    builder: (context, refreshState, pulledExtent, triggerDist, indicatorExtent) {
+      if (refreshState == RefreshIndicatorMode.done) {
+        return const SizedBox.shrink();
+      }
+      return Transform.translate(
+        offset: Offset(0, statusBarOverlapInset),
+        child: CupertinoSliverRefreshControl.buildRefreshIndicator(
+          context,
+          refreshState,
+          pulledExtent,
+          triggerDist,
+          indicatorExtent,
+        ),
+      );
+    },
     onRefresh: onRefresh,
   );
 }
