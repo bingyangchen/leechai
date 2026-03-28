@@ -234,11 +234,11 @@ class _FilledBudgetBodyState extends State<_FilledBudgetBody> {
         : '\$${formatAmountForDisplay(remaining.abs())}';
     final capStr = privacyMode ? '****' : formatAmountForDisplay(cap);
     final daysStr = '${data.remainingDaysInMonth} 天';
+    final dailySuggestedRaw = data.dailySuggested ?? 0;
+    final dailySuggestedDisplay = dailySuggestedRaw < 0 ? 0.0 : dailySuggestedRaw;
     final dailyStr = data.remainingDaysInMonth <= 0
         ? '—'
-        : (privacyMode
-              ? '****'
-              : '\$${formatAmountForDisplay((data.dailySuggested ?? 0).abs())}');
+        : (privacyMode ? '****' : '\$${formatAmountForDisplay(dailySuggestedDisplay)}');
 
     final remainingStyle = remaining < 0
         ? theme.textStyles.titleEmphasis.copyWith(color: cs.error)
@@ -344,15 +344,9 @@ class _FilledBudgetBodyState extends State<_FilledBudgetBody> {
             ),
             Expanded(
               child: _MetricColumn(
-                label: data.remainingDaysInMonth <= 0
-                    ? '今日結算'
-                    : (remaining < 0 ? '日均超支' : '每日建議'),
+                label: data.remainingDaysInMonth <= 0 ? '今日結算' : '每日建議',
                 value: dailyStr,
-                valueStyle: theme.textStyles.titleEmphasis.copyWith(
-                  color: (data.dailySuggested != null && data.dailySuggested! < 0)
-                      ? cs.error
-                      : null,
-                ),
+                valueStyle: theme.textStyles.titleEmphasis,
               ),
             ),
           ],
