@@ -147,7 +147,7 @@ class _ProfilePageState extends State<ProfilePage> {
           }
           final data = snapshot.data ?? _lastData;
           if (data == null) return const SizedBox.shrink();
-          final statusBarInset = MediaQuery.viewPaddingOf(context).top;
+          final statusBarOverlapInset = MediaQuery.viewPaddingOf(context).top;
           final scrollBody = HapticRefreshWrapper(
             child: SafeArea(
               top: false,
@@ -155,12 +155,14 @@ class _ProfilePageState extends State<ProfilePage> {
               child: ValueListenableBuilder<bool>(
                 valueListenable: _cardInteracting,
                 builder: (context, isCardInteracting, child) => CustomScrollView(
+                  clipBehavior: Clip.none,
                   controller: _scrollController,
                   physics: isCardInteracting
                       ? const NeverScrollableScrollPhysics()
                       : const AlwaysScrollableScrollPhysics(),
                   slivers: [
                     appSliverRefreshControl(
+                      statusBarOverlapInset: statusBarOverlapInset,
                       onRefresh: () =>
                           runRefreshWithSnapBack(_scrollController, () async {
                             // NOTE: placebo effect
@@ -171,7 +173,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: EdgeInsets.only(top: 16 + statusBarInset),
+                        padding: EdgeInsets.only(top: 16 + statusBarOverlapInset),
                         child: UserStatsCard(
                           data: data,
                           isPageVisible: widget.isPageVisible,
