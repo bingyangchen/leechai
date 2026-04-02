@@ -497,7 +497,7 @@ App 版本：${packageInfo.version} (${packageInfo.buildNumber})
             ),
           ),
           const SizedBox(height: 16),
-          Text('LeeChai', style: theme.textStyles.headlineSmallEmphasis),
+          Text('Leechai', style: theme.textStyles.headlineSmallEmphasis),
           const SizedBox(height: 4),
           FutureBuilder<String>(
             future: _appVersionFuture,
