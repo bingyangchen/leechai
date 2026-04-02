@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/features/entry/domain/entry_type.dart';
 import 'package:mobile/features/entry/presentation/constants/entry_type_colors.dart';
+import 'package:mobile/features/entry/presentation/constants/journal_sticky_strip.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 
 const List<String> _weekdays = ['一', '二', '三', '四', '五', '六', '日'];
 
-const double kDateHeaderBarExtent = 70;
+const double kDateHeaderBarExtent = journalStickyStripRowHeight;
 
 class DateHeaderContent extends StatelessWidget {
   const DateHeaderContent({
@@ -38,54 +39,80 @@ class DateHeaderContent extends StatelessWidget {
     final expenseColor = EntryTypeColors.forType(context, EntryType.expense);
     final incomeColor = EntryTypeColors.forType(context, EntryType.income);
 
-    return ColoredBox(
-      color: theme.colorScheme.surface,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '$dateStr (週$weekday)',
-                  style: theme.textStyles.sectionLabel.copyWith(
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 6,
+    final separatorColor = theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.35);
+
+    return SizedBox(
+      height: journalStickyStripRowHeight,
+      child: ColoredBox(
+        color: theme.colorScheme.surface,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    _DaySummaryChip(
-                      label: '支出',
-                      amount: expenseStr,
-                      amountColor: expenseColor,
+                    Expanded(
+                      child: Text(
+                        '$dateStr (週$weekday)',
+                        style: theme.textStyles.sectionLabel.copyWith(
+                          color: theme.colorScheme.onSurface,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    _DaySummaryChip(
-                      label: '收入',
-                      amount: incomeStr,
-                      amountColor: incomeColor,
+                    const SizedBox(width: 12),
+                    Flexible(
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerRight,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _InlineDayAmount(
+                                label: '支出',
+                                amount: expenseStr,
+                                amountColor: expenseColor,
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 7),
+                                child: Text(
+                                  '·',
+                                  style: theme.textTheme.bodySmall!.copyWith(
+                                    color: separatorColor,
+                                    height: 1,
+                                  ),
+                                ),
+                              ),
+                              _InlineDayAmount(
+                                label: '收入',
+                                amount: incomeStr,
+                                amountColor: incomeColor,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
-              ],
+              ),
             ),
-          ),
-          SizedBox(height: 1, child: ColoredBox(color: bottomLineColor)),
-        ],
+            SizedBox(height: 1, child: ColoredBox(color: bottomLineColor)),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _DaySummaryChip extends StatelessWidget {
-  const _DaySummaryChip({
+class _InlineDayAmount extends StatelessWidget {
+  const _InlineDayAmount({
     required this.label,
     required this.amount,
     required this.amountColor,
@@ -98,30 +125,21 @@ class _DaySummaryChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(label, style: theme.textStyles.bodySmallMuted),
-            const SizedBox(width: 4),
-            Text(
-              '\$$amount',
-              style: theme.textTheme.titleSmall!.copyWith(
-                fontWeight: FontWeight.w600,
-                color: amountColor,
-                height: 1.2,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-            ),
-          ],
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(label, style: theme.textStyles.bodySmallMuted),
+        const SizedBox(width: 4),
+        Text(
+          '\$$amount',
+          style: theme.textTheme.titleSmall!.copyWith(
+            fontWeight: FontWeight.w600,
+            color: amountColor,
+            height: 1.2,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
         ),
-      ),
+      ],
     );
   }
 }
