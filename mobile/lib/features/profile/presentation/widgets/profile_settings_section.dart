@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'package:mobile/features/budget/presentation/pages/budget_page.dart';
 import 'package:mobile/features/category/presentation/pages/category_management_page.dart';
+import 'package:mobile/features/profile/data/constants/store_listing.dart';
 import 'package:mobile/features/profile/presentation/pages/notification_settings_page.dart';
 import 'package:mobile/features/tag/presentation/pages/tag_management_page.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
@@ -268,13 +269,14 @@ class ProfileSettingsSection extends StatelessWidget {
           action: SnackBarAction(
             label: '前往商店',
             textColor: theme.colorScheme.primary,
-            onPressed: () => inAppReview.openStoreListing(),
+            onPressed: () =>
+                inAppReview.openStoreListing(appStoreId: appleAppStoreListingId),
           ),
         ),
       );
     } else {
       if (!context.mounted) return;
-      await inAppReview.openStoreListing();
+      await inAppReview.openStoreListing(appStoreId: appleAppStoreListingId);
     }
   }
 
