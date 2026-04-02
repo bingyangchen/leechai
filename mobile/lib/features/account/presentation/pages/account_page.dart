@@ -82,7 +82,6 @@ class _AccountPageState extends State<AccountPage> {
   Future<_AccountPageData> _loadData() async {
     final accounts = await AccountRepository.getBalanceAccounts();
     final balances = await AccountBalanceService.getBalances();
-    final sparkline = await AccountBalanceService.getNetWorthSparkline();
     double totalAssets = 0;
     double totalLiabilities = 0;
     for (final a in accounts) {
@@ -96,7 +95,6 @@ class _AccountPageState extends State<AccountPage> {
     return _AccountPageData(
       accounts: accounts,
       balances: balances,
-      sparkline: sparkline,
       totalAssets: totalAssets,
       totalLiabilities: totalLiabilities,
     );
@@ -280,7 +278,6 @@ class _AccountPageState extends State<AccountPage> {
                     netWorth: netWorth,
                     totalAssets: data.totalAssets,
                     totalLiabilities: data.totalLiabilities,
-                    sparklinePoints: data.sparkline,
                     accountCount: data.accounts.length,
                     privacyMode: _privacyMode,
                     onPrivacyToggle: () => setState(() => _privacyMode = !_privacyMode),
@@ -398,14 +395,12 @@ class _AccountPageData {
   _AccountPageData({
     required this.accounts,
     required this.balances,
-    required this.sparkline,
     required this.totalAssets,
     required this.totalLiabilities,
   });
 
   final List<Account> accounts;
   final Map<String, double> balances;
-  final List<double> sparkline;
   final double totalAssets;
   final double totalLiabilities;
 }

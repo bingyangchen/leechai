@@ -44,27 +44,6 @@ class AccountBalanceService {
     return balance;
   }
 
-  static Future<List<double>> getNetWorthSparkline() async {
-    final accounts = await AccountRepository.getBalanceAccounts();
-    final entries = await EntryRepository.getAll();
-    final now = DateTime.now();
-    final points = <double>[];
-    for (var i = 5; i >= 0; i--) {
-      final monthEnd = DateTime(now.year, now.month - i + 1, 0, 23, 59, 59, 999);
-      if (monthEnd.isAfter(now)) continue;
-      double net = 0;
-      for (final a in accounts) {
-        final b = balanceAsOf(a, entries, monthEnd);
-        net += b;
-      }
-      points.add(net);
-    }
-    while (points.length < 6) {
-      points.insert(0, 0.0);
-    }
-    return points.length > 6 ? points.sublist(points.length - 6) : points;
-  }
-
   static double balanceAsOf(
     Account account,
     List<Map<String, Object?>> entries,
