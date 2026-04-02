@@ -24,7 +24,7 @@ class AccountRepository {
       _table,
       where: 'type = ? AND deleted_at IS NULL',
       whereArgs: [type],
-      orderBy: 'id',
+      orderBy: 'last_used_at DESC, id ASC',
     );
     return rows.map(_rowToAccount).toList();
   }
@@ -115,6 +115,11 @@ class AccountRepository {
       where: 'id = ?',
       whereArgs: [accountId],
     );
+  }
+
+  static Future<void> batchUpdateLastUsedAt(Iterable<String> accountIds) async {
+    final unique = accountIds.toSet();
+    await Future.wait(unique.map(updateLastUsedAt));
   }
 
   static Future<void> update({

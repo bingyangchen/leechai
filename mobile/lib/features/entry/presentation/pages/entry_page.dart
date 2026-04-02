@@ -392,20 +392,14 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
   void _openAccountPickerSingle() {
     _openAccountPicker(
       isFrom: _entryType == EntryType.expense,
-      onSelect: (a) {
-        AccountRepository.updateLastUsedAt(a.id);
-        setState(() => _selectedAccountId = a.id);
-      },
+      onSelect: (a) => setState(() => _selectedAccountId = a.id),
     );
   }
 
   void _openAccountPickerFrom() {
     _openAccountPicker(
       isFrom: true,
-      onSelect: (a) {
-        AccountRepository.updateLastUsedAt(a.id);
-        setState(() => _selectedAccountFromId = a.id);
-      },
+      onSelect: (a) => setState(() => _selectedAccountFromId = a.id),
       excludeAccountId: _selectedAccountToId,
     );
   }
@@ -413,10 +407,7 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
   void _openAccountPickerTo() {
     _openAccountPicker(
       isFrom: false,
-      onSelect: (a) {
-        AccountRepository.updateLastUsedAt(a.id);
-        setState(() => _selectedAccountToId = a.id);
-      },
+      onSelect: (a) => setState(() => _selectedAccountToId = a.id),
       excludeAccountId: _selectedAccountFromId,
     );
   }
@@ -518,6 +509,10 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
           memo: memo,
           occurredAt: _selectedDate,
         );
+        await AccountRepository.batchUpdateLastUsedAt([
+          accounts.debit,
+          accounts.credit,
+        ]);
       } else {
         double? transferFeeAmount;
         if (_entryType == EntryType.transfer) {
@@ -537,6 +532,10 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
           memo: memo,
           occurredAt: _selectedDate,
         );
+        await AccountRepository.batchUpdateLastUsedAt([
+          accounts.debit,
+          accounts.credit,
+        ]);
         await AchievementService.evaluateAfterEntryInserted(
           type: _entryType.name,
           occurredAt: _selectedDate,
