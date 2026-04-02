@@ -29,6 +29,17 @@ class AccountRepository {
     return rows.map(_rowToAccount).toList();
   }
 
+  static Future<List<Account>> getByTypeOrderByCreatedAt(String type) async {
+    final db = await AppDatabase.database;
+    final rows = await db.query(
+      _table,
+      where: 'type = ? AND deleted_at IS NULL',
+      whereArgs: [type],
+      orderBy: 'created_at ASC, id ASC',
+    );
+    return rows.map(_rowToAccount).toList();
+  }
+
   static Future<List<Account>> getBalanceAccounts() async {
     final db = await AppDatabase.database;
     final rows = await db.query(

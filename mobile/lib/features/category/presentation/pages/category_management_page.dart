@@ -35,8 +35,8 @@ class _CategoryManagementPageState extends State<CategoryManagementPage>
 
   void _loadCategories() {
     setState(() {
-      _expenseFuture = AccountRepository.getByType('expense');
-      _incomeFuture = AccountRepository.getByType('income');
+      _expenseFuture = AccountRepository.getByTypeOrderByCreatedAt('expense');
+      _incomeFuture = AccountRepository.getByTypeOrderByCreatedAt('income');
     });
   }
 
