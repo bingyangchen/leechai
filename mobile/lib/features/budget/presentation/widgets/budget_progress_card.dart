@@ -61,7 +61,7 @@ class _BudgetProgressCardState extends State<BudgetProgressCard> {
   }
 
   Color _barFillColor(ColorScheme cs, double ratio) {
-    if (ratio >= 1.0) return cs.error;
+    if (ratio > 1.0) return cs.error;
     if (ratio >= 0.8) return cs.secondary;
     return cs.primary;
   }
