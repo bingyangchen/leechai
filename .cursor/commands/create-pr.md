@@ -14,3 +14,5 @@
 - 不要理會沒有 commit 進 repository 的變更（也不要 revert 這些變更）。
 - `<title>` 與 `<body>` 需以英文撰寫。
 - 做完這些事後，在最後提供我 PR 的網址。
+
+如果你不清楚 `gh` 的使用方式的話，請使用 skill: `~/.cursor/skills/gh-create-pr/SKILL.md`。
