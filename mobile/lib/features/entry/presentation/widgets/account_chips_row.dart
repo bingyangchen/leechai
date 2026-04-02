@@ -16,6 +16,7 @@ class AccountChipsRow extends StatelessWidget {
     required this.onAccountTap,
     required this.onAccountFromTap,
     required this.onAccountToTap,
+    this.highlightDualAccountConflict = false,
   });
 
   final EntryType entryType;
@@ -28,10 +29,12 @@ class AccountChipsRow extends StatelessWidget {
   final VoidCallback onAccountTap;
   final VoidCallback onAccountFromTap;
   final VoidCallback onAccountToTap;
+  final bool highlightDualAccountConflict;
 
   @override
   Widget build(BuildContext context) {
     final isDual = entryType.isDualAccount;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -42,19 +45,23 @@ class AccountChipsRow extends StatelessWidget {
               account: fromAccount,
               label: fromAccountLabel,
               onTap: onAccountFromTap,
+              highlightConflict: highlightDualAccountConflict,
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 6),
               child: Icon(
                 Icons.arrow_forward,
                 size: 20,
-                color: Theme.of(context).colorScheme.primary,
+                color: highlightDualAccountConflict
+                    ? colorScheme.error.withValues(alpha: 0.88)
+                    : colorScheme.primary,
               ),
             ),
             AccountChip(
               account: toAccount,
               label: toAccountLabel,
               onTap: onAccountToTap,
+              highlightConflict: highlightDualAccountConflict,
             ),
           ] else
             AccountChip(
@@ -74,26 +81,38 @@ class AccountChip extends StatelessWidget {
     this.account,
     required this.label,
     required this.onTap,
+    this.highlightConflict = false,
   });
 
   final Account? account;
   final String label;
   final VoidCallback onTap;
+  final bool highlightConflict;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final icon = account?.displayIcon ?? Icons.account_balance_wallet_outlined;
+    final errorWashAlpha = theme.brightness == Brightness.light ? 0.16 : 0.22;
 
     return MetaChip(
       icon: icon,
       label: label,
       onTap: onTap,
-      iconColor: theme.colorScheme.primary,
+      iconColor: highlightConflict ? colorScheme.error : colorScheme.primary,
+      backgroundColor: highlightConflict
+          ? Color.alphaBlend(
+              colorScheme.error.withValues(alpha: errorWashAlpha),
+              colorScheme.surfaceContainerHighest,
+            )
+          : null,
       trailing: Icon(
         Icons.keyboard_arrow_down,
         size: 18,
-        color: theme.colorScheme.onSurfaceVariant,
+        color: highlightConflict
+            ? colorScheme.error.withValues(alpha: 0.75)
+            : colorScheme.onSurfaceVariant,
       ),
     );
   }

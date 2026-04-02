@@ -6,7 +6,6 @@ void showAccountPickerSheet(
   BuildContext context, {
   required List<Account> accounts,
   required ValueChanged<Account> onSelect,
-  String? excludeAccountId,
 }) {
   showAppBottomSheet<void>(
     context,
@@ -20,32 +19,16 @@ void showAccountPickerSheet(
           itemCount: accounts.length,
           itemBuilder: (context, index) {
             final a = accounts[index];
-            final isDisabled = excludeAccountId != null && a.id == excludeAccountId;
             return ListTile(
               leading: Icon(
                 a.displayIcon,
-                color: isDisabled
-                    ? Theme.of(
-                        context,
-                      ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5)
-                    : Theme.of(context).colorScheme.primary,
+                color: Theme.of(context).colorScheme.primary,
               ),
-              title: Text(
-                a.name ?? '',
-                style: isDisabled
-                    ? TextStyle(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-                      )
-                    : null,
-              ),
-              onTap: isDisabled
-                  ? null
-                  : () {
-                      onSelect(a);
-                      Navigator.of(ctx).pop();
-                    },
+              title: Text(a.name ?? ''),
+              onTap: () {
+                onSelect(a);
+                Navigator.of(ctx).pop();
+              },
             );
           },
         ),

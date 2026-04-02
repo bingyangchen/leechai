@@ -36,7 +36,7 @@ class EntryPage extends StatefulWidget {
   State<EntryPage> createState() => _EntryPageState();
 }
 
-class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMixin {
+class _EntryPageState extends State<EntryPage> with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _transferFeeController = TextEditingController();
@@ -59,6 +59,9 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
   int _selectedIncomeCategoryIndex = 0;
   bool _entryTypePageChangeHapticEnabled = false;
   int? _previousEntryTypePageIndex;
+  bool _dualAccountConflictHighlight = false;
+  late AnimationController _accountDuplicateShakeController;
+  late Animation<double> _accountDuplicateShakeOffset;
 
   String? _originalAmountDisplay;
   DateTime? _originalDate;
@@ -107,6 +110,24 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
   @override
   void initState() {
     super.initState();
+    _accountDuplicateShakeController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    _accountDuplicateShakeOffset =
+        TweenSequence<double>([
+          TweenSequenceItem(tween: Tween(begin: 0.0, end: -6.0), weight: 1),
+          TweenSequenceItem(tween: Tween(begin: -6.0, end: 6.0), weight: 1),
+          TweenSequenceItem(tween: Tween(begin: 6.0, end: -5.0), weight: 1),
+          TweenSequenceItem(tween: Tween(begin: -5.0, end: 5.0), weight: 1),
+          TweenSequenceItem(tween: Tween(begin: 5.0, end: -3.0), weight: 1),
+          TweenSequenceItem(tween: Tween(begin: -3.0, end: 0.0), weight: 1),
+        ]).animate(
+          CurvedAnimation(
+            parent: _accountDuplicateShakeController,
+            curve: Curves.easeInOut,
+          ),
+        );
     _tabController = TabController(
       vsync: this,
       length: EntryTypeX.userFacingTypes.length,
@@ -152,13 +173,9 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
     if (type == EntryType.adjustment) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        final theme = Theme.of(context);
         showReplacingSnackBar(
           context,
-          SnackBar(
-            content: Text('這是系統自動調整的紀錄，無法編輯唷！'),
-            backgroundColor: theme.colorScheme.error,
-          ),
+          const SnackBar(content: Text('這是系統自動調整的紀錄，無法編輯唷！')),
         );
         Navigator.of(context).pop();
       });
@@ -234,7 +251,10 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
       final index = _tabController.index;
       final newType = EntryTypeX.userFacingTypes[index];
       final didChangeType = newType != _entryType;
-      setState(() => _entryType = newType);
+      setState(() {
+        _entryType = newType;
+        if (didChangeType) _dualAccountConflictHighlight = false;
+      });
       if (didChangeType) _applyDefaultAccounts();
       _pageController.jumpToPage(index);
     }
@@ -252,7 +272,10 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
     }
     final newType = EntryTypeX.userFacingTypes[index];
     final didChangeType = newType != _entryType;
-    setState(() => _entryType = newType);
+    setState(() {
+      _entryType = newType;
+      if (didChangeType) _dualAccountConflictHighlight = false;
+    });
     if (didChangeType) _applyDefaultAccounts();
   }
 
@@ -260,6 +283,7 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
   void dispose() {
     _tabController.removeListener(_syncEntryTypeFromTab);
     _tabController.dispose();
+    _accountDuplicateShakeController.dispose();
     _pageController.dispose();
     _amountController.dispose();
     _transferFeeController.dispose();
@@ -374,19 +398,13 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
   void _openAccountPicker({
     required bool isFrom,
     required void Function(Account) onSelect,
-    String? excludeAccountId,
   }) {
     final accounts = filterAccountsForEntryType(
       _balanceAccounts,
       entryType: _entryType,
       isFrom: isFrom,
     );
-    showAccountPickerSheet(
-      context,
-      accounts: accounts,
-      onSelect: onSelect,
-      excludeAccountId: excludeAccountId,
-    );
+    showAccountPickerSheet(context, accounts: accounts, onSelect: onSelect);
   }
 
   void _openAccountPickerSingle() {
@@ -399,16 +417,20 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
   void _openAccountPickerFrom() {
     _openAccountPicker(
       isFrom: true,
-      onSelect: (a) => setState(() => _selectedAccountFromId = a.id),
-      excludeAccountId: _selectedAccountToId,
+      onSelect: (a) => setState(() {
+        _selectedAccountFromId = a.id;
+        _dualAccountConflictHighlight = false;
+      }),
     );
   }
 
   void _openAccountPickerTo() {
     _openAccountPicker(
       isFrom: false,
-      onSelect: (a) => setState(() => _selectedAccountToId = a.id),
-      excludeAccountId: _selectedAccountFromId,
+      onSelect: (a) => setState(() {
+        _selectedAccountToId = a.id;
+        _dualAccountConflictHighlight = false;
+      }),
     );
   }
 
@@ -452,13 +474,9 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
         final fee = double.tryParse(feeRaw);
         if (fee == null || fee < 0) {
           if (mounted) {
-            final theme = Theme.of(context);
             showReplacingSnackBar(
               context,
-              SnackBar(
-                content: Text('請輸入有效的手續費金額'),
-                backgroundColor: theme.colorScheme.error,
-              ),
+              const SnackBar(content: Text('請輸入有效的手續費金額')),
             );
           }
           return;
@@ -469,13 +487,18 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
     final accounts = _getDebitCreditAccountIds();
     if (accounts == null) {
       if (mounted) {
-        final theme = Theme.of(context);
+        showReplacingSnackBar(context, const SnackBar(content: Text('記得選擇帳戶與分類唷！')));
+      }
+      return;
+    }
+
+    if (_entryType.isDualAccount && accounts.debit == accounts.credit) {
+      if (mounted) {
+        setState(() => _dualAccountConflictHighlight = true);
+        _accountDuplicateShakeController.forward(from: 0);
         showReplacingSnackBar(
           context,
-          SnackBar(
-            content: Text('記得選擇帳戶與分類唷！'),
-            backgroundColor: theme.colorScheme.error,
-          ),
+          const SnackBar(content: Text('兩個帳戶不可相同，請調整後再送出')),
         );
       }
       return;
@@ -692,26 +715,48 @@ class _EntryPageState extends State<EntryPage> with SingleTickerProviderStateMix
                   ),
                   const SliverToBoxAdapter(child: SizedBox(height: 12)),
                   SliverToBoxAdapter(
-                    child: AccountChipsRow(
-                      entryType: pageType,
-                      singleAccount: _accountById(_selectedAccountId),
-                      singleAccountLabel:
-                          _accountName(_selectedAccountId) ??
-                          accountChipLabel(
-                            pageType,
-                            isFrom: pageType == EntryType.expense,
-                          ),
-                      fromAccount: _accountById(_selectedAccountFromId),
-                      toAccount: _accountById(_selectedAccountToId),
-                      fromAccountLabel:
-                          _accountName(_selectedAccountFromId) ??
-                          accountChipLabel(pageType, isFrom: true),
-                      toAccountLabel:
-                          _accountName(_selectedAccountToId) ??
-                          accountChipLabel(pageType, isFrom: false),
-                      onAccountTap: _openAccountPickerSingle,
-                      onAccountFromTap: _openAccountPickerFrom,
-                      onAccountToTap: _openAccountPickerTo,
+                    child: Builder(
+                      builder: (context) {
+                        final highlightDualAccountConflict =
+                            _dualAccountConflictHighlight &&
+                            pageType == _entryType &&
+                            pageType.isDualAccount;
+                        final accountRow = AccountChipsRow(
+                          entryType: pageType,
+                          singleAccount: _accountById(_selectedAccountId),
+                          singleAccountLabel:
+                              _accountName(_selectedAccountId) ??
+                              accountChipLabel(
+                                pageType,
+                                isFrom: pageType == EntryType.expense,
+                              ),
+                          fromAccount: _accountById(_selectedAccountFromId),
+                          toAccount: _accountById(_selectedAccountToId),
+                          fromAccountLabel:
+                              _accountName(_selectedAccountFromId) ??
+                              accountChipLabel(pageType, isFrom: true),
+                          toAccountLabel:
+                              _accountName(_selectedAccountToId) ??
+                              accountChipLabel(pageType, isFrom: false),
+                          onAccountTap: _openAccountPickerSingle,
+                          onAccountFromTap: _openAccountPickerFrom,
+                          onAccountToTap: _openAccountPickerTo,
+                          highlightDualAccountConflict: highlightDualAccountConflict,
+                        );
+                        if (pageType.isDualAccount && pageType == _entryType) {
+                          return AnimatedBuilder(
+                            animation: _accountDuplicateShakeOffset,
+                            builder: (context, child) {
+                              return Transform.translate(
+                                offset: Offset(_accountDuplicateShakeOffset.value, 0),
+                                child: child,
+                              );
+                            },
+                            child: accountRow,
+                          );
+                        }
+                        return accountRow;
+                      },
                     ),
                   ),
                   const SliverToBoxAdapter(child: SizedBox(height: 16)),
