@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/features/entry/presentation/constants/journal_sticky_strip.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
 
 class CollapsedSummaryBar extends StatelessWidget {
-  static const double height = 44;
+  static const double height = journalStickyStripRowHeight;
 
   const CollapsedSummaryBar({
     super.key,

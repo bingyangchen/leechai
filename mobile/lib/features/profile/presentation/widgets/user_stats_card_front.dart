@@ -65,6 +65,28 @@ class UserStatsCardFront extends StatelessWidget {
           child: Stack(
             children: [
               Positioned.fill(
+                child: IgnorePointer(
+                  child: Opacity(
+                    opacity: 0.05,
+                    child: ColorFiltered(
+                      // dart format off
+                      colorFilter: const ColorFilter.matrix(<double>[
+                        0.2126, 0.7152, 0.0722, 0, 0,
+                        0.2126, 0.7152, 0.0722, 0, 0,
+                        0.2126, 0.7152, 0.0722, 0, 0,
+                        0, 0, 0, 1, 0,
+                      ]),
+                      // dart format on
+                      child: Transform.scale(
+                        scale: 1.2,
+                        alignment: Alignment.center,
+                        child: Image.asset('assets/icon/cool.png', fit: BoxFit.contain),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned.fill(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
                   child: Row(

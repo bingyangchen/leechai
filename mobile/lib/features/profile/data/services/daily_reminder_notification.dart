@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:mobile/features/profile/data/constants/daily_reminder.dart';
 import 'package:mobile/features/profile/domain/notification_settings.dart';
 import 'package:timezone/timezone.dart' as timezone;
 
 const int _dailyReminderNotificationId = 1;
 const String _channelId = 'daily_reminder';
-const String _channelName = '每日記帳提醒';
-const String _notificationBody = '提醒您記錄今天的收支';
 
 class DailyReminderNotificationService {
   DailyReminderNotificationService._();
@@ -50,8 +49,8 @@ class DailyReminderNotificationService {
 
     const androidDetails = AndroidNotificationDetails(
       _channelId,
-      _channelName,
-      channelDescription: _notificationBody,
+      dailyReminderTitle,
+      channelDescription: dailyReminderSubtitle,
       importance: Importance.defaultImportance,
       priority: Priority.defaultPriority,
     );
@@ -60,8 +59,8 @@ class DailyReminderNotificationService {
 
     await plugin.zonedSchedule(
       _dailyReminderNotificationId,
-      _channelName,
-      _notificationBody,
+      dailyReminderTitle,
+      dailyReminderSubtitle,
       scheduled,
       details,
       uiLocalNotificationDateInterpretation:

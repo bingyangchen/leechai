@@ -10,7 +10,6 @@ class NetWorthHeader extends StatelessWidget {
     required this.netWorth,
     required this.totalAssets,
     required this.totalLiabilities,
-    required this.sparklinePoints,
     required this.accountCount,
     required this.privacyMode,
     required this.onPrivacyToggle,
@@ -20,7 +19,6 @@ class NetWorthHeader extends StatelessWidget {
   final double netWorth;
   final double totalAssets;
   final double totalLiabilities;
-  final List<double> sparklinePoints;
   final int accountCount;
   final bool privacyMode;
   final VoidCallback onPrivacyToggle;
@@ -40,12 +38,6 @@ class NetWorthHeader extends StatelessWidget {
     final detailVisibilityScale = Curves.easeOut.transform(detailOpacity);
     final netWorthScale = lerpDouble(1.0, 0.84, clampedCollapseProgress)!;
 
-    final trendRatio = _calculateTrendRatio(sparklinePoints);
-    final isTrendPositive = trendRatio >= 0;
-    final trendColor = isTrendPositive ? colorScheme.primary : colorScheme.error;
-    final trendText = privacyMode
-        ? '趨勢'
-        : '${isTrendPositive ? '+' : ''}${(trendRatio * 100).toStringAsFixed(1)}%';
     final headerTintColor = colorScheme.surface;
     final assetsValueColor = privacyMode
         ? colorScheme.onSurface
@@ -81,50 +73,24 @@ class NetWorthHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text('總淨資產', style: theme.textStyles.titleMuted),
-                Row(
-                  children: [
-                    Opacity(
-                      opacity: detailOpacity,
-                      child: Row(
-                        children: [
-                          Icon(
-                            isTrendPositive
-                                ? Icons.trending_up_rounded
-                                : Icons.trending_down_rounded,
-                            size: 16,
-                            color: trendColor.withValues(alpha: 0.9),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            trendText,
-                            style: theme.textStyles.labelMuted.copyWith(
-                              color: trendColor.withValues(alpha: 0.95),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      style: IconButton.styleFrom(
-                        minimumSize: const Size(44, 44),
-                        fixedSize: const Size(44, 44),
-                        padding: EdgeInsets.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      onPressed: onPrivacyToggle,
-                      icon: Icon(
-                        privacyMode
-                            ? Icons.visibility_off_outlined
-                            : Icons.visibility_outlined,
-                        size: 21,
-                        color: privacyMode
-                            ? colorScheme.primary
-                            : colorScheme.onSurfaceVariant,
-                      ),
-                      tooltip: privacyMode ? '顯示金額' : '隱藏金額',
-                    ),
-                  ],
+                IconButton(
+                  style: IconButton.styleFrom(
+                    minimumSize: const Size(44, 44),
+                    fixedSize: const Size(44, 44),
+                    padding: EdgeInsets.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  onPressed: onPrivacyToggle,
+                  icon: Icon(
+                    privacyMode
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                    size: 21,
+                    color: privacyMode
+                        ? colorScheme.primary
+                        : colorScheme.onSurfaceVariant,
+                  ),
+                  tooltip: privacyMode ? '顯示金額' : '隱藏金額',
                 ),
               ],
             ),
@@ -187,17 +153,4 @@ class NetWorthHeader extends StatelessWidget {
       ),
     );
   }
-}
-
-double _calculateTrendRatio(List<double> points) {
-  if (points.length < 2) {
-    return 0;
-  }
-
-  final firstValue = points.first;
-  if (firstValue == 0) {
-    return 0;
-  }
-
-  return (points.last - firstValue) / firstValue;
 }

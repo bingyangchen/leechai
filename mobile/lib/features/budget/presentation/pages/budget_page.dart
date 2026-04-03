@@ -190,7 +190,7 @@ class _BudgetPageState extends State<BudgetPage> {
   }
 
   Color _ratioColor(ColorScheme cs, double ratio) {
-    if (ratio >= 1.0) return cs.error;
+    if (ratio > 1.0) return cs.error;
     if (ratio >= 0.8) return cs.secondary;
     return cs.primary;
   }
@@ -625,7 +625,7 @@ class _CategoryBudgetTileState extends State<_CategoryBudgetTile> {
     final ratio = widget.budgetAmount <= 0
         ? 0.0
         : (widget.spentAmount / widget.budgetAmount);
-    final barColor = ratio >= 1.0
+    final barColor = ratio > 1.0
         ? cs.error
         : ratio >= 0.8
         ? cs.secondary

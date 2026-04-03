@@ -60,12 +60,12 @@ List<AchievementItem> achievementsFromRepositoryRows(
   return definitions
       .where((def) {
         if (!def.isSecret) return true;
-        final r = byId[def.id];
-        return r != null && r['unlocked_at'] != null;
+        final row = byId[def.id];
+        return row != null && row['unlocked_at'] != null;
       })
       .map((def) {
-        final r = byId[def.id];
-        if (r == null) {
+        final row = byId[def.id];
+        if (row == null) {
           return AchievementItem(
             id: def.id,
             name: def.name,
@@ -79,17 +79,18 @@ List<AchievementItem> achievementsFromRepositoryRows(
             isSecret: def.isSecret,
           );
         }
-        final unlockedAtStr = r['unlocked_at'] as String?;
+        final unlockedAtStr = row['unlocked_at'] as String?;
+        final isUnlocked = unlockedAtStr != null;
         return AchievementItem(
           id: def.id,
           name: def.name,
           description: def.description,
           conditionText: def.conditionText,
-          isUnlocked: unlockedAtStr != null,
+          isUnlocked: isUnlocked,
           unlockedAt: unlockedAtStr != null ? DateTime.tryParse(unlockedAtStr) : null,
-          current: (r['progress'] as int?) ?? 0,
-          target: (r['target'] as int?) ?? def.target,
-          completedCount: (r['completed_count'] as int?) ?? 0,
+          current: (row['progress'] as int?) ?? 0,
+          target: (row['target'] as int?) ?? def.target,
+          completedCount: (row['completed_count'] as int?) ?? 0,
           isSecret: def.isSecret,
         );
       })

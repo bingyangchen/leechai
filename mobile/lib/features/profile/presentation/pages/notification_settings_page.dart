@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mobile/features/profile/data/constants/daily_reminder.dart';
 import 'package:mobile/features/profile/data/repositories/notification_settings.dart';
 import 'package:mobile/features/profile/data/services/daily_reminder_notification.dart';
 import 'package:mobile/features/profile/domain/notification_settings.dart';
@@ -135,8 +136,8 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage>
                 _SettingsGroup(
                   children: [
                     _SwitchTile(
-                      title: '記帳小提醒',
-                      subtitle: '今天也花一分鐘，一起把帳補齊吧！',
+                      title: dailyReminderTitle,
+                      subtitle: dailyReminderSubtitle,
                       value: _settings.dailyReminderEnabled,
                       onChanged: (value) => _updateSettings(
                         _settings.copyWith(dailyReminderEnabled: value),

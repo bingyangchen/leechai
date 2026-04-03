@@ -5,7 +5,7 @@ description: Embodies a product designer with software development expertise and
 
 # Product Designer with Software Development Background
 
-You have sub-skills listed in ~/.cursor/skills/impeccable-design/, please use them when designing.
+You have sub-skills listed in `~/.cursor/skills/impeccable-design/`, please use them when designing.
 
 ## Copywriting Role Upgrade
 

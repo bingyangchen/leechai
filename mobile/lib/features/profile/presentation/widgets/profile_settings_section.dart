@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'package:mobile/features/budget/presentation/pages/budget_page.dart';
 import 'package:mobile/features/category/presentation/pages/category_management_page.dart';
+import 'package:mobile/features/profile/data/constants/store_listing.dart';
 import 'package:mobile/features/profile/presentation/pages/notification_settings_page.dart';
 import 'package:mobile/features/tag/presentation/pages/tag_management_page.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
@@ -33,6 +34,8 @@ const _termsOfServiceUrl = 'https://bingyangchen.github.io/leechai/terms-of-serv
 const _openSourceLicensesUrl =
     'https://bingyangchen.github.io/leechai/open-source-licenses/';
 const _feedbackEmail = 'leechai.app@gmail.com';
+const double _aboutSheetAppIconSize = 72;
+const double _iosAppIconCornerRadiusRatio = 0.2237;
 final Future<String> _appVersionFuture = _readAppVersionLabel();
 
 Future<String> _readAppVersionLabel() async {
@@ -268,13 +271,14 @@ class ProfileSettingsSection extends StatelessWidget {
           action: SnackBarAction(
             label: '前往商店',
             textColor: theme.colorScheme.primary,
-            onPressed: () => inAppReview.openStoreListing(),
+            onPressed: () =>
+                inAppReview.openStoreListing(appStoreId: appleAppStoreListingId),
           ),
         ),
       );
     } else {
       if (!context.mounted) return;
-      await inAppReview.openStoreListing();
+      await inAppReview.openStoreListing(appStoreId: appleAppStoreListingId);
     }
   }
 
@@ -480,22 +484,24 @@ App 版本：${packageInfo.version} (${packageInfo.buildNumber})
         children: [
           const SizedBox(height: 20),
           Container(
-            width: 72,
-            height: 72,
+            width: _aboutSheetAppIconSize,
+            height: _aboutSheetAppIconSize,
+            clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               color: theme.colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(
+                _aboutSheetAppIconSize * _iosAppIconCornerRadiusRatio,
+              ),
             ),
-            alignment: Alignment.center,
             child: Image.asset(
               'assets/icon/app_icon.png',
-              width: 72,
-              height: 72,
+              width: _aboutSheetAppIconSize,
+              height: _aboutSheetAppIconSize,
               fit: BoxFit.cover,
             ),
           ),
           const SizedBox(height: 16),
-          Text('LeeChai', style: theme.textStyles.headlineSmallEmphasis),
+          Text('Leechai', style: theme.textStyles.headlineSmallEmphasis),
           const SizedBox(height: 4),
           FutureBuilder<String>(
             future: _appVersionFuture,

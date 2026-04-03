@@ -9,6 +9,7 @@ import 'package:mobile/features/entry/data/repositories/tag.dart' show TagReposi
 import 'package:mobile/features/entry/domain/entry_aggregation.dart';
 import 'package:mobile/features/entry/domain/entry_type.dart';
 import 'package:mobile/features/entry/presentation/entry_list_handlers.dart';
+import 'package:mobile/features/entry/presentation/pages/journal_search_page.dart';
 import 'package:mobile/features/entry/presentation/widgets/collapsed_summary_bar.dart';
 import 'package:mobile/features/entry/presentation/widgets/entry_row.dart';
 import 'package:mobile/features/entry/presentation/widgets/journal_empty_state.dart';
@@ -201,6 +202,16 @@ class _JournalPageState extends State<JournalPage> with SingleTickerProviderStat
               },
               privacyMode: _privacyMode,
               onPrivacyModeToggle: () => setState(() => _privacyMode = !_privacyMode),
+              onSearchTap: () {
+                Navigator.of(context).push<void>(
+                  MaterialPageRoute<void>(
+                    builder: (context) => JournalSearchPage(
+                      onDataChanged: _onRefreshTrigger,
+                      refreshTrigger: widget.refreshTrigger,
+                    ),
+                  ),
+                );
+              },
             ),
             Expanded(
               child: Stack(
