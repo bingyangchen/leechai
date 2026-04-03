@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:mobile/features/entry/domain/entry_type.dart';
 import 'package:mobile/features/entry/presentation/constants/entry_type_colors.dart';
 import 'package:mobile/features/entry/presentation/constants/journal_sticky_strip.dart';
+import 'package:mobile/shared/constants/weekday.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
-
-const List<String> _weekdays = ['一', '二', '三', '四', '五', '六', '日'];
 
 const double kDateHeaderBarExtent = journalStickyStripRowHeight;
 
@@ -31,7 +30,7 @@ class DateHeaderContent extends StatelessWidget {
     final theme = Theme.of(context);
     final dateStr =
         '${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}';
-    final weekday = _weekdays[date.weekday - 1];
+    final weekday = chineseWeekdayLabels[date.weekday - 1];
     final expenseStr = privacyMode ? '****' : formatAmountForDisplay(dayExpense);
     final incomeStr = privacyMode ? '****' : formatAmountForDisplay(dayIncome);
     final outlineAlpha = pinned ? 0.14 : 0.12;
@@ -56,7 +55,7 @@ class DateHeaderContent extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        '$dateStr (週$weekday)',
+                        '$dateStr ($weekday)',
                         style: theme.textStyles.sectionLabel.copyWith(
                           color: theme.colorScheme.onSurface,
                         ),
