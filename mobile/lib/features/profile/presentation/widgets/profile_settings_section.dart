@@ -34,6 +34,8 @@ const _termsOfServiceUrl = 'https://bingyangchen.github.io/leechai/terms-of-serv
 const _openSourceLicensesUrl =
     'https://bingyangchen.github.io/leechai/open-source-licenses/';
 const _feedbackEmail = 'leechai.app@gmail.com';
+const double _aboutSheetAppIconSize = 72;
+const double _iosAppIconCornerRadiusRatio = 0.2237;
 final Future<String> _appVersionFuture = _readAppVersionLabel();
 
 Future<String> _readAppVersionLabel() async {
@@ -482,17 +484,19 @@ App 版本：${packageInfo.version} (${packageInfo.buildNumber})
         children: [
           const SizedBox(height: 20),
           Container(
-            width: 72,
-            height: 72,
+            width: _aboutSheetAppIconSize,
+            height: _aboutSheetAppIconSize,
+            clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               color: theme.colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(
+                _aboutSheetAppIconSize * _iosAppIconCornerRadiusRatio,
+              ),
             ),
-            alignment: Alignment.center,
             child: Image.asset(
               'assets/icon/app_icon.png',
-              width: 72,
-              height: 72,
+              width: _aboutSheetAppIconSize,
+              height: _aboutSheetAppIconSize,
               fit: BoxFit.cover,
             ),
           ),
