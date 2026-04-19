@@ -15,17 +15,5 @@ Do not write comments or doc strings unless they are necessary.
 ## When to Skip
 
 - **Self-explanatory code**: Clear variable names and function names make comments redundant
-- **Trivial getters/setters**: `// Returns the name` adds no value over `getName()`
+- **Trivial getters/setters**: `Returns the name` adds no value over `getName()`
 - **Obvious code**: Don't comment what the code obviously does
-
-## Examples
-
-```dart
-// ❌ Unnecessary
-/// Returns the account balance.
-double getBalance() => _balance;
-
-// ✅ Necessary - explains non-obvious behavior
-// Round down to avoid floating-point errors when comparing amounts
-final displayAmount = (rawAmount * 100).floor() / 100;
-```
