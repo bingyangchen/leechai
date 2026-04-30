@@ -1,5 +1,5 @@
 ---
-description: When the user raises a valid concern, implement the fix—do not stop at agreement
+description: When the user raises a valid concern, implement the fix, do not stop at agreement
 alwaysApply: true
 ---
 

@@ -1,4 +1,4 @@
-現在請進入設計。
+現在請使用 `product-designer` skill（`@.cursor/skills/product-designer/SKILL.md`）然後進入設計。
 
 請充分發揮你的設計思維與關於設計的 skills (在 `~/.cursor/skills/impeccable-design/` 裡)。
 
