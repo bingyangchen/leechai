@@ -71,7 +71,6 @@ Output:
 This function violates the Single Responsibility Principle and is difficult to test. Extract the conditional logic into separate, focused functions and use early returns to flatten the nesting.
 
 ```dart
-// Refactored approach using early returns
 bool processOrder(Order order) {
   if (!order.isValid) return false;
   if (!order.isPaid) return false;

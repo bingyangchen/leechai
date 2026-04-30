@@ -7,11 +7,10 @@ alwaysApply: true
 
 If the directory already specifies the functionality, do not repeat that same suffix in the file name.
 
+**Examples:**
+
 - In `repositories/` → use `achievement.dart`, not `achievement_repository.dart`
 - In `services/` → use `achievement.dart`, not `achievement_service.dart`
 - In `schema/` → use `achievement.dart`, not `achievement_schema.dart`
-
-**Good:** `repositories/achievement.dart`, `services/achievement.dart`  
-**Avoid:** `repositories/achievement_repository.dart`, `services/achievement_service.dart`
 
 Apply the same idea for other directory names that already describe the role (e.g. `widgets/`, `pages/`, `handlers/`).
