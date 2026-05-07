@@ -208,10 +208,16 @@ class _JournalSearchPageState extends State<JournalSearchPage> {
 
   Widget _buildBody(ThemeData theme) {
     if (_loadError != null) {
-      return _SearchErrorBody(onRetry: _loadContext);
+      return _KeyboardDismissibleViewport(
+        child: _SearchErrorBody(onRetry: _loadContext),
+      );
     }
     if (_loadInProgress && _context == null) {
-      return Center(child: CircularProgressIndicator(color: theme.colorScheme.primary));
+      return _KeyboardDismissibleViewport(
+        child: Center(
+          child: CircularProgressIndicator(color: theme.colorScheme.primary),
+        ),
+      );
     }
     final searchContext = _context;
     if (searchContext == null) {
@@ -219,14 +225,20 @@ class _JournalSearchPageState extends State<JournalSearchPage> {
     }
 
     if (_liveQueryTrimmed.isEmpty) {
-      return const _JournalSearchEmptyPane(
-        icon: Icons.search_outlined,
-        title: '輸入關鍵字，搜尋所有月份的紀錄',
+      return const _KeyboardDismissibleViewport(
+        child: _JournalSearchEmptyPane(
+          icon: Icons.search_outlined,
+          title: '輸入關鍵字，搜尋所有月份的紀錄',
+        ),
       );
     }
 
     if (_debouncedQuery.trim() != _liveQueryTrimmed) {
-      return Center(child: CircularProgressIndicator(color: theme.colorScheme.primary));
+      return _KeyboardDismissibleViewport(
+        child: Center(
+          child: CircularProgressIndicator(color: theme.colorScheme.primary),
+        ),
+      );
     }
 
     final activeQuery = _debouncedQuery.trim();
@@ -237,11 +249,13 @@ class _JournalSearchPageState extends State<JournalSearchPage> {
       switchInCurve: Curves.easeOut,
       switchOutCurve: Curves.easeOut,
       child: filtered.isEmpty
-          ? const _JournalSearchEmptyPane(
+          ? const _KeyboardDismissibleViewport(
               key: ValueKey('empty'),
-              icon: Icons.search_off_outlined,
-              title: '找不到符合的紀錄',
-              subtitle: '試試其他關鍵字，或簡短一點',
+              child: _JournalSearchEmptyPane(
+                icon: Icons.search_off_outlined,
+                title: '找不到符合的紀錄',
+                subtitle: '試試其他關鍵字，或簡短一點',
+              ),
             )
           : _SearchResultsList(
               key: ValueKey(activeQuery),
@@ -255,9 +269,27 @@ class _JournalSearchPageState extends State<JournalSearchPage> {
   }
 }
 
+class _KeyboardDismissibleViewport extends StatelessWidget {
+  const _KeyboardDismissibleViewport({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: SizedBox(height: constraints.maxHeight, child: child),
+        );
+      },
+    );
+  }
+}
+
 class _JournalSearchEmptyPane extends StatelessWidget {
   const _JournalSearchEmptyPane({
-    super.key,
     required this.icon,
     required this.title,
     this.subtitle,
@@ -357,6 +389,7 @@ class _SearchResultsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.only(bottom: 24),
       itemCount: entries.length,
       separatorBuilder: (context, _) =>
