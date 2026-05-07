@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:mobile/features/account/data/repositories/account.dart'
     show AccountRepository;
 import 'package:mobile/features/account/data/services/account_balance.dart';
@@ -500,7 +499,7 @@ class _MarketValueSheetContentState extends State<_MarketValueSheetContent> {
           TextField(
             controller: _controller,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d,.]'))],
+            inputFormatters: [ThousandsSeparatorInputFormatter()],
             decoration: const InputDecoration(
               labelText: '目前市值',
               hintText: '輸入金額',
