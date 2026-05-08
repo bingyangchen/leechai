@@ -18,7 +18,7 @@ class AppDatabase {
   AppDatabase._();
 
   static const String _dbName = 'leechai.db';
-  static const int _dbVersion = 1;
+  static const int _dbVersion = 2;
   static Database? _db;
   static Future<Database>? _openFuture;
 
@@ -57,7 +57,16 @@ class AppDatabase {
   }
 
   static Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // NOTE: handle schema migration
+    if (oldVersion < 2) {
+      await db.execute('''
+      CREATE INDEX IF NOT EXISTS entry_debit_account_occurred_at
+      ON entry (debit_account_id, occurred_at DESC, created_at DESC);
+      ''');
+      await db.execute('''
+      CREATE INDEX IF NOT EXISTS entry_credit_account_occurred_at
+      ON entry (credit_account_id, occurred_at DESC, created_at DESC);
+      ''');
+    }
   }
 
   static Future<void> close() async {

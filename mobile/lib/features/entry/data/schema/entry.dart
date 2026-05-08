@@ -16,4 +16,12 @@ Future<void> run(Database db) async {
     synced INTEGER NOT NULL DEFAULT 0
   );
   """);
+  await db.execute('''
+  CREATE INDEX IF NOT EXISTS entry_debit_account_occurred_at
+  ON entry (debit_account_id, occurred_at DESC, created_at DESC);
+  ''');
+  await db.execute('''
+  CREATE INDEX IF NOT EXISTS entry_credit_account_occurred_at
+  ON entry (credit_account_id, occurred_at DESC, created_at DESC);
+  ''');
 }

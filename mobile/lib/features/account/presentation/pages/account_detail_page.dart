@@ -9,7 +9,6 @@ import 'package:mobile/features/account/domain/liability_type.dart';
 import 'package:mobile/features/account/presentation/widgets/add_account_sheet.dart';
 import 'package:mobile/features/entry/data/repositories/entry.dart'
     show EntryRepository;
-import 'package:mobile/features/entry/data/repositories/tag.dart' show TagRepository;
 import 'package:mobile/features/entry/domain/entry_aggregation.dart';
 import 'package:mobile/features/entry/domain/entry_type.dart';
 import 'package:mobile/features/entry/presentation/entry_list_handlers.dart';
@@ -37,13 +36,22 @@ class AccountDetailPage extends StatefulWidget {
 }
 
 class _AccountDetailPageState extends State<AccountDetailPage> {
+  static const int _entryPageSize = 30;
+  static const double _loadMoreExtentAfterThresholdPx = 640;
+
   bool _privacyMode = false;
   late Future<_DetailData> _future;
   final ScrollController _scrollController = ScrollController();
+  final List<Map<String, Object?>> _entries = [];
+  final Map<String, List<String>> _entryIdToTagTitles = {};
+  bool _hasMoreEntries = true;
+  bool _isLoadingMoreEntries = false;
+  Object? _loadMoreError;
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_maybeLoadMoreEntries);
     _future = _loadData();
   }
 
@@ -54,39 +62,80 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
   }
 
   Future<_DetailData> _loadData() async {
+    _entries.clear();
+    _entryIdToTagTitles.clear();
+    _hasMoreEntries = true;
+    _isLoadingMoreEntries = false;
+    _loadMoreError = null;
+
     final account = await AccountRepository.getById(widget.accountId);
     if (account == null) throw StateError('Account not found: ${widget.accountId}');
-    final entries = await EntryRepository.getByAccountId(widget.accountId);
     final allAccounts = <String, Account>{};
     for (final a in await AccountRepository.getAll()) {
       allAccounts[a.id] = a;
     }
-    final tagIds = <String>{};
-    final entryTagIds = <String, List<String>>{};
-    for (final e in entries) {
-      final id = e['id'] as String;
-      final ids = await EntryRepository.getTagIdsForEntry(id);
-      entryTagIds[id] = ids;
-      tagIds.addAll(ids);
-    }
-    final tagTitles = await TagRepository.getTitlesByIds(tagIds.toList());
-    final entryTagTitles = <String, List<String>>{};
-    for (final e in entryTagIds.entries) {
-      entryTagTitles[e.key] = e.value
-          .map((id) => tagTitles[id] ?? '')
-          .where((s) => s.isNotEmpty)
-          .toList();
-    }
     final balances = await AccountBalanceService.getBalances();
     final balance = balances[widget.accountId] ?? 0;
+    final hasEntries = await EntryRepository.existsByAccountId(widget.accountId);
+    final firstPage = await _loadEntryPage(offset: 0);
+    _entries.addAll(firstPage.entries);
+    _entryIdToTagTitles.addAll(firstPage.entryIdToTagTitles);
+    _hasMoreEntries = firstPage.entries.length == _entryPageSize;
 
     return _DetailData(
       account: account,
-      entries: entries,
       accounts: allAccounts,
-      entryTagTitles: entryTagTitles,
       balance: balance,
+      hasEntries: hasEntries,
     );
+  }
+
+  Future<_EntryPageData> _loadEntryPage({required int offset}) async {
+    final entries = await EntryRepository.getByAccountIdPage(
+      widget.accountId,
+      limit: _entryPageSize,
+      offset: offset,
+    );
+    final entryIds = entries.map((e) => e['id'] as String).toList();
+    final entryIdToTagTitles = await EntryRepository.getTagTitlesForEntries(entryIds);
+    return _EntryPageData(entries: entries, entryIdToTagTitles: entryIdToTagTitles);
+  }
+
+  void _maybeLoadMoreEntries() {
+    if (!_scrollController.hasClients ||
+        !_hasMoreEntries ||
+        _isLoadingMoreEntries ||
+        _loadMoreError != null) {
+      return;
+    }
+    if (_scrollController.position.extentAfter > _loadMoreExtentAfterThresholdPx) {
+      return;
+    }
+    _loadMoreEntries();
+  }
+
+  Future<void> _loadMoreEntries() async {
+    if (_isLoadingMoreEntries || !_hasMoreEntries) return;
+    setState(() {
+      _isLoadingMoreEntries = true;
+      _loadMoreError = null;
+    });
+    try {
+      final page = await _loadEntryPage(offset: _entries.length);
+      if (!mounted) return;
+      setState(() {
+        _entries.addAll(page.entries);
+        _entryIdToTagTitles.addAll(page.entryIdToTagTitles);
+        _hasMoreEntries = page.entries.length == _entryPageSize;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _loadMoreError = error);
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingMoreEntries = false);
+      }
+    }
   }
 
   void _onRefresh() {
@@ -185,7 +234,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
             ),
             onTap: () {
               Navigator.pop(ctx);
-              if (data.entries.isEmpty) {
+              if (!data.hasEntries) {
                 _onDeleteAccount(data);
               } else {
                 showDialog<void>(
@@ -213,7 +262,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
     final updated = await showAccountFormSheet(
       context,
       existingAccount: data.account,
-      hasEntries: data.entries.isNotEmpty,
+      hasEntries: data.hasEntries,
     );
     if (updated == true && mounted) _onRefresh();
   }
@@ -334,9 +383,10 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
           }
           final data = snapshot.data;
           if (data == null) return const SizedBox.shrink();
+          WidgetsBinding.instance.addPostFrameCallback((_) => _maybeLoadMoreEntries());
 
-          final grouped = groupEntriesByDate(data.entries);
-          if (data.entries.isEmpty) {
+          final grouped = groupEntriesByDate(_entries);
+          if (_entries.isEmpty) {
             return HapticRefreshWrapper(
               child: CustomScrollView(
                 controller: _scrollController,
@@ -368,6 +418,14 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
                             ),
                             const SizedBox(height: 16),
                             Text('此帳戶尚無交易紀錄', style: theme.textStyles.titleMuted),
+                            if (_isLoadingMoreEntries) ...[
+                              const SizedBox(height: 20),
+                              const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -408,7 +466,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
                       return EntryRow(
                         entry: row,
                         accounts: data.accounts,
-                        entryTagTitles: data.entryTagTitles,
+                        entryTagTitles: _entryIdToTagTitles,
                         privacyMode: _privacyMode,
                         perspectiveAccountId: data.account.id,
                         onTap: () =>
@@ -421,6 +479,32 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
                     }, childCount: e.value.length),
                   ),
                 ],
+                if (_isLoadingMoreEntries)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: Center(
+                        child: SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                    ),
+                  )
+                else if (_loadMoreError != null)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                      child: Center(
+                        child: TextButton.icon(
+                          onPressed: _loadMoreEntries,
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('載入失敗，重試'),
+                        ),
+                      ),
+                    ),
+                  ),
                 const SliverPadding(padding: EdgeInsets.only(bottom: 88)),
               ],
             ),
@@ -434,17 +518,22 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
 class _DetailData {
   _DetailData({
     required this.account,
-    required this.entries,
     required this.accounts,
-    required this.entryTagTitles,
     required this.balance,
+    required this.hasEntries,
   });
 
   final Account account;
-  final List<Map<String, Object?>> entries;
   final Map<String, Account> accounts;
-  final Map<String, List<String>> entryTagTitles;
   final double balance;
+  final bool hasEntries;
+}
+
+class _EntryPageData {
+  _EntryPageData({required this.entries, required this.entryIdToTagTitles});
+
+  final List<Map<String, Object?>> entries;
+  final Map<String, List<String>> entryIdToTagTitles;
 }
 
 class _MarketValueSheetContent extends StatefulWidget {

@@ -7,6 +7,7 @@ class EntryRepository {
 
   static const String _table = 'entry';
   static const String _entryTagTable = 'entry_tag';
+  static const String _tagTable = 'tag';
   static final _uuid = Uuid();
 
   static Future<int> getCount() async {
@@ -46,6 +47,34 @@ class EntryRepository {
       where: 'deleted_at IS NULL AND (debit_account_id = ? OR credit_account_id = ?)',
       whereArgs: [accountId, accountId],
       orderBy: 'occurred_at DESC',
+    );
+  }
+
+  static Future<bool> existsByAccountId(String accountId) async {
+    final db = await AppDatabase.database;
+    final rows = await db.query(
+      _table,
+      columns: ['id'],
+      where: 'deleted_at IS NULL AND (debit_account_id = ? OR credit_account_id = ?)',
+      whereArgs: [accountId, accountId],
+      limit: 1,
+    );
+    return rows.isNotEmpty;
+  }
+
+  static Future<List<Map<String, Object?>>> getByAccountIdPage(
+    String accountId, {
+    required int limit,
+    required int offset,
+  }) async {
+    final db = await AppDatabase.database;
+    return db.query(
+      _table,
+      where: 'deleted_at IS NULL AND (debit_account_id = ? OR credit_account_id = ?)',
+      whereArgs: [accountId, accountId],
+      orderBy: 'occurred_at DESC, created_at DESC, id DESC',
+      limit: limit,
+      offset: offset,
     );
   }
 
@@ -178,6 +207,29 @@ class EntryRepository {
       whereArgs: [entryId],
     );
     return rows.map((r) => r['tag_id'] as String).toList();
+  }
+
+  static Future<Map<String, List<String>>> getTagTitlesForEntries(
+    List<String> entryIds,
+  ) async {
+    if (entryIds.isEmpty) return {};
+    final db = await AppDatabase.database;
+    final placeholders = List.filled(entryIds.length, '?').join(', ');
+    final rows = await db.rawQuery(
+      'SELECT et.entry_id, t.title '
+      'FROM $_entryTagTable et '
+      'JOIN $_tagTable t ON t.id = et.tag_id '
+      'WHERE et.entry_id IN ($placeholders) '
+      'AND et.deleted_at IS NULL '
+      'AND t.deleted_at IS NULL',
+      entryIds,
+    );
+    final map = {for (final id in entryIds) id: <String>[]};
+    for (final row in rows) {
+      final entryId = row['entry_id'] as String;
+      map.putIfAbsent(entryId, () => <String>[]).add(row['title'] as String);
+    }
+    return map;
   }
 
   static Future<void> update({
