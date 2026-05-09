@@ -7,6 +7,7 @@ import 'package:mobile/features/statistics/data/services/statistics.dart';
 import 'package:mobile/features/statistics/domain/category_breakdown_item.dart';
 import 'package:mobile/features/statistics/domain/date_range_preset.dart';
 import 'package:mobile/features/statistics/presentation/constants/category_colors.dart';
+import 'package:mobile/features/statistics/presentation/pages/cashflow_detail_page.dart';
 import 'package:mobile/features/statistics/presentation/pages/category_detail_page.dart';
 import 'package:mobile/features/statistics/presentation/widgets/category_donut_chart.dart';
 import 'package:mobile/features/statistics/presentation/widgets/category_ranking_tile.dart';
@@ -247,6 +248,18 @@ class _StatisticsDashboardBodyState extends State<StatisticsDashboardBody> {
                       privacyMode: widget.privacyMode,
                       onSectionTouched: (i) {
                         setState(() => _touchedIndex = i);
+                      },
+                      onCenterTap: () async {
+                        await Navigator.of(context).push<bool>(
+                          MaterialPageRoute(
+                            builder: (_) => CashflowDetailPage(
+                              isExpense: _isExpense,
+                              dateRange: widget.dateRange,
+                              privacyMode: widget.privacyMode,
+                            ),
+                          ),
+                        );
+                        if (mounted) _onRefresh();
                       },
                     ),
                     const SizedBox(height: 32),

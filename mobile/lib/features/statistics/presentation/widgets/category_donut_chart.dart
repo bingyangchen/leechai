@@ -14,6 +14,7 @@ class CategoryDonutChart extends StatelessWidget {
     required this.isExpense,
     required this.privacyMode,
     required this.onSectionTouched,
+    this.onCenterTap,
   });
 
   final List<CategoryBreakdownItem> breakdown;
@@ -22,6 +23,7 @@ class CategoryDonutChart extends StatelessWidget {
   final bool isExpense;
   final bool privacyMode;
   final void Function(int?) onSectionTouched;
+  final VoidCallback? onCenterTap;
 
   @override
   Widget build(BuildContext context) {
@@ -69,30 +71,68 @@ class CategoryDonutChart extends StatelessWidget {
           ),
           Transform.translate(
             offset: const Offset(0, -4),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  displayLabel,
-                  style: theme.textStyles.bodySmallMuted,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    isValidTouched
-                        ? (privacyMode
-                              ? '****'
-                              : formatAmountForDisplay(breakdown[touched].amount))
-                        : displayAmount,
-                    style: theme.textStyles.headlineSmallEmphasis,
-                    textAlign: TextAlign.center,
+            child: Semantics(
+              button: !isValidTouched && onCenterTap != null,
+              label: !isValidTouched && onCenterTap != null
+                  ? '查看${isExpense ? '支出' : '收入'}趨勢'
+                  : null,
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: isValidTouched ? null : onCenterTap,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  child: SizedBox(
+                    width: 112,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        SizedBox(
+                          width: !isValidTouched && onCenterTap != null ? 92 : 112,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                displayLabel,
+                                style: theme.textStyles.bodySmallMuted,
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 2),
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  isValidTouched
+                                      ? (privacyMode
+                                            ? '****'
+                                            : formatAmountForDisplay(
+                                                breakdown[touched].amount,
+                                              ))
+                                      : displayAmount,
+                                  style: theme.textStyles.headlineSmallEmphasis,
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (!isValidTouched && onCenterTap != null)
+                          Positioned(
+                            right: 0,
+                            top: 20,
+                            child: Icon(
+                              Icons.chevron_right,
+                              size: 14,
+                              color: theme.colorScheme.onSurfaceVariant.withValues(
+                                alpha: 0.65,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
-              ],
+              ),
             ),
           ),
         ],
