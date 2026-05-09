@@ -8,6 +8,7 @@ import 'package:mobile/features/account/domain/account_group_kind.dart';
 import 'package:mobile/features/account/domain/asset_type.dart';
 import 'package:mobile/features/account/domain/liability_type.dart';
 import 'package:mobile/features/account/presentation/pages/account_detail_page.dart';
+import 'package:mobile/features/account/presentation/widgets/account_composition_sheet.dart';
 import 'package:mobile/features/account/presentation/widgets/account_group_section.dart';
 import 'package:mobile/features/account/presentation/widgets/add_account_sheet.dart';
 import 'package:mobile/features/account/presentation/widgets/net_worth_header.dart';
@@ -223,6 +224,42 @@ class _AccountPageState extends State<AccountPage> {
         .then((_) => _onRefresh());
   }
 
+  void _showAccountCompositionSheet(
+    _AccountPageData data, {
+    required bool isLiability,
+  }) {
+    final accounts = data.accounts.where((account) {
+      return isLiability
+          ? account.type == AccountType.liability
+          : account.type == AccountType.asset;
+    }).toList();
+    final subtitle = isLiability
+        ? '負債佔資產 ${_formatLiabilityRatio(totalAssets: data.totalAssets, totalLiabilities: data.totalLiabilities, privacyMode: _privacyMode)}'
+        : null;
+
+    showAppBottomSheet<void>(
+      context,
+      title: isLiability ? '總負債組成' : '總資產組成',
+      subtitle: subtitle,
+      titleAlignment: AppBottomSheetTitleAlignment.left,
+      mode: AppBottomSheetMode.scrollable,
+      initialChildSize: 0.68,
+      minChildSize: 0.42,
+      maxChildSize: 0.92,
+      scrollableBuilder: (sheetContext, scrollController) => AccountCompositionSheet(
+        accounts: accounts,
+        balances: data.balances,
+        isLiability: isLiability,
+        privacyMode: _privacyMode,
+        scrollController: scrollController,
+        onAddAssetAccount: () {
+          Navigator.of(sheetContext).pop();
+          _onAddCurrentAssets();
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -281,6 +318,10 @@ class _AccountPageState extends State<AccountPage> {
                     accountCount: data.accounts.length,
                     privacyMode: _privacyMode,
                     onPrivacyToggle: () => setState(() => _privacyMode = !_privacyMode),
+                    onTotalAssetsTap: () =>
+                        _showAccountCompositionSheet(data, isLiability: false),
+                    onTotalLiabilitiesTap: () =>
+                        _showAccountCompositionSheet(data, isLiability: true),
                     collapseProgress: _headerCollapseProgress,
                   ),
                   Expanded(
@@ -292,7 +333,7 @@ class _AccountPageState extends State<AccountPage> {
                           onRefresh: () =>
                               runRefreshWithSnapBack(_scrollController, () async {
                                 // NOTE: placebo effect
-                                await Future.delayed(const Duration(milliseconds: 800));
+                                await Future.delayed(const Duration(milliseconds: 600));
                                 _onRefresh();
                                 await _future;
                               }),
@@ -351,6 +392,17 @@ class _AccountPageState extends State<AccountPage> {
   }
 
   static const _currentAssetsSubTypes = ['cash', 'bank', 'epayment', 'storedValueCard'];
+}
+
+String _formatLiabilityRatio({
+  required double totalAssets,
+  required double totalLiabilities,
+  required bool privacyMode,
+}) {
+  if (privacyMode) return '****';
+  if (totalAssets <= 0) return '--';
+  final ratio = totalLiabilities.abs() / totalAssets.abs() * 100;
+  return '${ratio.toStringAsFixed(1)}%';
 }
 
 class _TypeChip extends StatelessWidget {

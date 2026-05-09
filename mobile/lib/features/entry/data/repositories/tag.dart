@@ -18,13 +18,28 @@ class TagRepository {
     );
   }
 
-  static Future<int> getUsageCount(String tagId) async {
+  static Future<Map<String, Object?>?> getById(String id) async {
     final db = await AppDatabase.database;
     final rows = await db.query(
-      _entryTagTable,
-      columns: ['COUNT(*) AS c'],
-      where: 'tag_id = ? AND deleted_at IS NULL',
-      whereArgs: [tagId],
+      _table,
+      columns: ['id', 'title', 'created_at'],
+      where: 'id = ? AND deleted_at IS NULL',
+      whereArgs: [id],
+      limit: 1,
+    );
+    return rows.isEmpty ? null : rows.single;
+  }
+
+  static Future<int> getUsageCount(String tagId) async {
+    final db = await AppDatabase.database;
+    final rows = await db.rawQuery(
+      'SELECT COUNT(*) AS c '
+      'FROM $_entryTagTable et '
+      'JOIN entry e ON e.id = et.entry_id '
+      'WHERE et.tag_id = ? '
+      'AND et.deleted_at IS NULL '
+      'AND e.deleted_at IS NULL',
+      [tagId],
     );
     return (rows.single['c'] as int?) ?? 0;
   }
@@ -34,9 +49,13 @@ class TagRepository {
     final db = await AppDatabase.database;
     final placeholders = List.filled(tagIds.length, '?').join(', ');
     final rows = await db.rawQuery(
-      'SELECT tag_id, COUNT(*) AS c FROM $_entryTagTable '
-      'WHERE tag_id IN ($placeholders) AND deleted_at IS NULL '
-      'GROUP BY tag_id',
+      'SELECT et.tag_id, COUNT(*) AS c '
+      'FROM $_entryTagTable et '
+      'JOIN entry e ON e.id = et.entry_id '
+      'WHERE et.tag_id IN ($placeholders) '
+      'AND et.deleted_at IS NULL '
+      'AND e.deleted_at IS NULL '
+      'GROUP BY et.tag_id',
       tagIds,
     );
     return {for (final r in rows) r['tag_id'] as String: r['c'] as int};

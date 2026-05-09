@@ -208,6 +208,58 @@ class StatisticsService {
     ];
   }
 
+  static Future<List<({DateTime month, double amount})>> getEntryTypeMonthlyTotals(
+    bool isExpense,
+    DateTime rangeEnd,
+  ) async {
+    final rangeStart = DateTime(rangeEnd.year, rangeEnd.month - 11, 1);
+    final endOfRange = DateTime(rangeEnd.year, rangeEnd.month + 1, 0, 23, 59, 59, 999);
+    final entries = await EntryRepository.getByOccurredAtDateRange(
+      rangeStart,
+      endOfRange,
+    );
+    final targetType = isExpense ? EntryType.expense : EntryType.income;
+
+    final monthly = <int, double>{};
+    for (var i = 0; i < 12; i++) {
+      final month = DateTime(rangeEnd.year, rangeEnd.month - 11 + i, 1);
+      monthly[month.millisecondsSinceEpoch] = 0;
+    }
+
+    for (final entry in entries) {
+      final typeStr = entry['type'] as String? ?? 'expense';
+      final type = EntryType.values.asNameMap()[typeStr] ?? EntryType.expense;
+      if (type != targetType) continue;
+
+      final occurredAt = entry['occurred_at'] as String?;
+      if (occurredAt == null) continue;
+      DateTime time;
+      try {
+        time = DateTime.parse(occurredAt).toLocal();
+      } catch (_) {
+        continue;
+      }
+      final monthKey = DateTime(time.year, time.month, 1);
+      final amount = (entry['amount'] as num?)?.toDouble() ?? 0.0;
+      monthly[monthKey.millisecondsSinceEpoch] =
+          (monthly[monthKey.millisecondsSinceEpoch] ?? 0) + amount;
+    }
+
+    return [
+      for (var i = 0; i < 12; i++)
+        (
+          month: DateTime(rangeEnd.year, rangeEnd.month - 11 + i, 1),
+          amount:
+              monthly[DateTime(
+                rangeEnd.year,
+                rangeEnd.month - 11 + i,
+                1,
+              ).millisecondsSinceEpoch] ??
+              0,
+        ),
+    ];
+  }
+
   static Future<({double totalExpense, double totalIncome})> getRangeTotals(
     DateTime start,
     DateTime end,

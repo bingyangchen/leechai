@@ -3,12 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:mobile/features/entry/data/repositories/tag.dart' show TagRepository;
 import 'package:mobile/shared/utils/snackbar.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
-import 'package:mobile/shared/widgets/confirm_delete_dialog.dart';
 
 Future<bool?> showTagFormSheet(
   BuildContext context, {
   Map<String, String>? existingTag,
-  VoidCallback? onRestore,
 }) {
   final isEdit = existingTag != null;
   return showAppBottomSheet<bool>(
@@ -23,7 +21,6 @@ Future<bool?> showTagFormSheet(
       existingTag: existingTag,
       scrollController: scrollController,
       onSuccess: () => Navigator.of(context).pop(true),
-      onRestore: onRestore,
     ),
   );
 }
@@ -33,13 +30,11 @@ class _TagFormSheet extends StatefulWidget {
     this.existingTag,
     required this.scrollController,
     required this.onSuccess,
-    this.onRestore,
   });
 
   final Map<String, String>? existingTag;
   final ScrollController scrollController;
   final VoidCallback onSuccess;
-  final VoidCallback? onRestore;
 
   @override
   State<_TagFormSheet> createState() => _TagFormSheetState();
@@ -64,44 +59,6 @@ class _TagFormSheetState extends State<_TagFormSheet> {
   void dispose() {
     _titleController.dispose();
     super.dispose();
-  }
-
-  Future<void> _onDelete() async {
-    final id = widget.existingTag!['id']!;
-    final title = widget.existingTag!['title']!;
-    final count = await TagRepository.getUsageCount(id);
-    if (!mounted) return;
-    final content = count > 0
-        ? '確定要刪除標籤「$title」嗎？\n這將影響 $count 筆記帳紀錄，且刪除後無法復原。'
-        : '確定要刪除標籤「$title」嗎？';
-    final confirm = await ConfirmDeleteDialog.show(context, content: content);
-    if (confirm != true || !mounted) return;
-    await TagRepository.softDelete(id);
-    if (!mounted) return;
-    final messenger = ScaffoldMessenger.of(context);
-    widget.onSuccess();
-    showReplacingSnackBarForMessenger(
-      messenger,
-      SnackBar(
-        content: const Text('標籤已刪除'),
-        duration: const Duration(seconds: 4),
-        persist: false,
-        action: SnackBarAction(
-          label: '復原',
-          onPressed: () async {
-            await TagRepository.restore(id);
-            widget.onRestore?.call();
-            showReplacingSnackBarForMessenger(
-              messenger,
-              const SnackBar(
-                content: Text('已復原'),
-                duration: Duration(milliseconds: 1500),
-              ),
-            );
-          },
-        ),
-      ),
-    );
   }
 
   Future<void> _onSave() async {
@@ -198,14 +155,7 @@ class _TagFormSheetState extends State<_TagFormSheet> {
             padding: EdgeInsets.fromLTRB(24, 16, 24, 16 + viewInsets.bottom),
             child: Row(
               children: [
-                if (_isEdit) ...[
-                  TextButton(
-                    onPressed: _isSubmitting ? null : _onDelete,
-                    child: Text('刪除', style: TextStyle(color: theme.colorScheme.error)),
-                  ),
-                  const Spacer(),
-                ] else
-                  const Spacer(),
+                const Spacer(),
                 TextButton(
                   onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
                   child: const Text('取消'),

@@ -44,6 +44,7 @@ class _CategoryRankingTileState extends State<CategoryRankingTile> {
         ? '****'
         : formatAmountForDisplay(widget.amount);
     final percentStr = '${widget.percent.toStringAsFixed(1)}%';
+    final iconColor = _iconColor(theme);
 
     return InkWell(
       onTap: widget.onTap,
@@ -92,10 +93,10 @@ class _CategoryRankingTileState extends State<CategoryRankingTile> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: widget.color.withValues(alpha: 0.2),
+                  color: iconColor.withValues(alpha: 0.24),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(widget.icon, color: widget.color, size: 22),
+                child: Icon(widget.icon, color: iconColor, size: 22),
               ),
               title: Text(widget.subType),
               trailing: Row(
@@ -122,5 +123,15 @@ class _CategoryRankingTileState extends State<CategoryRankingTile> {
         ),
       ),
     );
+  }
+
+  Color _iconColor(ThemeData theme) {
+    if (theme.brightness == Brightness.dark) return widget.color;
+
+    final hsl = HSLColor.fromColor(widget.color);
+    return hsl
+        .withSaturation((hsl.saturation + 0.08).clamp(0.0, 1.0))
+        .withLightness((hsl.lightness - 0.10).clamp(0.20, 0.55))
+        .toColor();
   }
 }

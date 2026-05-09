@@ -17,13 +17,25 @@ class _ShibaColors {
 class _AccountingColorValues {
   _AccountingColorValues._();
 
-  static const Color income = Color(0xFF4CAF50);
-  static const Color expense = Color(0xFFE53935);
-  static const Color transfer = Color(0xFF59A5D8);
-  static const Color borrow = Color(0xFFF29555);
-  static const Color repay = Color(0xFF9C27B0);
-  static const Color liability = Color(0xFFE65100);
-  static const Color neutral = Color(0xFF616161);
+  static const AccountingColors light = AccountingColors(
+    income: Color(0xFF3F9856),
+    expense: Color(0xFFD14B43),
+    transfer: Color(0xFF3F91B3),
+    borrow: Color(0xFFD97F35),
+    repay: Color(0xFF9558A8),
+    liability: Color(0xFFC86428),
+    neutral: Color(0xFF75675F),
+  );
+
+  static const AccountingColors dark = AccountingColors(
+    income: Color(0xFF8FC79A),
+    expense: Color(0xFFE08A7E),
+    transfer: Color(0xFF87B6D6),
+    borrow: Color(0xFFE0A06F),
+    repay: Color(0xFFC095C8),
+    liability: Color(0xFFE0A06A),
+    neutral: Color(0xFFBCAFA6),
+  );
 }
 
 class _HeroCardContentValues {
@@ -46,32 +58,32 @@ class _ChartPaletteValues {
 
   static const List<Color> light = [
     _ShibaColors.primaryLight,
-    _AccountingColorValues.income,
-    _AccountingColorValues.transfer,
-    _AccountingColorValues.repay,
-    _AccountingColorValues.borrow,
-    Color(0xFFE91E63),
-    Color(0xFF00BCD4),
-    Color(0xFF8BC34A),
-    Color(0xFF673AB7),
-    Color(0xFF009688),
-    Color(0xFFCDDC39),
-    Color(0xFF3F51B5),
+    Color(0xFF6FAE7B),
+    Color(0xFF4FA6A1),
+    Color(0xFF5C8FB8),
+    Color(0xFF7D78B8),
+    Color(0xFFA86BA6),
+    Color(0xFFD16B86),
+    Color(0xFFD8835A),
+    Color(0xFFD3A24F),
+    Color(0xFFA6A653),
+    Color(0xFF78B89F),
+    Color(0xFF9A816B),
   ];
 
   static const List<Color> dark = [
     _ShibaColors.primaryDark,
-    _AccountingColorValues.income,
-    _AccountingColorValues.transfer,
-    _AccountingColorValues.repay,
-    _AccountingColorValues.borrow,
-    Color(0xFFE91E63),
-    Color(0xFF00BCD4),
-    Color(0xFF8BC34A),
-    Color(0xFF673AB7),
-    Color(0xFF009688),
-    Color(0xFFCDDC39),
-    Color(0xFF3F51B5),
+    Color(0xFF8FC79A),
+    Color(0xFF78C4BE),
+    Color(0xFF87B6D6),
+    Color(0xFFA59DDA),
+    Color(0xFFB98AC0),
+    Color(0xFFE08AA0),
+    Color(0xFFE09A78),
+    Color(0xFFE0B86A),
+    Color(0xFFC5C679),
+    Color(0xFF8FC9B1),
+    Color(0xFFBCA08A),
   ];
 }
 
@@ -161,15 +173,7 @@ class AppTheme {
       ),
       extensions: [
         _appTextStyles(textTheme, colorScheme),
-        AccountingColors(
-          income: _AccountingColorValues.income,
-          expense: _AccountingColorValues.expense,
-          transfer: _AccountingColorValues.transfer,
-          borrow: _AccountingColorValues.borrow,
-          repay: _AccountingColorValues.repay,
-          liability: _AccountingColorValues.liability,
-          neutral: _AccountingColorValues.neutral,
-        ),
+        _AccountingColorValues.light,
         ChartPalette(palette: _ChartPaletteValues.light),
         HeroCardColors(
           content: _HeroCardContentValues.content,
@@ -420,15 +424,7 @@ class AppTheme {
       ),
       extensions: [
         _appTextStyles(textTheme, colorScheme),
-        AccountingColors(
-          income: _AccountingColorValues.income,
-          expense: _AccountingColorValues.expense,
-          transfer: _AccountingColorValues.transfer,
-          borrow: _AccountingColorValues.borrow,
-          repay: _AccountingColorValues.repay,
-          liability: _AccountingColorValues.liability,
-          neutral: _AccountingColorValues.neutral,
-        ),
+        _AccountingColorValues.dark,
         ChartPalette(palette: _ChartPaletteValues.dark),
         HeroCardColors(
           content: _HeroCardContentValues.content,

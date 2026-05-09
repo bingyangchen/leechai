@@ -7,6 +7,7 @@ class EntryRepository {
 
   static const String _table = 'entry';
   static const String _entryTagTable = 'entry_tag';
+  static const String _tagTable = 'tag';
   static final _uuid = Uuid();
 
   static Future<int> getCount() async {
@@ -46,6 +47,136 @@ class EntryRepository {
       where: 'deleted_at IS NULL AND (debit_account_id = ? OR credit_account_id = ?)',
       whereArgs: [accountId, accountId],
       orderBy: 'occurred_at DESC',
+    );
+  }
+
+  static Future<bool> existsByAccountId(String accountId) async {
+    final db = await AppDatabase.database;
+    final rows = await db.query(
+      _table,
+      columns: ['id'],
+      where: 'deleted_at IS NULL AND (debit_account_id = ? OR credit_account_id = ?)',
+      whereArgs: [accountId, accountId],
+      limit: 1,
+    );
+    return rows.isNotEmpty;
+  }
+
+  static Future<List<Map<String, Object?>>> getByAccountIdBatch(
+    String accountId, {
+    required int limit,
+    required int offset,
+  }) async {
+    final db = await AppDatabase.database;
+    return db.query(
+      _table,
+      where: 'deleted_at IS NULL AND (debit_account_id = ? OR credit_account_id = ?)',
+      whereArgs: [accountId, accountId],
+      orderBy: 'occurred_at DESC, created_at DESC, id DESC',
+      limit: limit,
+      offset: offset,
+    );
+  }
+
+  static Future<List<Map<String, Object?>>> getByTagIdBatch(
+    String tagId, {
+    required int limit,
+    required int offset,
+  }) async {
+    final db = await AppDatabase.database;
+    return db.rawQuery(
+      'SELECT e.* '
+      'FROM $_table e '
+      'JOIN $_entryTagTable et ON et.entry_id = e.id '
+      'WHERE et.tag_id = ? '
+      'AND et.deleted_at IS NULL '
+      'AND e.deleted_at IS NULL '
+      'AND e.type != ? '
+      'ORDER BY e.occurred_at DESC, e.created_at DESC, e.id DESC '
+      'LIMIT ? OFFSET ?',
+      [tagId, 'adjustment', limit, offset],
+    );
+  }
+
+  static Future<({double income, double expense})> getTagIncomeExpenseSummary(
+    String tagId,
+  ) async {
+    final db = await AppDatabase.database;
+    final rows = await db.rawQuery(
+      'SELECT '
+      'SUM(CASE WHEN e.type = ? THEN e.amount ELSE 0 END) AS income, '
+      'SUM(CASE WHEN e.type = ? THEN e.amount ELSE 0 END) AS expense '
+      'FROM $_table e '
+      'JOIN $_entryTagTable et ON et.entry_id = e.id '
+      'WHERE et.tag_id = ? '
+      'AND et.deleted_at IS NULL '
+      'AND e.deleted_at IS NULL',
+      ['income', 'expense', tagId],
+    );
+    final row = rows.single;
+    return (
+      income: (row['income'] as num?)?.toDouble() ?? 0.0,
+      expense: (row['expense'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+
+  static Future<List<Map<String, Object?>>> searchJournalBatch({
+    required String query,
+    required List<String> matchingTypeNames,
+    required int limit,
+    required int offset,
+  }) async {
+    final normalizedQuery = query.trim().toLowerCase();
+    if (normalizedQuery.isEmpty) return [];
+
+    final db = await AppDatabase.database;
+    final likeQuery = '%$normalizedQuery%';
+    final numericQuery = normalizedQuery.replaceAll(',', '');
+    final whereParts = <String>[
+      'LOWER(COALESCE(e.memo, \'\')) LIKE ?',
+      'LOWER(e.occurred_at) LIKE ?',
+      'CAST(e.amount AS TEXT) LIKE ?',
+      'LOWER(COALESCE(debit.name, \'\')) LIKE ?',
+      'LOWER(debit.sub_type) LIKE ?',
+      'LOWER(COALESCE(credit.name, \'\')) LIKE ?',
+      'LOWER(credit.sub_type) LIKE ?',
+      'EXISTS ('
+          'SELECT 1 '
+          'FROM $_entryTagTable et '
+          'JOIN $_tagTable t ON t.id = et.tag_id '
+          'WHERE et.entry_id = e.id '
+          'AND et.deleted_at IS NULL '
+          'AND t.deleted_at IS NULL '
+          'AND LOWER(t.title) LIKE ?'
+          ')',
+    ];
+    final whereArgs = <Object?>[
+      likeQuery,
+      likeQuery,
+      numericQuery.isEmpty ? likeQuery : '%$numericQuery%',
+      likeQuery,
+      likeQuery,
+      likeQuery,
+      likeQuery,
+      likeQuery,
+    ];
+    if (matchingTypeNames.isNotEmpty) {
+      final placeholders = List.filled(matchingTypeNames.length, '?').join(', ');
+      whereParts.add('e.type IN ($placeholders)');
+      whereArgs.addAll(matchingTypeNames);
+    }
+
+    return db.rawQuery(
+      'SELECT e.* '
+      'FROM $_table e '
+      'JOIN account debit ON debit.id = e.debit_account_id '
+      'JOIN account credit ON credit.id = e.credit_account_id '
+      'WHERE e.deleted_at IS NULL '
+      'AND e.type != ? '
+      'AND (${whereParts.join(' OR ')}) '
+      'ORDER BY e.occurred_at DESC, e.created_at DESC, e.id DESC '
+      'LIMIT ? OFFSET ?',
+      ['adjustment', ...whereArgs, limit, offset],
     );
   }
 
@@ -178,6 +309,29 @@ class EntryRepository {
       whereArgs: [entryId],
     );
     return rows.map((r) => r['tag_id'] as String).toList();
+  }
+
+  static Future<Map<String, List<String>>> getTagTitlesForEntries(
+    List<String> entryIds,
+  ) async {
+    if (entryIds.isEmpty) return {};
+    final db = await AppDatabase.database;
+    final placeholders = List.filled(entryIds.length, '?').join(', ');
+    final rows = await db.rawQuery(
+      'SELECT et.entry_id, t.title '
+      'FROM $_entryTagTable et '
+      'JOIN $_tagTable t ON t.id = et.tag_id '
+      'WHERE et.entry_id IN ($placeholders) '
+      'AND et.deleted_at IS NULL '
+      'AND t.deleted_at IS NULL',
+      entryIds,
+    );
+    final map = {for (final id in entryIds) id: <String>[]};
+    for (final row in rows) {
+      final entryId = row['entry_id'] as String;
+      map.putIfAbsent(entryId, () => <String>[]).add(row['title'] as String);
+    }
+    return map;
   }
 
   static Future<void> update({

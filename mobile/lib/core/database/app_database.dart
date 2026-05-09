@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:mobile/core/database/debug_seed.dart';
 import 'package:mobile/core/database/schema.dart' as core_schema;
 import 'package:mobile/features/account/data/schema/account.dart' as account_schema;
 import 'package:mobile/features/budget/data/schema/budget.dart' as budget_schema;
@@ -17,7 +18,7 @@ class AppDatabase {
   AppDatabase._();
 
   static const String _dbName = 'leechai.db';
-  static const int _dbVersion = 1;
+  static const int _dbVersion = 2;
   static Database? _db;
   static Future<Database>? _openFuture;
 
@@ -52,10 +53,20 @@ class AppDatabase {
     await entry_tag_schema.run(db);
     await achievement_schema.run(db);
     await budget_schema.run(db);
+    if (kDebugMode) await seedDebugData(db);
   }
 
   static Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // NOTE: handle schema migration
+    if (oldVersion < 2) {
+      await db.execute('''
+      CREATE INDEX IF NOT EXISTS entry_debit_account_occurred_at
+      ON entry (debit_account_id, occurred_at DESC, created_at DESC);
+      ''');
+      await db.execute('''
+      CREATE INDEX IF NOT EXISTS entry_credit_account_occurred_at
+      ON entry (credit_account_id, occurred_at DESC, created_at DESC);
+      ''');
+    }
   }
 
   static Future<void> close() async {

@@ -15,6 +15,8 @@ class SlidingSegmentedControl extends StatelessWidget {
     required this.onSelected,
     required this.thumbDecoration,
     required this.selectedLabelColor,
+    this.labelVerticalPadding = kSlidingSegmentLabelVerticalPadding,
+    this.labelStyle,
   });
 
   final List<String> segmentLabels;
@@ -22,6 +24,8 @@ class SlidingSegmentedControl extends StatelessWidget {
   final ValueChanged<int> onSelected;
   final BoxDecoration thumbDecoration;
   final Color Function(int index) selectedLabelColor;
+  final double labelVerticalPadding;
+  final TextStyle? labelStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -61,6 +65,8 @@ class SlidingSegmentedControl extends StatelessWidget {
                       label: segmentLabels[index],
                       selected: selected,
                       selectedColor: selectedLabelColor(index),
+                      labelVerticalPadding: labelVerticalPadding,
+                      labelStyle: labelStyle,
                       onTap: () => onSelected(index),
                     ),
                   );
@@ -79,12 +85,16 @@ class _SegmentCell extends StatefulWidget {
     required this.label,
     required this.selected,
     required this.selectedColor,
+    required this.labelVerticalPadding,
+    required this.labelStyle,
     required this.onTap,
   });
 
   final String label;
   final bool selected;
   final Color selectedColor;
+  final double labelVerticalPadding;
+  final TextStyle? labelStyle;
   final VoidCallback onTap;
 
   @override
@@ -112,13 +122,11 @@ class _SegmentCellState extends State<_SegmentCell> {
         duration: const Duration(milliseconds: 120),
         curve: Curves.easeInOut,
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-            vertical: kSlidingSegmentLabelVerticalPadding,
-          ),
+          padding: EdgeInsets.symmetric(vertical: widget.labelVerticalPadding),
           child: AnimatedDefaultTextStyle(
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeInOut,
-            style: theme.textStyles.sectionLabel.copyWith(
+            style: (widget.labelStyle ?? theme.textStyles.sectionLabel).copyWith(
               color: color,
               fontWeight: widget.selected ? FontWeight.w600 : FontWeight.normal,
             ),

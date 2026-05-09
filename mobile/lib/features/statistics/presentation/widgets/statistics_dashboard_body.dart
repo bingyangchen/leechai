@@ -3,12 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:mobile/features/budget/presentation/pages/budget_page.dart';
 import 'package:mobile/features/budget/presentation/widgets/budget_non_month_hint.dart';
 import 'package:mobile/features/budget/presentation/widgets/budget_progress_card.dart';
-import 'package:mobile/features/entry/domain/entry_type.dart';
-import 'package:mobile/features/entry/presentation/constants/entry_type_colors.dart';
 import 'package:mobile/features/statistics/data/services/statistics.dart';
 import 'package:mobile/features/statistics/domain/category_breakdown_item.dart';
 import 'package:mobile/features/statistics/domain/date_range_preset.dart';
 import 'package:mobile/features/statistics/presentation/constants/category_colors.dart';
+import 'package:mobile/features/statistics/presentation/pages/cashflow_detail_page.dart';
 import 'package:mobile/features/statistics/presentation/pages/category_detail_page.dart';
 import 'package:mobile/features/statistics/presentation/widgets/category_donut_chart.dart';
 import 'package:mobile/features/statistics/presentation/widgets/category_ranking_tile.dart';
@@ -148,6 +147,25 @@ class _StatisticsDashboardBodyState extends State<StatisticsDashboardBody> {
     );
   }
 
+  Widget _dashboardSectionHeader(
+    BuildContext context,
+    String title, {
+    required Widget trailing,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(title, style: Theme.of(context).textStyles.sectionLabel),
+          ),
+          const SizedBox(width: 16),
+          trailing,
+        ],
+      ),
+    );
+  }
+
   Widget _dashboardSectionDivider(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -165,7 +183,7 @@ class _StatisticsDashboardBodyState extends State<StatisticsDashboardBody> {
           appSliverRefreshControl(
             onRefresh: () => runRefreshWithSnapBack(_scrollController, () async {
               // NOTE: placebo effect
-              await Future.delayed(const Duration(milliseconds: 800));
+              await Future.delayed(const Duration(milliseconds: 600));
               _onRefresh();
               await _future;
             }),
@@ -191,10 +209,13 @@ class _StatisticsDashboardBodyState extends State<StatisticsDashboardBody> {
                 const SizedBox(height: 28),
                 _dashboardSectionDivider(context),
                 const SizedBox(height: 20),
-                _dashboardSectionTitle(context, '收支結構'),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  child: _buildSegmentedControl(context),
+                _dashboardSectionHeader(
+                  context,
+                  '收支結構',
+                  trailing: SizedBox(
+                    width: 140,
+                    child: _buildSegmentedControl(context),
+                  ),
                 ),
               ],
             ),
@@ -228,6 +249,18 @@ class _StatisticsDashboardBodyState extends State<StatisticsDashboardBody> {
                       onSectionTouched: (i) {
                         setState(() => _touchedIndex = i);
                       },
+                      onCenterTap: () async {
+                        await Navigator.of(context).push<bool>(
+                          MaterialPageRoute(
+                            builder: (_) => CashflowDetailPage(
+                              isExpense: _isExpense,
+                              dateRange: widget.dateRange,
+                              privacyMode: widget.privacyMode,
+                            ),
+                          ),
+                        );
+                        if (mounted) _onRefresh();
+                      },
                     ),
                     const SizedBox(height: 32),
                     _buildRankingList(context, data),
@@ -243,15 +276,16 @@ class _StatisticsDashboardBodyState extends State<StatisticsDashboardBody> {
   }
 
   Widget _buildSegmentedControl(BuildContext context) {
-    final expenseColor = EntryTypeColors.forType(context, EntryType.expense);
-    final incomeColor = EntryTypeColors.forType(context, EntryType.income);
+    final theme = Theme.of(context);
 
     return SlidingSegmentedControl(
       segmentLabels: const ['支出', '收入'],
       selectedIndex: _isExpense ? 0 : 1,
       onSelected: (index) => _onSegmentChanged(index == 0),
       thumbDecoration: slidingSegmentElevatedThumb(context),
-      selectedLabelColor: (index) => index == 0 ? expenseColor : incomeColor,
+      selectedLabelColor: (_) => theme.colorScheme.onSurface,
+      labelVerticalPadding: 7,
+      labelStyle: theme.textStyles.labelEmphasis,
     );
   }
 
@@ -263,7 +297,7 @@ class _StatisticsDashboardBodyState extends State<StatisticsDashboardBody> {
       itemCount: data.breakdown.length,
       itemBuilder: (context, index) {
         final item = data.breakdown[index];
-        final color = colorForSubType(context, item.subType, index);
+        final color = colorForCategoryIndex(context, index);
         return CategoryRankingTile(
           key: ValueKey('${widget.rankingAnimationTrigger}-${item.subType}'),
           subType: item.subType,

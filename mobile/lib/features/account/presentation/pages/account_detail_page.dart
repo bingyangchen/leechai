@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:mobile/features/account/data/repositories/account.dart'
     show AccountRepository;
 import 'package:mobile/features/account/data/services/account_balance.dart';
@@ -10,7 +9,6 @@ import 'package:mobile/features/account/domain/liability_type.dart';
 import 'package:mobile/features/account/presentation/widgets/add_account_sheet.dart';
 import 'package:mobile/features/entry/data/repositories/entry.dart'
     show EntryRepository;
-import 'package:mobile/features/entry/data/repositories/tag.dart' show TagRepository;
 import 'package:mobile/features/entry/domain/entry_aggregation.dart';
 import 'package:mobile/features/entry/domain/entry_type.dart';
 import 'package:mobile/features/entry/presentation/entry_list_handlers.dart';
@@ -38,13 +36,22 @@ class AccountDetailPage extends StatefulWidget {
 }
 
 class _AccountDetailPageState extends State<AccountDetailPage> {
+  static const int _entryBatchSize = 30;
+  static const double _loadMoreExtentAfterThresholdPx = 640;
+
   bool _privacyMode = false;
   late Future<_DetailData> _future;
   final ScrollController _scrollController = ScrollController();
+  final List<Map<String, Object?>> _entries = [];
+  final Map<String, List<String>> _entryIdToTagTitles = {};
+  bool _hasMoreEntries = true;
+  bool _isLoadingMoreEntries = false;
+  Object? _loadMoreError;
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_maybeLoadMoreEntries);
     _future = _loadData();
   }
 
@@ -55,39 +62,80 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
   }
 
   Future<_DetailData> _loadData() async {
+    _entries.clear();
+    _entryIdToTagTitles.clear();
+    _hasMoreEntries = true;
+    _isLoadingMoreEntries = false;
+    _loadMoreError = null;
+
     final account = await AccountRepository.getById(widget.accountId);
     if (account == null) throw StateError('Account not found: ${widget.accountId}');
-    final entries = await EntryRepository.getByAccountId(widget.accountId);
     final allAccounts = <String, Account>{};
     for (final a in await AccountRepository.getAll()) {
       allAccounts[a.id] = a;
     }
-    final tagIds = <String>{};
-    final entryTagIds = <String, List<String>>{};
-    for (final e in entries) {
-      final id = e['id'] as String;
-      final ids = await EntryRepository.getTagIdsForEntry(id);
-      entryTagIds[id] = ids;
-      tagIds.addAll(ids);
-    }
-    final tagTitles = await TagRepository.getTitlesByIds(tagIds.toList());
-    final entryTagTitles = <String, List<String>>{};
-    for (final e in entryTagIds.entries) {
-      entryTagTitles[e.key] = e.value
-          .map((id) => tagTitles[id] ?? '')
-          .where((s) => s.isNotEmpty)
-          .toList();
-    }
     final balances = await AccountBalanceService.getBalances();
     final balance = balances[widget.accountId] ?? 0;
+    final hasEntries = await EntryRepository.existsByAccountId(widget.accountId);
+    final firstBatch = await _loadEntryBatch(offset: 0);
+    _entries.addAll(firstBatch.entries);
+    _entryIdToTagTitles.addAll(firstBatch.entryIdToTagTitles);
+    _hasMoreEntries = firstBatch.entries.length == _entryBatchSize;
 
     return _DetailData(
       account: account,
-      entries: entries,
       accounts: allAccounts,
-      entryTagTitles: entryTagTitles,
       balance: balance,
+      hasEntries: hasEntries,
     );
+  }
+
+  Future<_EntryBatchData> _loadEntryBatch({required int offset}) async {
+    final entries = await EntryRepository.getByAccountIdBatch(
+      widget.accountId,
+      limit: _entryBatchSize,
+      offset: offset,
+    );
+    final entryIds = entries.map((e) => e['id'] as String).toList();
+    final entryIdToTagTitles = await EntryRepository.getTagTitlesForEntries(entryIds);
+    return _EntryBatchData(entries: entries, entryIdToTagTitles: entryIdToTagTitles);
+  }
+
+  void _maybeLoadMoreEntries() {
+    if (!_scrollController.hasClients ||
+        !_hasMoreEntries ||
+        _isLoadingMoreEntries ||
+        _loadMoreError != null) {
+      return;
+    }
+    if (_scrollController.position.extentAfter > _loadMoreExtentAfterThresholdPx) {
+      return;
+    }
+    _loadMoreEntries();
+  }
+
+  Future<void> _loadMoreEntries() async {
+    if (_isLoadingMoreEntries || !_hasMoreEntries) return;
+    setState(() {
+      _isLoadingMoreEntries = true;
+      _loadMoreError = null;
+    });
+    try {
+      final batch = await _loadEntryBatch(offset: _entries.length);
+      if (!mounted) return;
+      setState(() {
+        _entries.addAll(batch.entries);
+        _entryIdToTagTitles.addAll(batch.entryIdToTagTitles);
+        _hasMoreEntries = batch.entries.length == _entryBatchSize;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _loadMoreError = error);
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingMoreEntries = false);
+      }
+    }
   }
 
   void _onRefresh() {
@@ -106,6 +154,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
       showCloseButton: false,
       mode: AppBottomSheetMode.static,
       builder: (ctx) => _MarketValueSheetContent(
+        account: data.account,
         currentValue: oldBalance,
         onConfirm: (value) => Navigator.of(ctx).pop(value),
         onCancel: () => Navigator.of(ctx).pop(),
@@ -186,7 +235,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
             ),
             onTap: () {
               Navigator.pop(ctx);
-              if (data.entries.isEmpty) {
+              if (!data.hasEntries) {
                 _onDeleteAccount(data);
               } else {
                 showDialog<void>(
@@ -214,7 +263,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
     final updated = await showAccountFormSheet(
       context,
       existingAccount: data.account,
-      hasEntries: data.entries.isNotEmpty,
+      hasEntries: data.hasEntries,
     );
     if (updated == true && mounted) _onRefresh();
   }
@@ -335,9 +384,10 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
           }
           final data = snapshot.data;
           if (data == null) return const SizedBox.shrink();
+          WidgetsBinding.instance.addPostFrameCallback((_) => _maybeLoadMoreEntries());
 
-          final grouped = groupEntriesByDate(data.entries);
-          if (data.entries.isEmpty) {
+          final grouped = groupEntriesByDate(_entries);
+          if (_entries.isEmpty) {
             return HapticRefreshWrapper(
               child: CustomScrollView(
                 controller: _scrollController,
@@ -349,7 +399,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
                     onRefresh: () =>
                         runRefreshWithSnapBack(_scrollController, () async {
                           // NOTE: placebo effect
-                          await Future.delayed(const Duration(milliseconds: 800));
+                          await Future.delayed(const Duration(milliseconds: 600));
                           _onRefresh();
                           await _future;
                         }),
@@ -369,6 +419,14 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
                             ),
                             const SizedBox(height: 16),
                             Text('此帳戶尚無交易紀錄', style: theme.textStyles.titleMuted),
+                            if (_isLoadingMoreEntries) ...[
+                              const SizedBox(height: 20),
+                              const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -389,7 +447,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
                 appSliverRefreshControl(
                   onRefresh: () => runRefreshWithSnapBack(_scrollController, () async {
                     // NOTE: placebo effect
-                    await Future.delayed(const Duration(milliseconds: 800));
+                    await Future.delayed(const Duration(milliseconds: 600));
                     _onRefresh();
                     await _future;
                   }),
@@ -409,7 +467,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
                       return EntryRow(
                         entry: row,
                         accounts: data.accounts,
-                        entryTagTitles: data.entryTagTitles,
+                        entryTagTitles: _entryIdToTagTitles,
                         privacyMode: _privacyMode,
                         perspectiveAccountId: data.account.id,
                         onTap: () =>
@@ -422,6 +480,32 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
                     }, childCount: e.value.length),
                   ),
                 ],
+                if (_isLoadingMoreEntries)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: Center(
+                        child: SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                    ),
+                  )
+                else if (_loadMoreError != null)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                      child: Center(
+                        child: TextButton.icon(
+                          onPressed: _loadMoreEntries,
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('載入失敗，重試'),
+                        ),
+                      ),
+                    ),
+                  ),
                 const SliverPadding(padding: EdgeInsets.only(bottom: 88)),
               ],
             ),
@@ -435,26 +519,33 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
 class _DetailData {
   _DetailData({
     required this.account,
-    required this.entries,
     required this.accounts,
-    required this.entryTagTitles,
     required this.balance,
+    required this.hasEntries,
   });
 
   final Account account;
-  final List<Map<String, Object?>> entries;
   final Map<String, Account> accounts;
-  final Map<String, List<String>> entryTagTitles;
   final double balance;
+  final bool hasEntries;
+}
+
+class _EntryBatchData {
+  _EntryBatchData({required this.entries, required this.entryIdToTagTitles});
+
+  final List<Map<String, Object?>> entries;
+  final Map<String, List<String>> entryIdToTagTitles;
 }
 
 class _MarketValueSheetContent extends StatefulWidget {
   const _MarketValueSheetContent({
+    required this.account,
     required this.currentValue,
     required this.onConfirm,
     required this.onCancel,
   });
 
+  final Account account;
   final double currentValue;
   final ValueChanged<double> onConfirm;
   final VoidCallback onCancel;
@@ -464,7 +555,9 @@ class _MarketValueSheetContent extends StatefulWidget {
 }
 
 class _MarketValueSheetContentState extends State<_MarketValueSheetContent> {
-  late TextEditingController _controller;
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _controller;
+  final _focusNode = FocusNode();
 
   @override
   void initState() {
@@ -472,7 +565,9 @@ class _MarketValueSheetContentState extends State<_MarketValueSheetContent> {
     _controller = TextEditingController(
       text: formatAmountForDisplay(widget.currentValue),
     );
+    _controller.addListener(() => setState(() {}));
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusNode.requestFocus();
       if (_controller.text.isNotEmpty) {
         _controller.selection = TextSelection(
           baseOffset: 0,
@@ -485,48 +580,171 @@ class _MarketValueSheetContentState extends State<_MarketValueSheetContent> {
   @override
   void dispose() {
     _controller.dispose();
+    _focusNode.dispose();
     super.dispose();
+  }
+
+  String get _accountName =>
+      widget.account.name ??
+      (AssetTypeX.fromName(widget.account.subType)?.label ??
+          LiabilityTypeX.fromName(widget.account.subType)?.label ??
+          widget.account.subType);
+
+  double? get _value {
+    final raw = stripAmount(_controller.text);
+    if (raw.isEmpty) return null;
+    return double.tryParse(raw);
+  }
+
+  double? get _diff {
+    final value = _value;
+    if (value == null) return null;
+    return value - widget.currentValue;
+  }
+
+  String get _diffLabel {
+    final diff = _diff;
+    if (diff == null) return '輸入新市值後會自動計算差額';
+    if (diff == 0) return '市值尚未變動';
+    final sign = diff > 0 ? '+' : '-';
+    return '未實現損益 $sign\$${formatAmountForDisplay(diff.abs())}';
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+    final value = _value;
+    if (value == null || value == widget.currentValue) return;
+    widget.onConfirm(value);
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final accountingColors = AccountingColors.of(context);
     final viewInsets = MediaQuery.viewInsetsOf(context);
-    return Padding(
-      padding: EdgeInsets.fromLTRB(24, 8, 24, 24 + viewInsets.bottom),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          TextField(
-            controller: _controller,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d,.]'))],
-            decoration: const InputDecoration(
-              labelText: '目前市值',
-              hintText: '輸入金額',
-              prefixText: '\$ ',
-            ),
-            autofocus: true,
-          ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+    final diff = _diff;
+    final diffColor = diff == null || diff == 0
+        ? theme.colorScheme.onSurfaceVariant
+        : diff > 0
+        ? accountingColors.income
+        : accountingColors.expense;
+    final canSubmit = _value != null && _value! >= 0 && _value != widget.currentValue;
+
+    return Form(
+      key: _formKey,
+      child: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.opaque,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(24, 8, 24, 24 + viewInsets.bottom),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextButton(onPressed: widget.onCancel, child: const Text('取消')),
-              const SizedBox(width: 8),
-              FilledButton(
-                onPressed: () {
-                  final raw = stripAmount(_controller.text);
-                  final value = double.tryParse(raw);
-                  if (value != null && value >= 0) {
-                    widget.onConfirm(value);
-                  }
-                },
-                child: const Text('確定'),
+              Row(
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      widget.account.displayIcon,
+                      color: theme.colorScheme.primary,
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _accountName,
+                          style: theme.textStyles.titleEmphasis,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '目前帳面值 \$${formatAmountForDisplay(widget.currentValue)}',
+                          style: theme.textStyles.bodySmallMuted,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
+              const SizedBox(height: 28),
+              Text('新的市值', style: theme.textStyles.titleMuted),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _controller,
+                focusNode: _focusNode,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [ThousandsSeparatorInputFormatter()],
+                decoration: const InputDecoration(
+                  hintText: '0',
+                  prefixText: '\$ ',
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.zero,
+                  isDense: true,
+                ),
+                style: theme.textStyles.headline.copyWith(
+                  color: theme.colorScheme.primary,
+                ),
+                textAlign: TextAlign.right,
+                autofocus: true,
+                validator: (value) {
+                  final raw = value == null ? '' : stripAmount(value);
+                  if (raw.isEmpty) return '請輸入目前市值';
+                  final amount = double.tryParse(raw);
+                  if (amount == null || amount < 0) return '請輸入有效金額';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color: diffColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      diff == null || diff == 0
+                          ? Icons.horizontal_rule
+                          : diff > 0
+                          ? Icons.trending_up
+                          : Icons.trending_down,
+                      color: diffColor,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        _diffLabel,
+                        style: theme.textStyles.body.copyWith(color: diffColor),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: canSubmit ? _submit : null,
+                  child: const Text('記錄市值更新'),
+                ),
+              ),
+              TextButton(onPressed: widget.onCancel, child: const Text('取消')),
             ],
           ),
-        ],
+        ),
       ),
     );
   }

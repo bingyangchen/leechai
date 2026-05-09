@@ -171,7 +171,7 @@ class _JournalPageState extends State<JournalPage> with SingleTickerProviderStat
 
   Future<void> _onRefresh() async {
     await runRefreshWithSnapBack(_scrollController, () async {
-      await Future.delayed(const Duration(milliseconds: 800)); // NOTE: placebo effect
+      await Future.delayed(const Duration(milliseconds: 600)); // NOTE: placebo effect
       setState(() {
         _future = _loadData();
       });

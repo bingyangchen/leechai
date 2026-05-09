@@ -40,24 +40,6 @@ class NetWorthLineChart extends StatelessWidget {
       xLabels[data.length - 1] = '${d.month}月';
     }
 
-    String formatScaled(double scaled, String suffix) {
-      final abs = scaled.abs();
-      final sign = scaled < 0 ? '-' : '';
-      if (abs >= 100) return '$sign${scaled.round()}$suffix';
-      if (abs == abs.roundToDouble()) return '$sign${scaled.round()}$suffix';
-      final s = abs.toStringAsFixed(1);
-      return '$sign${s.endsWith('.0') ? abs.toInt() : s}$suffix';
-    }
-
-    String formatY(double v) {
-      if (privacyMode) return '****';
-      final abs = v.abs();
-      if (abs >= 1000000000) return formatScaled(v / 1000000000, 'T');
-      if (abs >= 1000000) return formatScaled(v / 1000000, 'M');
-      if (abs >= 1000) return formatScaled(v / 1000, 'K');
-      return v.round().toString();
-    }
-
     return LineChart(
       LineChartData(
         gridData: FlGridData(
@@ -81,7 +63,10 @@ class NetWorthLineChart extends StatelessWidget {
                 if (nearBottom || nearTop) return const SizedBox.shrink();
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
-                  child: Text(formatY(v), style: theme.textStyles.labelSmallMuted),
+                  child: Text(
+                    privacyMode ? '****' : _formatCompactAxisValue(v),
+                    style: theme.textStyles.labelSmallMuted,
+                  ),
                 );
               },
             ),
@@ -136,6 +121,8 @@ class NetWorthLineChart extends StatelessWidget {
           touchTooltipData: LineTouchTooltipData(
             getTooltipColor: (_) => theme.colorScheme.surfaceContainerHighest,
             tooltipBorderRadius: BorderRadius.circular(8),
+            fitInsideHorizontally: true,
+            fitInsideVertically: true,
             getTooltipItems: (spots) {
               return spots.map((s) {
                 final i = s.x.toInt();
@@ -179,4 +166,54 @@ class NetWorthLineChart extends StatelessWidget {
       duration: Duration.zero,
     );
   }
+}
+
+// Keeps axis labels compact within three visible digits: 1550 -> 1.55K, -1550 -> -1.6K.
+String _formatCompactAxisValue(double value) {
+  const units = [
+    (divisor: 1000000000, suffix: 'T'),
+    (divisor: 1000000, suffix: 'M'),
+    (divisor: 1000, suffix: 'K'),
+    (divisor: 1, suffix: ''),
+  ];
+
+  final abs = value.abs();
+  final maxDigits = value < 0 ? 2 : 3;
+  var unitIndex = units.indexWhere((unit) => abs >= unit.divisor);
+  if (unitIndex == -1) unitIndex = units.length - 1;
+
+  while (true) {
+    final unit = units[unitIndex];
+    final text = _formatWithDigitLimit(value / unit.divisor, maxDigits);
+    if (_digitCount(text) <= maxDigits || unitIndex == 0) {
+      return '$text${unit.suffix}';
+    }
+
+    unitIndex -= 1;
+  }
+}
+
+String _formatWithDigitLimit(double value, int maxDigits) {
+  final sign = value < 0 ? '-' : '';
+  final abs = value.abs();
+  if (abs == 0) return '0';
+
+  final integerDigits = abs >= 1 ? abs.floor().toString().length : 1;
+  final decimalPlaces = (maxDigits - integerDigits).clamp(0, maxDigits);
+  final rounded = decimalPlaces == 0
+      ? abs.round().toString()
+      : abs
+            .toStringAsFixed(decimalPlaces)
+            .replaceFirst(RegExp(r'\.0+$'), '')
+            .replaceFirst(RegExp(r'(\.\d*[1-9])0+$'), r'$1');
+
+  return '$sign$rounded';
+}
+
+int _digitCount(String value) {
+  var count = 0;
+  for (final codeUnit in value.codeUnits) {
+    if (codeUnit >= 48 && codeUnit <= 57) count += 1;
+  }
+  return count;
 }

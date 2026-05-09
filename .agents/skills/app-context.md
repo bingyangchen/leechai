@@ -50,3 +50,11 @@ It helps users record daily money movement, track assets, and understand trends.
 - Direct, concise, and supportive
 - Avoid blame language when users miss data or have inconsistent records
 - Prefer action-oriented labels and messages
+
+## Technical Context
+
+This app is **offline-first**: it works fully without network. When online, local data syncs to the cloud. The **same account can be active on multiple devices**. When advising on architecture, APIs, or database design, always consider:
+
+- **Local-first data model** — Local DB is source of truth; design for offline CRUD and sync metadata (e.g. `updated_at`, `synced_at`, client-generated stable IDs).
+- **Multi-device & conflicts** — Use client-generated UUIDs for entities to avoid ID collisions across devices; define conflict resolution (e.g. last-write-wins, vector clocks, or CRDTs where needed).
+- **Sync boundaries** — Data is scoped by account; design schemas and sync payloads so multi-device merge and incremental sync are feasible.
