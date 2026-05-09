@@ -13,6 +13,7 @@ typedef AppBottomSheetScrollableBuilder =
 Future<T?> showAppBottomSheet<T>(
   BuildContext context, {
   String? title,
+  String? subtitle,
   bool showCloseButton = false,
   AppBottomSheetTitleAlignment titleAlignment = AppBottomSheetTitleAlignment.center,
   required AppBottomSheetMode mode,
@@ -32,10 +33,11 @@ Future<T?> showAppBottomSheet<T>(
     isScrollControlled: true,
     useSafeArea: true,
     builder: (ctx) {
-      final showHeader = title != null || showCloseButton;
+      final showHeader = title != null || subtitle != null || showCloseButton;
       final header = showHeader
           ? _AppBottomSheetHeader(
               title: title,
+              subtitle: subtitle,
               showCloseButton: showCloseButton,
               titleAlignment: titleAlignment,
               onClose: () => Navigator.of(ctx).pop(),
@@ -252,12 +254,14 @@ class _DragHandle extends StatelessWidget {
 class _AppBottomSheetHeader extends StatelessWidget {
   const _AppBottomSheetHeader({
     this.title,
+    this.subtitle,
     required this.showCloseButton,
     required this.titleAlignment,
     required this.onClose,
   });
 
   final String? title;
+  final String? subtitle;
   final bool showCloseButton;
   final AppBottomSheetTitleAlignment titleAlignment;
   final VoidCallback onClose;
@@ -269,13 +273,41 @@ class _AppBottomSheetHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Row(
         children: [
-          if (title != null)
+          if (title != null || subtitle != null)
             Expanded(
               child: Align(
                 alignment: titleAlignment == AppBottomSheetTitleAlignment.center
                     ? Alignment.center
                     : Alignment.centerLeft,
-                child: Text(title!, style: theme.textStyles.headlineSmall),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment:
+                      titleAlignment == AppBottomSheetTitleAlignment.center
+                      ? CrossAxisAlignment.center
+                      : CrossAxisAlignment.start,
+                  children: [
+                    if (title != null)
+                      Text(
+                        title!,
+                        style: theme.textStyles.headlineSmall,
+                        textAlign: titleAlignment == AppBottomSheetTitleAlignment.center
+                            ? TextAlign.center
+                            : TextAlign.start,
+                      ),
+                    if (subtitle != null) ...[
+                      if (title != null) const SizedBox(height: 3),
+                      Text(
+                        subtitle!,
+                        style: theme.textStyles.bodySmallMuted,
+                        textAlign: titleAlignment == AppBottomSheetTitleAlignment.center
+                            ? TextAlign.center
+                            : TextAlign.start,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ],
+                ),
               ),
             )
           else
