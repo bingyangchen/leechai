@@ -5,8 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:mobile/features/account/domain/account.dart';
 import 'package:mobile/features/entry/data/services/journal_search.dart';
 import 'package:mobile/features/entry/domain/entry_type.dart';
-import 'package:mobile/features/entry/domain/journal_entry_search.dart';
-import 'package:mobile/features/entry/domain/journal_search_context.dart';
 import 'package:mobile/features/entry/presentation/entry_list_handlers.dart';
 import 'package:mobile/features/entry/presentation/widgets/entry_row.dart';
 import 'package:mobile/shared/constants/weekday.dart';
@@ -31,25 +29,37 @@ class JournalSearchPage extends StatefulWidget {
 }
 
 class _JournalSearchPageState extends State<JournalSearchPage> {
+  static const int _searchPageSize = 30;
+  static const double _loadMoreExtentAfterThresholdPx = 640;
+
   final TextEditingController _queryController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
+  final ScrollController _scrollController = ScrollController();
   Timer? _debounceTimer;
   String _debouncedQuery = '';
-  JournalSearchContext? _context;
+  Map<String, Account>? _accounts;
+  final List<Map<String, Object?>> _entries = [];
+  final Map<String, List<String>> _entryIdToTagTitles = {};
   Object? _loadError;
-  bool _loadInProgress = false;
+  Object? _searchError;
+  bool _accountsLoadInProgress = false;
+  bool _initialSearchInProgress = false;
+  bool _loadMoreInProgress = false;
+  bool _hasMoreResults = false;
+  int _searchGeneration = 0;
 
   @override
   void initState() {
     super.initState();
     _queryController.addListener(_onQueryChanged);
+    _scrollController.addListener(_maybeLoadMoreResults);
     widget.refreshTrigger?.addListener(_onExternalRefresh);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _searchFocusNode.requestFocus();
       }
     });
-    _loadContext();
+    _loadAccounts();
   }
 
   @override
@@ -62,61 +72,173 @@ class _JournalSearchPageState extends State<JournalSearchPage> {
   }
 
   void _onExternalRefresh() {
-    _loadContext();
+    _loadAccounts();
+    final query = _debouncedQuery.trim();
+    if (query.isNotEmpty) {
+      _startSearch(query);
+    }
   }
 
   void _onQueryChanged() {
     _debounceTimer?.cancel();
     _debounceTimer = Timer(const Duration(milliseconds: 350), () {
       if (!mounted) return;
+      final query = _queryController.text.trim();
       setState(() {
-        _debouncedQuery = _queryController.text;
+        _debouncedQuery = query;
       });
+      _startSearch(query);
     });
     setState(() {});
   }
 
   void _onEntryMutation() {
     widget.onDataChanged();
-    _loadContext();
+    final query = _debouncedQuery.trim();
+    if (query.isNotEmpty) {
+      _startSearch(query);
+    }
   }
 
-  Future<void> _loadContext() async {
+  Future<void> _loadAccounts() async {
     setState(() {
-      _loadInProgress = true;
+      _accountsLoadInProgress = true;
       _loadError = null;
     });
     try {
-      final loaded = await JournalSearchService.loadContext();
+      final loaded = await JournalSearchService.loadAccounts();
       if (!mounted) return;
       setState(() {
-        _context = loaded;
-        _loadInProgress = false;
+        _accounts = loaded;
+        _accountsLoadInProgress = false;
         _loadError = null;
       });
     } catch (error, stackTrace) {
       if (kDebugMode) {
-        debugPrint('JournalSearchPage load failed: $error\n$stackTrace');
+        debugPrint('JournalSearchPage accounts load failed: $error\n$stackTrace');
       }
       if (!mounted) return;
       setState(() {
-        _loadInProgress = false;
+        _accountsLoadInProgress = false;
         _loadError = error;
       });
+    }
+  }
+
+  Future<void> _startSearch(String query) async {
+    final generation = ++_searchGeneration;
+    if (query.trim().isEmpty) {
+      setState(() {
+        _entries.clear();
+        _entryIdToTagTitles.clear();
+        _hasMoreResults = false;
+        _initialSearchInProgress = false;
+        _loadMoreInProgress = false;
+        _searchError = null;
+      });
+      return;
+    }
+
+    setState(() {
+      _entries.clear();
+      _entryIdToTagTitles.clear();
+      _hasMoreResults = true;
+      _initialSearchInProgress = true;
+      _loadMoreInProgress = false;
+      _searchError = null;
+    });
+    try {
+      final page = await JournalSearchService.searchPage(
+        query: query,
+        limit: _searchPageSize,
+        offset: 0,
+      );
+      if (!mounted || generation != _searchGeneration) return;
+      setState(() {
+        _entries.addAll(page.entries);
+        _entryIdToTagTitles.addAll(page.entryIdToTagTitles);
+        _hasMoreResults = page.entries.length == _searchPageSize;
+        _initialSearchInProgress = false;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) => _maybeLoadMoreResults());
+    } catch (error, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('JournalSearchPage search failed: $error\n$stackTrace');
+      }
+      if (!mounted || generation != _searchGeneration) return;
+      setState(() {
+        _initialSearchInProgress = false;
+        _hasMoreResults = false;
+        _searchError = error;
+      });
+    }
+  }
+
+  void _maybeLoadMoreResults() {
+    if (!_scrollController.hasClients ||
+        !_hasMoreResults ||
+        _initialSearchInProgress ||
+        _loadMoreInProgress ||
+        _searchError != null ||
+        _debouncedQuery.trim().isEmpty) {
+      return;
+    }
+    if (_scrollController.position.extentAfter > _loadMoreExtentAfterThresholdPx) {
+      return;
+    }
+    _loadMoreResults();
+  }
+
+  Future<void> _loadMoreResults() async {
+    if (_loadMoreInProgress || !_hasMoreResults) return;
+    final generation = _searchGeneration;
+    final query = _debouncedQuery.trim();
+    if (query.isEmpty) return;
+
+    setState(() {
+      _loadMoreInProgress = true;
+      _searchError = null;
+    });
+    try {
+      final page = await JournalSearchService.searchPage(
+        query: query,
+        limit: _searchPageSize,
+        offset: _entries.length,
+      );
+      if (!mounted || generation != _searchGeneration) return;
+      setState(() {
+        _entries.addAll(page.entries);
+        _entryIdToTagTitles.addAll(page.entryIdToTagTitles);
+        _hasMoreResults = page.entries.length == _searchPageSize;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) => _maybeLoadMoreResults());
+    } catch (error, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('JournalSearchPage load more failed: $error\n$stackTrace');
+      }
+      if (!mounted || generation != _searchGeneration) return;
+      setState(() => _searchError = error);
+    } finally {
+      if (mounted && generation == _searchGeneration) {
+        setState(() => _loadMoreInProgress = false);
+      }
     }
   }
 
   void _clearQuery() {
     _debounceTimer?.cancel();
     _queryController.clear();
-    setState(() => _debouncedQuery = '');
+    _searchGeneration++;
+    setState(() {
+      _debouncedQuery = '';
+      _entries.clear();
+      _entryIdToTagTitles.clear();
+      _hasMoreResults = false;
+      _initialSearchInProgress = false;
+      _loadMoreInProgress = false;
+      _searchError = null;
+    });
     _searchFocusNode.requestFocus();
-  }
-
-  List<Map<String, Object?>> _filteredEntriesForQuery(String query) {
-    final context = _context;
-    if (context == null) return [];
-    return filterJournalEntriesBySearchQuery(context: context, query: query);
   }
 
   String get _liveQueryTrimmed => _queryController.text.trim();
@@ -125,6 +247,7 @@ class _JournalSearchPageState extends State<JournalSearchPage> {
   void dispose() {
     widget.refreshTrigger?.removeListener(_onExternalRefresh);
     _debounceTimer?.cancel();
+    _scrollController.dispose();
     _queryController.removeListener(_onQueryChanged);
     _queryController.dispose();
     _searchFocusNode.dispose();
@@ -209,18 +332,18 @@ class _JournalSearchPageState extends State<JournalSearchPage> {
   Widget _buildBody(ThemeData theme) {
     if (_loadError != null) {
       return _KeyboardDismissibleViewport(
-        child: _SearchErrorBody(onRetry: _loadContext),
+        child: _SearchErrorBody(onRetry: _loadAccounts),
       );
     }
-    if (_loadInProgress && _context == null) {
+    if (_accountsLoadInProgress && _accounts == null) {
       return _KeyboardDismissibleViewport(
         child: Center(
           child: CircularProgressIndicator(color: theme.colorScheme.primary),
         ),
       );
     }
-    final searchContext = _context;
-    if (searchContext == null) {
+    final accounts = _accounts;
+    if (accounts == null) {
       return const SizedBox.shrink();
     }
 
@@ -242,13 +365,25 @@ class _JournalSearchPageState extends State<JournalSearchPage> {
     }
 
     final activeQuery = _debouncedQuery.trim();
-    final filtered = _filteredEntriesForQuery(activeQuery);
+    if (_initialSearchInProgress) {
+      return _KeyboardDismissibleViewport(
+        child: Center(
+          child: CircularProgressIndicator(color: theme.colorScheme.primary),
+        ),
+      );
+    }
+
+    if (_searchError != null && _entries.isEmpty) {
+      return _KeyboardDismissibleViewport(
+        child: _SearchErrorBody(onRetry: () => _startSearch(activeQuery)),
+      );
+    }
 
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 180),
       switchInCurve: Curves.easeOut,
       switchOutCurve: Curves.easeOut,
-      child: filtered.isEmpty
+      child: _entries.isEmpty
           ? const _KeyboardDismissibleViewport(
               key: ValueKey('empty'),
               child: _JournalSearchEmptyPane(
@@ -259,9 +394,13 @@ class _JournalSearchPageState extends State<JournalSearchPage> {
             )
           : _SearchResultsList(
               key: ValueKey(activeQuery),
-              entries: filtered,
-              accounts: searchContext.accounts,
-              entryTagTitles: searchContext.entryTagTitles,
+              controller: _scrollController,
+              entries: _entries,
+              accounts: accounts,
+              entryIdToTagTitles: _entryIdToTagTitles,
+              loadMoreInProgress: _loadMoreInProgress,
+              loadMoreError: _searchError,
+              onLoadMoreRetry: _loadMoreResults,
               onEntryChanged: _onEntryMutation,
               theme: theme,
             ),
@@ -373,33 +512,69 @@ class _SearchErrorBody extends StatelessWidget {
 class _SearchResultsList extends StatelessWidget {
   const _SearchResultsList({
     super.key,
+    required this.controller,
     required this.entries,
     required this.accounts,
-    required this.entryTagTitles,
+    required this.entryIdToTagTitles,
+    required this.loadMoreInProgress,
+    required this.loadMoreError,
+    required this.onLoadMoreRetry,
     required this.onEntryChanged,
     required this.theme,
   });
 
+  final ScrollController controller;
   final List<Map<String, Object?>> entries;
   final Map<String, Account> accounts;
-  final Map<String, List<String>> entryTagTitles;
+  final Map<String, List<String>> entryIdToTagTitles;
+  final bool loadMoreInProgress;
+  final Object? loadMoreError;
+  final VoidCallback onLoadMoreRetry;
   final VoidCallback onEntryChanged;
   final ThemeData theme;
 
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
+      controller: controller,
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.only(bottom: 24),
-      itemCount: entries.length,
+      itemCount: entries.length + 1,
       separatorBuilder: (context, _) =>
           Divider(height: 1, thickness: 1, color: theme.dividerColor),
       itemBuilder: (context, index) {
+        if (index == entries.length) {
+          if (loadMoreInProgress) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: Center(
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            );
+          }
+          if (loadMoreError != null) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+              child: Center(
+                child: TextButton.icon(
+                  onPressed: onLoadMoreRetry,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('載入失敗，重試'),
+                ),
+              ),
+            );
+          }
+          return const SizedBox(height: 64);
+        }
         final entry = entries[index];
         return _JournalSearchEntryBlock(
           entry: entry,
           accounts: accounts,
-          entryTagTitles: entryTagTitles,
+          entryIdToTagTitles: entryIdToTagTitles,
           onDataChanged: onEntryChanged,
         );
       },
@@ -411,13 +586,13 @@ class _JournalSearchEntryBlock extends StatelessWidget {
   const _JournalSearchEntryBlock({
     required this.entry,
     required this.accounts,
-    required this.entryTagTitles,
+    required this.entryIdToTagTitles,
     required this.onDataChanged,
   });
 
   final Map<String, Object?> entry;
   final Map<String, Account> accounts;
-  final Map<String, List<String>> entryTagTitles;
+  final Map<String, List<String>> entryIdToTagTitles;
   final VoidCallback onDataChanged;
 
   String _formatEntryDateLine() {
@@ -500,7 +675,7 @@ class _JournalSearchEntryBlock extends StatelessWidget {
             EntryRow(
               entry: entry,
               accounts: accounts,
-              entryTagTitles: entryTagTitles,
+              entryTagTitles: entryIdToTagTitles,
               privacyMode: false,
               onTap: () => EntryListHandlers.openEntry(context, entry, onDataChanged),
               onDelete: () =>

@@ -78,6 +78,66 @@ class EntryRepository {
     );
   }
 
+  static Future<List<Map<String, Object?>>> searchJournalPage({
+    required String query,
+    required List<String> matchingTypeNames,
+    required int limit,
+    required int offset,
+  }) async {
+    final normalizedQuery = query.trim().toLowerCase();
+    if (normalizedQuery.isEmpty) return [];
+
+    final db = await AppDatabase.database;
+    final likeQuery = '%$normalizedQuery%';
+    final numericQuery = normalizedQuery.replaceAll(',', '');
+    final whereParts = <String>[
+      'LOWER(COALESCE(e.memo, \'\')) LIKE ?',
+      'LOWER(e.occurred_at) LIKE ?',
+      'CAST(e.amount AS TEXT) LIKE ?',
+      'LOWER(COALESCE(debit.name, \'\')) LIKE ?',
+      'LOWER(debit.sub_type) LIKE ?',
+      'LOWER(COALESCE(credit.name, \'\')) LIKE ?',
+      'LOWER(credit.sub_type) LIKE ?',
+      'EXISTS ('
+          'SELECT 1 '
+          'FROM $_entryTagTable et '
+          'JOIN $_tagTable t ON t.id = et.tag_id '
+          'WHERE et.entry_id = e.id '
+          'AND et.deleted_at IS NULL '
+          'AND t.deleted_at IS NULL '
+          'AND LOWER(t.title) LIKE ?'
+          ')',
+    ];
+    final whereArgs = <Object?>[
+      likeQuery,
+      likeQuery,
+      numericQuery.isEmpty ? likeQuery : '%$numericQuery%',
+      likeQuery,
+      likeQuery,
+      likeQuery,
+      likeQuery,
+      likeQuery,
+    ];
+    if (matchingTypeNames.isNotEmpty) {
+      final placeholders = List.filled(matchingTypeNames.length, '?').join(', ');
+      whereParts.add('e.type IN ($placeholders)');
+      whereArgs.addAll(matchingTypeNames);
+    }
+
+    return db.rawQuery(
+      'SELECT e.* '
+      'FROM $_table e '
+      'JOIN account debit ON debit.id = e.debit_account_id '
+      'JOIN account credit ON credit.id = e.credit_account_id '
+      'WHERE e.deleted_at IS NULL '
+      'AND e.type != ? '
+      'AND (${whereParts.join(' OR ')}) '
+      'ORDER BY e.occurred_at DESC, e.created_at DESC, e.id DESC '
+      'LIMIT ? OFFSET ?',
+      ['adjustment', ...whereArgs, limit, offset],
+    );
+  }
+
   static Future<List<Map<String, Object?>>> getByMonth(DateTime yearMonth) async {
     final db = await AppDatabase.database;
     final start = DateTime(yearMonth.year, yearMonth.month, 1);
