@@ -53,7 +53,7 @@ class CategoryDonutChart extends StatelessWidget {
               sections: breakdown.asMap().entries.map((e) {
                 final i = e.key;
                 final item = e.value;
-                final baseColor = colorForSubType(context, item.subType, i);
+                final baseColor = colorForCategoryIndex(context, i);
                 final isTouched = isValidTouched && i == touched;
                 final opacity = (isValidTouched && !isTouched) ? 0.3 : 1.0;
                 return PieChartSectionData(
@@ -67,30 +67,33 @@ class CategoryDonutChart extends StatelessWidget {
             ),
             duration: const Duration(milliseconds: 200),
           ),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                displayLabel,
-                style: theme.textStyles.bodySmallMuted,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 2),
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  isValidTouched
-                      ? (privacyMode
-                            ? '****'
-                            : formatAmountForDisplay(breakdown[touched].amount))
-                      : displayAmount,
-                  style: theme.textStyles.headlineSmallEmphasis,
+          Transform.translate(
+            offset: const Offset(0, -4),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  displayLabel,
+                  style: theme.textStyles.bodySmallMuted,
                   textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ],
+                const SizedBox(height: 2),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    isValidTouched
+                        ? (privacyMode
+                              ? '****'
+                              : formatAmountForDisplay(breakdown[touched].amount))
+                        : displayAmount,
+                    style: theme.textStyles.headlineSmallEmphasis,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

@@ -263,7 +263,7 @@ class _StatisticsDashboardBodyState extends State<StatisticsDashboardBody> {
       itemCount: data.breakdown.length,
       itemBuilder: (context, index) {
         final item = data.breakdown[index];
-        final color = colorForSubType(context, item.subType, index);
+        final color = colorForCategoryIndex(context, index);
         return CategoryRankingTile(
           key: ValueKey('${widget.rankingAnimationTrigger}-${item.subType}'),
           subType: item.subType,
