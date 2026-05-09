@@ -16,6 +16,7 @@ import 'package:mobile/shared/scopes/data_refresh.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/refresh_snap_back.dart';
 import 'package:mobile/shared/utils/snackbar.dart';
+import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
 import 'package:mobile/shared/widgets/app_refresh_indicator.dart';
 import 'package:mobile/shared/widgets/confirm_delete_dialog.dart';
@@ -76,6 +77,7 @@ class _TagEntriesPageState extends State<TagEntriesPage> {
       accounts[account.id] = account;
     }
     final usageCount = await TagRepository.getUsageCount(widget.tagId);
+    final summary = await EntryRepository.getTagIncomeExpenseSummary(widget.tagId);
     final firstBatch = await _loadEntryBatch(offset: 0);
     _entries.addAll(firstBatch.entries);
     _entryIdToTagTitles.addAll(firstBatch.entryIdToTagTitles);
@@ -85,6 +87,8 @@ class _TagEntriesPageState extends State<TagEntriesPage> {
       title: tag['title'] as String? ?? widget.initialTitle,
       accounts: accounts,
       usageCount: usageCount,
+      income: summary.income,
+      expense: summary.expense,
     );
   }
 
@@ -305,15 +309,7 @@ class _TagEntriesPageState extends State<TagEntriesPage> {
               ),
               slivers: [
                 appSliverRefreshControl(onRefresh: _onPullToRefresh),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                    child: Text(
-                      '共 ${data.usageCount} 筆紀錄',
-                      style: theme.textStyles.bodySmallMuted,
-                    ),
-                  ),
-                ),
+                SliverToBoxAdapter(child: _TagSummaryBlock(data: data)),
                 if (_entries.isEmpty)
                   SliverFillRemaining(
                     hasScrollBody: false,
@@ -402,11 +398,16 @@ class _TagEntriesData {
     required this.title,
     required this.accounts,
     required this.usageCount,
+    required this.income,
+    required this.expense,
   });
 
   final String title;
   final Map<String, Account> accounts;
   final int usageCount;
+  final double income;
+  final double expense;
+  double get balance => income - expense;
 }
 
 class _EntryBatchData {
@@ -414,4 +415,93 @@ class _EntryBatchData {
 
   final List<Map<String, Object?>> entries;
   final Map<String, List<String>> entryIdToTagTitles;
+}
+
+class _TagSummaryBlock extends StatelessWidget {
+  const _TagSummaryBlock({required this.data});
+
+  final _TagEntriesData data;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final accountingColors = AccountingColors.of(context);
+    final balanceColor = data.balance >= 0
+        ? accountingColors.income
+        : accountingColors.expense;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('共 ${data.usageCount} 筆紀錄', style: theme.textStyles.bodySmallMuted),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _SummaryMetric(
+                      label: '支出',
+                      value: '\$${formatAmountForDisplay(data.expense)}',
+                      color: accountingColors.expense,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _SummaryMetric(
+                      label: '收入',
+                      value: '\$${formatAmountForDisplay(data.income)}',
+                      color: accountingColors.income,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _SummaryMetric(
+                      label: '結餘',
+                      value:
+                          '${data.balance >= 0 ? '+' : '-'}\$${formatAmountForDisplay(data.balance.abs())}',
+                      color: balanceColor,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SummaryMetric extends StatelessWidget {
+  const _SummaryMetric({required this.label, required this.value, required this.color});
+
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: theme.textStyles.labelSmallMuted),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textStyles.titleSmallEmphasis.copyWith(color: color),
+        ),
+      ],
+    );
+  }
 }

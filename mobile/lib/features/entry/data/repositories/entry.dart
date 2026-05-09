@@ -98,6 +98,28 @@ class EntryRepository {
     );
   }
 
+  static Future<({double income, double expense})> getTagIncomeExpenseSummary(
+    String tagId,
+  ) async {
+    final db = await AppDatabase.database;
+    final rows = await db.rawQuery(
+      'SELECT '
+      'SUM(CASE WHEN e.type = ? THEN e.amount ELSE 0 END) AS income, '
+      'SUM(CASE WHEN e.type = ? THEN e.amount ELSE 0 END) AS expense '
+      'FROM $_table e '
+      'JOIN $_entryTagTable et ON et.entry_id = e.id '
+      'WHERE et.tag_id = ? '
+      'AND et.deleted_at IS NULL '
+      'AND e.deleted_at IS NULL',
+      ['income', 'expense', tagId],
+    );
+    final row = rows.single;
+    return (
+      income: (row['income'] as num?)?.toDouble() ?? 0.0,
+      expense: (row['expense'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+
   static Future<List<Map<String, Object?>>> searchJournalBatch({
     required String query,
     required List<String> matchingTypeNames,
