@@ -75,7 +75,7 @@ class _JournalSearchPageState extends State<JournalSearchPage> {
     _loadAccounts();
     final query = _debouncedQuery.trim();
     if (query.isNotEmpty) {
-      _startSearch(query);
+      _startSearch(query, clearExistingResults: false);
     }
   }
 
@@ -96,7 +96,7 @@ class _JournalSearchPageState extends State<JournalSearchPage> {
     widget.onDataChanged();
     final query = _debouncedQuery.trim();
     if (query.isNotEmpty) {
-      _startSearch(query);
+      _startSearch(query, clearExistingResults: false);
     }
   }
 
@@ -125,7 +125,7 @@ class _JournalSearchPageState extends State<JournalSearchPage> {
     }
   }
 
-  Future<void> _startSearch(String query) async {
+  Future<void> _startSearch(String query, {bool clearExistingResults = true}) async {
     final generation = ++_searchGeneration;
     if (query.trim().isEmpty) {
       setState(() {
@@ -140,8 +140,10 @@ class _JournalSearchPageState extends State<JournalSearchPage> {
     }
 
     setState(() {
-      _entries.clear();
-      _entryIdToTagTitles.clear();
+      if (clearExistingResults) {
+        _entries.clear();
+        _entryIdToTagTitles.clear();
+      }
       _hasMoreResults = true;
       _initialSearchInProgress = true;
       _loadMoreInProgress = false;
@@ -155,6 +157,8 @@ class _JournalSearchPageState extends State<JournalSearchPage> {
       );
       if (!mounted || generation != _searchGeneration) return;
       setState(() {
+        _entries.clear();
+        _entryIdToTagTitles.clear();
         _entries.addAll(batch.entries);
         _entryIdToTagTitles.addAll(batch.entryIdToTagTitles);
         _hasMoreResults = batch.entries.length == _searchBatchSize;
@@ -365,7 +369,7 @@ class _JournalSearchPageState extends State<JournalSearchPage> {
     }
 
     final activeQuery = _debouncedQuery.trim();
-    if (_initialSearchInProgress) {
+    if (_initialSearchInProgress && _entries.isEmpty) {
       return _KeyboardDismissibleViewport(
         child: Center(
           child: CircularProgressIndicator(color: theme.colorScheme.primary),

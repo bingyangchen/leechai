@@ -87,8 +87,6 @@ class _NetWorthTrendSectionState extends State<NetWorthTrendSection> {
         final latest = data.last;
         final first = data.first;
         final netChange = latest.netWorth - first.netWorth;
-        final assetChange = latest.totalAssets - first.totalAssets;
-        final liabilityChange = latest.totalLiabilities - first.totalLiabilities;
 
         final chartHeight = (MediaQuery.of(context).size.height * 0.35).clamp(
           200.0,
@@ -97,7 +95,7 @@ class _NetWorthTrendSectionState extends State<NetWorthTrendSection> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildHeroMetrics(context, latest.netWorth, netChange),
+            _buildHeroMetrics(context, latest.netWorth, netChange, first.netWorth),
             const SizedBox(height: 24),
             SizedBox(
               height: chartHeight,
@@ -106,8 +104,6 @@ class _NetWorthTrendSectionState extends State<NetWorthTrendSection> {
                 child: NetWorthLineChart(data: data, privacyMode: widget.privacyMode),
               ),
             ),
-            const SizedBox(height: 24),
-            _buildChangeBreakdown(context, assetChange, liabilityChange),
           ],
         );
       },
@@ -138,14 +134,25 @@ class _NetWorthTrendSectionState extends State<NetWorthTrendSection> {
     );
   }
 
-  Widget _buildHeroMetrics(BuildContext context, double netWorth, double netChange) {
+  Widget _buildHeroMetrics(
+    BuildContext context,
+    double netWorth,
+    double netChange,
+    double baselineNetWorth,
+  ) {
     final theme = Theme.of(context);
     final netStr = widget.privacyMode ? '****' : formatAmountForDisplay(netWorth);
-    final changeStr = widget.privacyMode
+    final amountChangeStr = widget.privacyMode
         ? '****'
         : (netChange >= 0
               ? '+\$${formatAmountForDisplay(netChange)}'
               : '-\$${formatAmountForDisplay(-netChange)}');
+    final changePercentStr = widget.privacyMode || baselineNetWorth.abs() < 0.01
+        ? null
+        : _formatPercentChange(netChange / baselineNetWorth.abs() * 100);
+    final changeStr = changePercentStr == null
+        ? amountChangeStr
+        : '$amountChangeStr ($changePercentStr)';
     final accountingColors = AccountingColors.of(context);
     final changeColor = netChange >= 0
         ? accountingColors.income
@@ -166,11 +173,13 @@ class _NetWorthTrendSectionState extends State<NetWorthTrendSection> {
                 color: changeColor,
               ),
               const SizedBox(width: 4),
-              Text(
-                '區間淨變化 $changeStr',
-                style: theme.textStyles.bodyMuted.copyWith(
-                  color: changeColor,
-                  fontWeight: FontWeight.w500,
+              Flexible(
+                child: Text(
+                  '區間淨變化 $changeStr',
+                  style: theme.textStyles.bodyMuted.copyWith(
+                    color: changeColor,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ],
@@ -179,80 +188,12 @@ class _NetWorthTrendSectionState extends State<NetWorthTrendSection> {
       ),
     );
   }
+}
 
-  Widget _buildChangeBreakdown(
-    BuildContext context,
-    double assetChange,
-    double liabilityChange,
-  ) {
-    final theme = Theme.of(context);
-    final incomeColor = AccountingColors.of(context).income;
-    final assetStr = widget.privacyMode
-        ? '****'
-        : (assetChange >= 0
-              ? '+\$${formatAmountForDisplay(assetChange)}'
-              : '-\$${formatAmountForDisplay(-assetChange)}');
-    final liabilityStr = widget.privacyMode
-        ? '****'
-        : (liabilityChange >= 0
-              ? '+\$${formatAmountForDisplay(liabilityChange)}'
-              : '-\$${formatAmountForDisplay(-liabilityChange)}');
-    final assetValueColor = assetChange >= 0 ? incomeColor : theme.colorScheme.error;
-    final liabilityValueColor = liabilityChange >= 0
-        ? theme.colorScheme.error
-        : incomeColor;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Material(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(20),
-        clipBehavior: Clip.antiAlias,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildChangeBreakdownRow(
-                context,
-                leading: '總資產',
-                value: assetStr,
-                valueColor: assetValueColor,
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: Divider(height: 1, thickness: 1, color: theme.dividerColor),
-              ),
-              _buildChangeBreakdownRow(
-                context,
-                leading: '總負債',
-                value: liabilityStr,
-                valueColor: liabilityValueColor,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildChangeBreakdownRow(
-    BuildContext context, {
-    required String leading,
-    required String value,
-    required Color valueColor,
-  }) {
-    final theme = Theme.of(context);
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.baseline,
-      textBaseline: TextBaseline.alphabetic,
-      children: [
-        Expanded(child: Text(leading, style: theme.textStyles.bodyMuted)),
-        Text(
-          value,
-          style: theme.textStyles.titleSmallEmphasis.copyWith(color: valueColor),
-        ),
-      ],
-    );
-  }
+String _formatPercentChange(double percent) {
+  final absPercent = percent.abs();
+  final digits = absPercent >= 100 ? 0 : 1;
+  final value = absPercent.toStringAsFixed(digits).replaceFirst(RegExp(r'\.0$'), '');
+  final sign = percent >= 0 ? '+' : '-';
+  return '$sign$value%';
 }
