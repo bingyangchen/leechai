@@ -154,6 +154,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
       showCloseButton: false,
       mode: AppBottomSheetMode.static,
       builder: (ctx) => _MarketValueSheetContent(
+        account: data.account,
         currentValue: oldBalance,
         onConfirm: (value) => Navigator.of(ctx).pop(value),
         onCancel: () => Navigator.of(ctx).pop(),
@@ -538,11 +539,13 @@ class _EntryBatchData {
 
 class _MarketValueSheetContent extends StatefulWidget {
   const _MarketValueSheetContent({
+    required this.account,
     required this.currentValue,
     required this.onConfirm,
     required this.onCancel,
   });
 
+  final Account account;
   final double currentValue;
   final ValueChanged<double> onConfirm;
   final VoidCallback onCancel;
@@ -552,7 +555,9 @@ class _MarketValueSheetContent extends StatefulWidget {
 }
 
 class _MarketValueSheetContentState extends State<_MarketValueSheetContent> {
-  late TextEditingController _controller;
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _controller;
+  final _focusNode = FocusNode();
 
   @override
   void initState() {
@@ -560,7 +565,9 @@ class _MarketValueSheetContentState extends State<_MarketValueSheetContent> {
     _controller = TextEditingController(
       text: formatAmountForDisplay(widget.currentValue),
     );
+    _controller.addListener(() => setState(() {}));
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusNode.requestFocus();
       if (_controller.text.isNotEmpty) {
         _controller.selection = TextSelection(
           baseOffset: 0,
@@ -573,48 +580,171 @@ class _MarketValueSheetContentState extends State<_MarketValueSheetContent> {
   @override
   void dispose() {
     _controller.dispose();
+    _focusNode.dispose();
     super.dispose();
+  }
+
+  String get _accountName =>
+      widget.account.name ??
+      (AssetTypeX.fromName(widget.account.subType)?.label ??
+          LiabilityTypeX.fromName(widget.account.subType)?.label ??
+          widget.account.subType);
+
+  double? get _value {
+    final raw = stripAmount(_controller.text);
+    if (raw.isEmpty) return null;
+    return double.tryParse(raw);
+  }
+
+  double? get _diff {
+    final value = _value;
+    if (value == null) return null;
+    return value - widget.currentValue;
+  }
+
+  String get _diffLabel {
+    final diff = _diff;
+    if (diff == null) return '輸入新市值後會自動計算差額';
+    if (diff == 0) return '市值尚未變動';
+    final sign = diff > 0 ? '+' : '-';
+    return '未實現損益 $sign\$${formatAmountForDisplay(diff.abs())}';
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+    final value = _value;
+    if (value == null || value == widget.currentValue) return;
+    widget.onConfirm(value);
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final accountingColors = AccountingColors.of(context);
     final viewInsets = MediaQuery.viewInsetsOf(context);
-    return Padding(
-      padding: EdgeInsets.fromLTRB(24, 8, 24, 24 + viewInsets.bottom),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          TextField(
-            controller: _controller,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [ThousandsSeparatorInputFormatter()],
-            decoration: const InputDecoration(
-              labelText: '目前市值',
-              hintText: '輸入金額',
-              prefixText: '\$ ',
-            ),
-            autofocus: true,
-          ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+    final diff = _diff;
+    final diffColor = diff == null || diff == 0
+        ? theme.colorScheme.onSurfaceVariant
+        : diff > 0
+        ? accountingColors.income
+        : accountingColors.expense;
+    final canSubmit = _value != null && _value! >= 0 && _value != widget.currentValue;
+
+    return Form(
+      key: _formKey,
+      child: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.opaque,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(24, 8, 24, 24 + viewInsets.bottom),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextButton(onPressed: widget.onCancel, child: const Text('取消')),
-              const SizedBox(width: 8),
-              FilledButton(
-                onPressed: () {
-                  final raw = stripAmount(_controller.text);
-                  final value = double.tryParse(raw);
-                  if (value != null && value >= 0) {
-                    widget.onConfirm(value);
-                  }
-                },
-                child: const Text('確定'),
+              Row(
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      widget.account.displayIcon,
+                      color: theme.colorScheme.primary,
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _accountName,
+                          style: theme.textStyles.titleEmphasis,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '目前帳面值 \$${formatAmountForDisplay(widget.currentValue)}',
+                          style: theme.textStyles.bodySmallMuted,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
+              const SizedBox(height: 28),
+              Text('新的市值', style: theme.textStyles.titleMuted),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _controller,
+                focusNode: _focusNode,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [ThousandsSeparatorInputFormatter()],
+                decoration: const InputDecoration(
+                  hintText: '0',
+                  prefixText: '\$ ',
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.zero,
+                  isDense: true,
+                ),
+                style: theme.textStyles.headline.copyWith(
+                  color: theme.colorScheme.primary,
+                ),
+                textAlign: TextAlign.right,
+                autofocus: true,
+                validator: (value) {
+                  final raw = value == null ? '' : stripAmount(value);
+                  if (raw.isEmpty) return '請輸入目前市值';
+                  final amount = double.tryParse(raw);
+                  if (amount == null || amount < 0) return '請輸入有效金額';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color: diffColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      diff == null || diff == 0
+                          ? Icons.horizontal_rule
+                          : diff > 0
+                          ? Icons.trending_up
+                          : Icons.trending_down,
+                      color: diffColor,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        _diffLabel,
+                        style: theme.textStyles.body.copyWith(color: diffColor),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: canSubmit ? _submit : null,
+                  child: const Text('記錄市值更新'),
+                ),
+              ),
+              TextButton(onPressed: widget.onCancel, child: const Text('取消')),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
