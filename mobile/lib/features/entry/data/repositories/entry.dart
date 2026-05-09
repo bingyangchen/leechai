@@ -137,9 +137,9 @@ class EntryRepository {
       'LOWER(e.occurred_at) LIKE ?',
       'CAST(e.amount AS TEXT) LIKE ?',
       'LOWER(COALESCE(debit.name, \'\')) LIKE ?',
-      'LOWER(debit.sub_type) LIKE ?',
       'LOWER(COALESCE(credit.name, \'\')) LIKE ?',
-      'LOWER(credit.sub_type) LIKE ?',
+      '(e.type = ? AND LOWER(debit.sub_type) LIKE ?)',
+      '(e.type = ? AND LOWER(credit.sub_type) LIKE ?)',
       'EXISTS ('
           'SELECT 1 '
           'FROM $_entryTagTable et '
@@ -156,7 +156,9 @@ class EntryRepository {
       numericQuery.isEmpty ? likeQuery : '%$numericQuery%',
       likeQuery,
       likeQuery,
+      'expense',
       likeQuery,
+      'income',
       likeQuery,
       likeQuery,
     ];
