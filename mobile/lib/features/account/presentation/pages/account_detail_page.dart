@@ -398,7 +398,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
                     onRefresh: () =>
                         runRefreshWithSnapBack(_scrollController, () async {
                           // NOTE: placebo effect
-                          await Future.delayed(const Duration(milliseconds: 800));
+                          await Future.delayed(const Duration(milliseconds: 600));
                           _onRefresh();
                           await _future;
                         }),
@@ -446,7 +446,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
                 appSliverRefreshControl(
                   onRefresh: () => runRefreshWithSnapBack(_scrollController, () async {
                     // NOTE: placebo effect
-                    await Future.delayed(const Duration(milliseconds: 800));
+                    await Future.delayed(const Duration(milliseconds: 600));
                     _onRefresh();
                     await _future;
                   }),

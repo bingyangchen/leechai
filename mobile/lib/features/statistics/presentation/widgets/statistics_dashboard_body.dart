@@ -183,7 +183,7 @@ class _StatisticsDashboardBodyState extends State<StatisticsDashboardBody> {
           appSliverRefreshControl(
             onRefresh: () => runRefreshWithSnapBack(_scrollController, () async {
               // NOTE: placebo effect
-              await Future.delayed(const Duration(milliseconds: 800));
+              await Future.delayed(const Duration(milliseconds: 600));
               _onRefresh();
               await _future;
             }),
