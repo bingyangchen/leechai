@@ -62,7 +62,7 @@ class EntryRepository {
     return rows.isNotEmpty;
   }
 
-  static Future<List<Map<String, Object?>>> getByAccountIdPage(
+  static Future<List<Map<String, Object?>>> getByAccountIdBatch(
     String accountId, {
     required int limit,
     required int offset,
@@ -78,7 +78,7 @@ class EntryRepository {
     );
   }
 
-  static Future<List<Map<String, Object?>>> searchJournalPage({
+  static Future<List<Map<String, Object?>>> searchJournalBatch({
     required String query,
     required List<String> matchingTypeNames,
     required int limit,

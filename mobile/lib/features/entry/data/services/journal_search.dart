@@ -5,8 +5,8 @@ import 'package:mobile/features/entry/data/repositories/entry.dart'
     show EntryRepository;
 import 'package:mobile/features/entry/domain/entry_type.dart';
 
-class JournalSearchResultPage {
-  const JournalSearchResultPage({
+class JournalSearchResultBatch {
+  const JournalSearchResultBatch({
     required this.entries,
     required this.entryIdToTagTitles,
   });
@@ -26,12 +26,12 @@ class JournalSearchService {
     return accounts;
   }
 
-  static Future<JournalSearchResultPage> searchPage({
+  static Future<JournalSearchResultBatch> search({
     required String query,
     required int limit,
     required int offset,
   }) async {
-    final entries = await EntryRepository.searchJournalPage(
+    final entries = await EntryRepository.searchJournalBatch(
       query: query,
       matchingTypeNames: _matchingTypeNames(query),
       limit: limit,
@@ -39,7 +39,7 @@ class JournalSearchService {
     );
     final entryIds = entries.map((entry) => entry['id'] as String).toList();
     final entryIdToTagTitles = await EntryRepository.getTagTitlesForEntries(entryIds);
-    return JournalSearchResultPage(
+    return JournalSearchResultBatch(
       entries: entries,
       entryIdToTagTitles: entryIdToTagTitles,
     );

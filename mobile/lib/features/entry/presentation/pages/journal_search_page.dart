@@ -29,7 +29,7 @@ class JournalSearchPage extends StatefulWidget {
 }
 
 class _JournalSearchPageState extends State<JournalSearchPage> {
-  static const int _searchPageSize = 30;
+  static const int _searchBatchSize = 30;
   static const double _loadMoreExtentAfterThresholdPx = 640;
 
   final TextEditingController _queryController = TextEditingController();
@@ -148,16 +148,16 @@ class _JournalSearchPageState extends State<JournalSearchPage> {
       _searchError = null;
     });
     try {
-      final page = await JournalSearchService.searchPage(
+      final batch = await JournalSearchService.search(
         query: query,
-        limit: _searchPageSize,
+        limit: _searchBatchSize,
         offset: 0,
       );
       if (!mounted || generation != _searchGeneration) return;
       setState(() {
-        _entries.addAll(page.entries);
-        _entryIdToTagTitles.addAll(page.entryIdToTagTitles);
-        _hasMoreResults = page.entries.length == _searchPageSize;
+        _entries.addAll(batch.entries);
+        _entryIdToTagTitles.addAll(batch.entryIdToTagTitles);
+        _hasMoreResults = batch.entries.length == _searchBatchSize;
         _initialSearchInProgress = false;
       });
       WidgetsBinding.instance.addPostFrameCallback((_) => _maybeLoadMoreResults());
@@ -200,16 +200,16 @@ class _JournalSearchPageState extends State<JournalSearchPage> {
       _searchError = null;
     });
     try {
-      final page = await JournalSearchService.searchPage(
+      final batch = await JournalSearchService.search(
         query: query,
-        limit: _searchPageSize,
+        limit: _searchBatchSize,
         offset: _entries.length,
       );
       if (!mounted || generation != _searchGeneration) return;
       setState(() {
-        _entries.addAll(page.entries);
-        _entryIdToTagTitles.addAll(page.entryIdToTagTitles);
-        _hasMoreResults = page.entries.length == _searchPageSize;
+        _entries.addAll(batch.entries);
+        _entryIdToTagTitles.addAll(batch.entryIdToTagTitles);
+        _hasMoreResults = batch.entries.length == _searchBatchSize;
       });
       WidgetsBinding.instance.addPostFrameCallback((_) => _maybeLoadMoreResults());
     } catch (error, stackTrace) {

@@ -36,7 +36,7 @@ class AccountDetailPage extends StatefulWidget {
 }
 
 class _AccountDetailPageState extends State<AccountDetailPage> {
-  static const int _entryPageSize = 30;
+  static const int _entryBatchSize = 30;
   static const double _loadMoreExtentAfterThresholdPx = 640;
 
   bool _privacyMode = false;
@@ -77,10 +77,10 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
     final balances = await AccountBalanceService.getBalances();
     final balance = balances[widget.accountId] ?? 0;
     final hasEntries = await EntryRepository.existsByAccountId(widget.accountId);
-    final firstPage = await _loadEntryPage(offset: 0);
-    _entries.addAll(firstPage.entries);
-    _entryIdToTagTitles.addAll(firstPage.entryIdToTagTitles);
-    _hasMoreEntries = firstPage.entries.length == _entryPageSize;
+    final firstBatch = await _loadEntryBatch(offset: 0);
+    _entries.addAll(firstBatch.entries);
+    _entryIdToTagTitles.addAll(firstBatch.entryIdToTagTitles);
+    _hasMoreEntries = firstBatch.entries.length == _entryBatchSize;
 
     return _DetailData(
       account: account,
@@ -90,15 +90,15 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
     );
   }
 
-  Future<_EntryPageData> _loadEntryPage({required int offset}) async {
-    final entries = await EntryRepository.getByAccountIdPage(
+  Future<_EntryBatchData> _loadEntryBatch({required int offset}) async {
+    final entries = await EntryRepository.getByAccountIdBatch(
       widget.accountId,
-      limit: _entryPageSize,
+      limit: _entryBatchSize,
       offset: offset,
     );
     final entryIds = entries.map((e) => e['id'] as String).toList();
     final entryIdToTagTitles = await EntryRepository.getTagTitlesForEntries(entryIds);
-    return _EntryPageData(entries: entries, entryIdToTagTitles: entryIdToTagTitles);
+    return _EntryBatchData(entries: entries, entryIdToTagTitles: entryIdToTagTitles);
   }
 
   void _maybeLoadMoreEntries() {
@@ -121,12 +121,12 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
       _loadMoreError = null;
     });
     try {
-      final page = await _loadEntryPage(offset: _entries.length);
+      final batch = await _loadEntryBatch(offset: _entries.length);
       if (!mounted) return;
       setState(() {
-        _entries.addAll(page.entries);
-        _entryIdToTagTitles.addAll(page.entryIdToTagTitles);
-        _hasMoreEntries = page.entries.length == _entryPageSize;
+        _entries.addAll(batch.entries);
+        _entryIdToTagTitles.addAll(batch.entryIdToTagTitles);
+        _hasMoreEntries = batch.entries.length == _entryBatchSize;
       });
     } catch (error) {
       if (!mounted) return;
@@ -529,8 +529,8 @@ class _DetailData {
   final bool hasEntries;
 }
 
-class _EntryPageData {
-  _EntryPageData({required this.entries, required this.entryIdToTagTitles});
+class _EntryBatchData {
+  _EntryBatchData({required this.entries, required this.entryIdToTagTitles});
 
   final List<Map<String, Object?>> entries;
   final Map<String, List<String>> entryIdToTagTitles;
