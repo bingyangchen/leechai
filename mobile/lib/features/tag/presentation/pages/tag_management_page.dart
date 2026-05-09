@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/features/entry/data/repositories/tag.dart' show TagRepository;
+import 'package:mobile/features/tag/presentation/pages/tag_entries_page.dart';
 import 'package:mobile/features/tag/presentation/widgets/tag_form_sheet.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
 
@@ -19,6 +20,22 @@ class _TagManagementPageState extends State<TagManagementPage> {
   void initState() {
     super.initState();
     _loadTags();
+    widget.refreshTrigger?.addListener(_onExternalRefresh);
+  }
+
+  @override
+  void didUpdateWidget(covariant TagManagementPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.refreshTrigger != widget.refreshTrigger) {
+      oldWidget.refreshTrigger?.removeListener(_onExternalRefresh);
+      widget.refreshTrigger?.addListener(_onExternalRefresh);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.refreshTrigger?.removeListener(_onExternalRefresh);
+    super.dispose();
   }
 
   void _loadTags() {
@@ -27,14 +44,22 @@ class _TagManagementPageState extends State<TagManagementPage> {
     });
   }
 
+  void _onExternalRefresh() {
+    if (mounted) _loadTags();
+  }
+
   void _onTagChanged() {
     if (!mounted) return;
-    _loadTags();
-    (widget.refreshTrigger as ValueNotifier<int>?)?.value++;
+    final refreshTrigger = widget.refreshTrigger;
+    if (refreshTrigger is ValueNotifier<int>) {
+      refreshTrigger.value++;
+    } else {
+      _loadTags();
+    }
   }
 
   Future<void> _onAddTag() async {
-    final updated = await showTagFormSheet(context, onRestore: _onTagChanged);
+    final updated = await showTagFormSheet(context);
     if (updated == true && mounted) _onTagChanged();
   }
 
@@ -42,10 +67,14 @@ class _TagManagementPageState extends State<TagManagementPage> {
     final id = tag['id'] as String?;
     final title = tag['title'] as String?;
     if (id == null || title == null) return;
-    final updated = await showTagFormSheet(
-      context,
-      existingTag: {'id': id, 'title': title},
-      onRestore: _onTagChanged,
+    final updated = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => TagEntriesPage(
+          tagId: id,
+          initialTitle: title,
+          refreshTrigger: widget.refreshTrigger,
+        ),
+      ),
     );
     if (updated == true && mounted) _onTagChanged();
   }
@@ -150,6 +179,12 @@ class _TagList extends StatelessWidget {
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.chevron_right,
+                      size: 20,
+                      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
                     ),
                   ],
                 ),

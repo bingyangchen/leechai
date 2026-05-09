@@ -78,6 +78,26 @@ class EntryRepository {
     );
   }
 
+  static Future<List<Map<String, Object?>>> getByTagIdBatch(
+    String tagId, {
+    required int limit,
+    required int offset,
+  }) async {
+    final db = await AppDatabase.database;
+    return db.rawQuery(
+      'SELECT e.* '
+      'FROM $_table e '
+      'JOIN $_entryTagTable et ON et.entry_id = e.id '
+      'WHERE et.tag_id = ? '
+      'AND et.deleted_at IS NULL '
+      'AND e.deleted_at IS NULL '
+      'AND e.type != ? '
+      'ORDER BY e.occurred_at DESC, e.created_at DESC, e.id DESC '
+      'LIMIT ? OFFSET ?',
+      [tagId, 'adjustment', limit, offset],
+    );
+  }
+
   static Future<List<Map<String, Object?>>> searchJournalBatch({
     required String query,
     required List<String> matchingTypeNames,
