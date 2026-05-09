@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/features/account/domain/asset_type.dart';
 import 'package:mobile/features/account/domain/constants.dart';
 import 'package:mobile/features/entry/domain/entry_type.dart';
 import 'package:sqflite/sqflite.dart';
@@ -41,6 +42,14 @@ Future<void> _insertAccounts(Database db, DateTime currentMonth) async {
       name: '測試儲蓄',
       icon: Icons.savings.codePoint.toString(),
       initialBalance: 120000.0,
+    ),
+    (
+      id: 'debug_investment',
+      type: 'asset',
+      subType: AssetType.securities.name,
+      name: '測試台股帳戶',
+      icon: AssetType.securities.icon.codePoint.toString(),
+      initialBalance: 85000.0,
     ),
     (
       id: 'debug_credit_card',
@@ -256,18 +265,92 @@ Future<void> _insertEntries(
     _DebugEntry(
       id: 'debug_entry_market_adjustment_previous',
       type: EntryType.adjustment,
-      debitAccountId: 'debug_savings',
+      debitAccountId: 'debug_investment',
       creditAccountId: defaultEquityUnrealizedGainId,
       amount: 2300,
       memo: '市值更新',
       occurredAt: _timestamp(previousMonth, 26, 17),
     ),
     ..._cashTestEntries(currentMonth, previousMonth, currentMonthLatestDay),
+    ..._investmentEntries(currentMonth, previousMonth, currentMonthLatestDay),
   ];
 
   for (final entry in entries) {
     await _insertEntry(db, entry);
   }
+}
+
+List<_DebugEntry> _investmentEntries(
+  DateTime currentMonth,
+  DateTime previousMonth,
+  int currentMonthLatestDay,
+) {
+  return [
+    _DebugEntry(
+      id: 'debug_investment_buy_etf_previous',
+      type: EntryType.transfer,
+      debitAccountId: 'debug_investment',
+      creditAccountId: 'debug_checking',
+      amount: 25000,
+      memo: '定期定額買進 ETF',
+      occurredAt: _timestamp(previousMonth, 6, 10),
+    ),
+    _DebugEntry(
+      id: 'debug_investment_buy_stock_previous',
+      type: EntryType.transfer,
+      debitAccountId: 'debug_investment',
+      creditAccountId: 'debug_checking',
+      amount: 18000,
+      memo: '加碼台積電',
+      occurredAt: _timestamp(previousMonth, 13, 10),
+    ),
+    _DebugEntry(
+      id: 'debug_investment_market_gain_previous',
+      type: EntryType.adjustment,
+      debitAccountId: 'debug_investment',
+      creditAccountId: defaultEquityUnrealizedGainId,
+      amount: 6200,
+      memo: '市值更新',
+      occurredAt: _timestamp(previousMonth, 28, 16),
+    ),
+    _DebugEntry(
+      id: 'debug_investment_dividend_current',
+      type: EntryType.income,
+      debitAccountId: 'debug_investment',
+      creditAccountId: 'default_income_2',
+      amount: 1350,
+      memo: 'ETF 配息再投入',
+      occurredAt: _currentMonthTimestamp(currentMonth, currentMonthLatestDay, 3, 10),
+      tagIds: const ['debug_tag_work'],
+    ),
+    _DebugEntry(
+      id: 'debug_investment_sell_current',
+      type: EntryType.transfer,
+      debitAccountId: 'debug_checking',
+      creditAccountId: 'debug_investment',
+      amount: 12000,
+      memo: '部分獲利了結',
+      occurredAt: _currentMonthTimestamp(currentMonth, currentMonthLatestDay, 9, 13),
+    ),
+    _DebugEntry(
+      id: 'debug_investment_buy_bond_current',
+      type: EntryType.transfer,
+      debitAccountId: 'debug_investment',
+      creditAccountId: 'debug_savings',
+      amount: 15000,
+      memo: '買進債券 ETF',
+      occurredAt: _currentMonthTimestamp(currentMonth, currentMonthLatestDay, 14, 10),
+    ),
+    _DebugEntry(
+      id: 'debug_investment_market_loss_current',
+      type: EntryType.adjustment,
+      debitAccountId: defaultEquityUnrealizedGainId,
+      creditAccountId: 'debug_investment',
+      amount: 2800,
+      memo: '市值更新',
+      occurredAt: _currentMonthTimestamp(currentMonth, currentMonthLatestDay, 24, 16),
+    ),
+  ];
 }
 
 List<_DebugEntry> _cashTestEntries(
