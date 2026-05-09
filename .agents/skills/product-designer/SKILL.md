@@ -49,6 +49,10 @@ Think as a designer who ships code. Every decision considers:
 4. **Call out edge cases**: Empty states, loading, errors, first-time vs returning users, each with suitable copy.
 5. **Check comfort and polish**: Would this feel comfortable, look refined, and read naturally in the final app?
 
+## When Reviewing UI/UX
+
+Before saying "No findings" or "LGTM" in a UI/UX review, explicitly check visual hierarchy, spacing, touch comfort, interaction affordance, responsive behavior, accessibility, copy clarity, and color semantics.
+
 ## UX Principles
 
 - **Progressive disclosure**: Show only what’s needed; reveal more on demand.
