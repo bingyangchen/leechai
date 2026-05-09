@@ -39,9 +39,11 @@ class CategoryMonthlyBarChart extends StatelessWidget {
             maxY: maxY,
             barTouchData: BarTouchData(
               touchTooltipData: BarTouchTooltipData(
-                direction: TooltipDirection.bottom,
+                direction: TooltipDirection.top,
                 getTooltipColor: (BarChartGroupData group) =>
                     theme.colorScheme.surfaceContainerHighest,
+                fitInsideHorizontally: true,
+                fitInsideVertically: true,
                 tooltipPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 tooltipMargin: 8,
                 getTooltipItem: (group, groupIndex, rod, rodIndex) {
