@@ -45,12 +45,13 @@ class CategoryDonutChart extends StatelessWidget {
         children: [
           PieChart(
             PieChartData(
+              startDegreeOffset: -90,
               pieTouchData: PieTouchData(
                 touchCallback: (event, response) {
                   onSectionTouched(response?.touchedSection?.touchedSectionIndex);
                 },
               ),
-              sectionsSpace: 4,
+              sectionsSpace: 2,
               centerSpaceRadius: 70,
               sections: breakdown.asMap().entries.map((e) {
                 final i = e.key;
