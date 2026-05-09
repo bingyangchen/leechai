@@ -38,6 +38,8 @@ Ensure that the API server is running locally first.
 
 ### Build for iOS
 
+0. Remember to update `version` in `pubspec.yaml`.
+
 1. From project root, go to `mobile`:
 
    ```bash
