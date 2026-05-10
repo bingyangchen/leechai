@@ -45,6 +45,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
   final List<Map<String, Object?>> _entries = [];
   final Map<String, List<String>> _entryIdToTagTitles = {};
   bool _hasMoreEntries = true;
+  bool _isLoadingInitialEntries = false;
   bool _isLoadingMoreEntries = false;
   Object? _loadMoreError;
 
@@ -65,29 +66,34 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
     _entries.clear();
     _entryIdToTagTitles.clear();
     _hasMoreEntries = true;
+    _isLoadingInitialEntries = true;
     _isLoadingMoreEntries = false;
     _loadMoreError = null;
 
-    final account = await AccountRepository.getById(widget.accountId);
-    if (account == null) throw StateError('Account not found: ${widget.accountId}');
-    final allAccounts = <String, Account>{};
-    for (final a in await AccountRepository.getAll()) {
-      allAccounts[a.id] = a;
-    }
-    final balances = await AccountBalanceService.getBalances();
-    final balance = balances[widget.accountId] ?? 0;
-    final hasEntries = await EntryRepository.existsByAccountId(widget.accountId);
-    final firstBatch = await _loadEntryBatch(offset: 0);
-    _entries.addAll(firstBatch.entries);
-    _entryIdToTagTitles.addAll(firstBatch.entryIdToTagTitles);
-    _hasMoreEntries = firstBatch.entries.length == _entryBatchSize;
+    try {
+      final account = await AccountRepository.getById(widget.accountId);
+      if (account == null) throw StateError('Account not found: ${widget.accountId}');
+      final allAccounts = <String, Account>{};
+      for (final a in await AccountRepository.getAll()) {
+        allAccounts[a.id] = a;
+      }
+      final balances = await AccountBalanceService.getBalances();
+      final balance = balances[widget.accountId] ?? 0;
+      final hasEntries = await EntryRepository.existsByAccountId(widget.accountId);
+      final firstBatch = await _loadEntryBatch(offset: 0);
+      _entries.addAll(firstBatch.entries);
+      _entryIdToTagTitles.addAll(firstBatch.entryIdToTagTitles);
+      _hasMoreEntries = firstBatch.entries.length == _entryBatchSize;
 
-    return _DetailData(
-      account: account,
-      accounts: allAccounts,
-      balance: balance,
-      hasEntries: hasEntries,
-    );
+      return _DetailData(
+        account: account,
+        accounts: allAccounts,
+        balance: balance,
+        hasEntries: hasEntries,
+      );
+    } finally {
+      _isLoadingInitialEntries = false;
+    }
   }
 
   Future<_EntryBatchData> _loadEntryBatch({required int offset}) async {
@@ -104,6 +110,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
   void _maybeLoadMoreEntries() {
     if (!_scrollController.hasClients ||
         !_hasMoreEntries ||
+        _isLoadingInitialEntries ||
         _isLoadingMoreEntries ||
         _loadMoreError != null) {
       return;

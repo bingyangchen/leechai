@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/features/entry/data/repositories/tag.dart' show TagRepository;
-import 'package:mobile/features/tag/presentation/pages/tag_entries_page.dart';
+import 'package:mobile/features/tag/presentation/pages/tag_detail_page.dart';
 import 'package:mobile/features/tag/presentation/widgets/tag_form_sheet.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
 
@@ -69,7 +69,7 @@ class _TagManagementPageState extends State<TagManagementPage> {
     if (id == null || title == null) return;
     final updated = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
-        builder: (_) => TagEntriesPage(
+        builder: (_) => TagDetailPage(
           tagId: id,
           initialTitle: title,
           refreshTrigger: widget.refreshTrigger,

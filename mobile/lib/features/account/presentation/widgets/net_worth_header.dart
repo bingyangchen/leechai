@@ -39,7 +39,6 @@ class NetWorthHeader extends StatelessWidget {
         : formatAmountForDisplay(totalLiabilities);
     final clampedCollapseProgress = collapseProgress.clamp(0.0, 1.0);
     final detailOpacity = 1 - clampedCollapseProgress;
-    final detailVisibilityScale = Curves.easeOut.transform(detailOpacity);
     final netWorthScale = lerpDouble(1.0, 0.84, clampedCollapseProgress)!;
 
     final headerTintColor = colorScheme.surface;
@@ -58,7 +57,7 @@ class NetWorthHeader extends StatelessWidget {
           20,
           lerpDouble(14, 10, clampedCollapseProgress)!,
           20,
-          lerpDouble(26, 12, clampedCollapseProgress)!,
+          lerpDouble(18, 8, clampedCollapseProgress)!,
         ),
         decoration: BoxDecoration(
           borderRadius: const BorderRadius.only(
@@ -114,7 +113,7 @@ class NetWorthHeader extends StatelessWidget {
             ClipRect(
               child: Align(
                 alignment: Alignment.topLeft,
-                heightFactor: detailVisibilityScale,
+                heightFactor: detailOpacity,
                 child: Opacity(
                   opacity: detailOpacity,
                   child: Column(

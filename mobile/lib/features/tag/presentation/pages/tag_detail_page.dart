@@ -22,8 +22,8 @@ import 'package:mobile/shared/widgets/app_refresh_indicator.dart';
 import 'package:mobile/shared/widgets/confirm_delete_dialog.dart';
 import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
 
-class TagEntriesPage extends StatefulWidget {
-  const TagEntriesPage({
+class TagDetailPage extends StatefulWidget {
+  const TagDetailPage({
     super.key,
     required this.tagId,
     required this.initialTitle,
@@ -35,18 +35,19 @@ class TagEntriesPage extends StatefulWidget {
   final ValueListenable<int>? refreshTrigger;
 
   @override
-  State<TagEntriesPage> createState() => _TagEntriesPageState();
+  State<TagDetailPage> createState() => _TagDetailPageState();
 }
 
-class _TagEntriesPageState extends State<TagEntriesPage> {
+class _TagDetailPageState extends State<TagDetailPage> {
   static const int _entryBatchSize = 30;
   static const double _loadMoreExtentAfterThresholdPx = 640;
 
-  late Future<_TagEntriesData> _future;
+  late Future<_TagDetailData> _future;
   final ScrollController _scrollController = ScrollController();
   final List<Map<String, Object?>> _entries = [];
   final Map<String, List<String>> _entryIdToTagTitles = {};
   bool _hasMoreEntries = true;
+  bool _isLoadingInitialEntries = false;
   bool _isLoadingMoreEntries = false;
   Object? _loadMoreError;
 
@@ -63,33 +64,38 @@ class _TagEntriesPageState extends State<TagEntriesPage> {
     super.dispose();
   }
 
-  Future<_TagEntriesData> _loadData() async {
+  Future<_TagDetailData> _loadData() async {
     _entries.clear();
     _entryIdToTagTitles.clear();
     _hasMoreEntries = true;
+    _isLoadingInitialEntries = true;
     _isLoadingMoreEntries = false;
     _loadMoreError = null;
 
-    final tag = await TagRepository.getById(widget.tagId);
-    if (tag == null) throw StateError('Tag not found: ${widget.tagId}');
-    final accounts = <String, Account>{};
-    for (final account in await AccountRepository.getAll()) {
-      accounts[account.id] = account;
-    }
-    final usageCount = await TagRepository.getUsageCount(widget.tagId);
-    final summary = await EntryRepository.getTagIncomeExpenseSummary(widget.tagId);
-    final firstBatch = await _loadEntryBatch(offset: 0);
-    _entries.addAll(firstBatch.entries);
-    _entryIdToTagTitles.addAll(firstBatch.entryIdToTagTitles);
-    _hasMoreEntries = firstBatch.entries.length == _entryBatchSize;
+    try {
+      final tag = await TagRepository.getById(widget.tagId);
+      if (tag == null) throw StateError('Tag not found: ${widget.tagId}');
+      final accounts = <String, Account>{};
+      for (final account in await AccountRepository.getAll()) {
+        accounts[account.id] = account;
+      }
+      final usageCount = await TagRepository.getUsageCount(widget.tagId);
+      final summary = await EntryRepository.getTagIncomeExpenseSummary(widget.tagId);
+      final firstBatch = await _loadEntryBatch(offset: 0);
+      _entries.addAll(firstBatch.entries);
+      _entryIdToTagTitles.addAll(firstBatch.entryIdToTagTitles);
+      _hasMoreEntries = firstBatch.entries.length == _entryBatchSize;
 
-    return _TagEntriesData(
-      title: tag['title'] as String? ?? widget.initialTitle,
-      accounts: accounts,
-      usageCount: usageCount,
-      income: summary.income,
-      expense: summary.expense,
-    );
+      return _TagDetailData(
+        title: tag['title'] as String? ?? widget.initialTitle,
+        accounts: accounts,
+        usageCount: usageCount,
+        income: summary.income,
+        expense: summary.expense,
+      );
+    } finally {
+      _isLoadingInitialEntries = false;
+    }
   }
 
   Future<_EntryBatchData> _loadEntryBatch({required int offset}) async {
@@ -106,6 +112,7 @@ class _TagEntriesPageState extends State<TagEntriesPage> {
   void _maybeLoadMoreEntries() {
     if (!_scrollController.hasClients ||
         !_hasMoreEntries ||
+        _isLoadingInitialEntries ||
         _isLoadingMoreEntries ||
         _loadMoreError != null) {
       return;
@@ -154,7 +161,7 @@ class _TagEntriesPageState extends State<TagEntriesPage> {
     if (mounted) DataRefreshScope.notify(context);
   }
 
-  Future<void> _onOpenSettings(_TagEntriesData data) async {
+  Future<void> _onOpenSettings(_TagDetailData data) async {
     final theme = Theme.of(context);
     await showAppBottomSheet<void>(
       context,
@@ -188,7 +195,7 @@ class _TagEntriesPageState extends State<TagEntriesPage> {
     );
   }
 
-  Future<void> _onEditTag(_TagEntriesData data) async {
+  Future<void> _onEditTag(_TagDetailData data) async {
     final updated = await showTagFormSheet(
       context,
       existingTag: {'id': widget.tagId, 'title': data.title},
@@ -205,7 +212,7 @@ class _TagEntriesPageState extends State<TagEntriesPage> {
     _onRefresh();
   }
 
-  Future<void> _onDeleteTag(_TagEntriesData data) async {
+  Future<void> _onDeleteTag(_TagDetailData data) async {
     final content = data.usageCount > 0
         ? '確定要刪除標籤「${data.title}」嗎？\n這將影響 ${data.usageCount} 筆記帳紀錄，且刪除後無法復原。'
         : '確定要刪除標籤「${data.title}」嗎？';
@@ -264,7 +271,7 @@ class _TagEntriesPageState extends State<TagEntriesPage> {
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: kToolbarHeight,
-        title: FutureBuilder<_TagEntriesData>(
+        title: FutureBuilder<_TagDetailData>(
           future: _future,
           builder: (context, snapshot) {
             final title = snapshot.data?.title ?? widget.initialTitle;
@@ -272,7 +279,7 @@ class _TagEntriesPageState extends State<TagEntriesPage> {
           },
         ),
         actions: [
-          FutureBuilder<_TagEntriesData>(
+          FutureBuilder<_TagDetailData>(
             future: _future,
             builder: (context, snapshot) {
               return IconButton(
@@ -286,7 +293,7 @@ class _TagEntriesPageState extends State<TagEntriesPage> {
           ),
         ],
       ),
-      body: FutureBuilder<_TagEntriesData>(
+      body: FutureBuilder<_TagDetailData>(
         future: _future,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting &&
@@ -393,8 +400,8 @@ class _TagEntriesPageState extends State<TagEntriesPage> {
   }
 }
 
-class _TagEntriesData {
-  const _TagEntriesData({
+class _TagDetailData {
+  const _TagDetailData({
     required this.title,
     required this.accounts,
     required this.usageCount,
@@ -420,7 +427,7 @@ class _EntryBatchData {
 class _TagSummaryBlock extends StatelessWidget {
   const _TagSummaryBlock({required this.data});
 
-  final _TagEntriesData data;
+  final _TagDetailData data;
 
   @override
   Widget build(BuildContext context) {
