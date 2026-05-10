@@ -313,7 +313,7 @@ class _AccountPageState extends State<AccountPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 8),
                             AccountGroupSection(
                               kind: AccountGroupKind.currentAssets,
                               accounts: currentAssets,

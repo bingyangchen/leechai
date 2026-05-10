@@ -30,63 +30,75 @@ class AccountGroupSection extends StatelessWidget {
     final total = accounts.fold<double>(0, (sum, a) => sum + (balances[a.id] ?? 0));
     final displayTotal = kind.isLiability ? total.abs() : total;
     final totalStr = privacyMode ? '****' : formatAmountForDisplay(displayTotal);
+    final initiallyExpanded = _isPrimarySection || accounts.isNotEmpty;
+    final sectionColor = _sectionColor(context);
 
-    final cardRadius = BorderRadius.circular(12);
+    if (accounts.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+        child: Column(
+          children: [
+            _AccountGroupHeader(
+              kind: kind,
+              totalText: totalStr,
+              sectionColor: sectionColor,
+            ),
+            const SizedBox(height: 8),
+            _AddAccountListTile(
+              label: _emptyAddButtonLabel,
+              sectionColor: sectionColor,
+              onTap: onAdd,
+            ),
+          ],
+        ),
+      );
+    }
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
       child: Material(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: cardRadius,
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
         clipBehavior: Clip.antiAlias,
         child: Theme(
           data: theme.copyWith(
-            dividerColor: theme.colorScheme.outline.withValues(alpha: 0.1),
+            dividerColor: theme.colorScheme.outline.withValues(alpha: 0),
           ),
           child: ExpansionTile(
-            initiallyExpanded: true,
-            controlAffinity: ListTileControlAffinity.leading,
-            tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            childrenPadding: const EdgeInsets.only(left: 12, right: 12, bottom: 8),
-            shape: RoundedRectangleBorder(borderRadius: cardRadius),
-            collapsedShape: RoundedRectangleBorder(borderRadius: cardRadius),
+            initiallyExpanded: initiallyExpanded,
+            tilePadding: EdgeInsets.zero,
+            childrenPadding: const EdgeInsets.only(top: 8),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            collapsedShape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             backgroundColor: theme.colorScheme.surface.withValues(alpha: 0),
             collapsedBackgroundColor: theme.colorScheme.surface.withValues(alpha: 0),
-            title: Row(
-              children: [
-                Icon(kind.sectionIcon, color: _sectionColor(context), size: 24),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(kind.title, style: theme.textStyles.titleEmphasis),
-                ),
-                if (kind == AccountGroupKind.creditCard)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: Text('未繳金額', style: theme.textStyles.bodySmallMuted),
-                  ),
-                if (kind == AccountGroupKind.investments)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: Text('市值', style: theme.textStyles.bodySmallMuted),
-                  ),
-                Text(
-                  '\$$totalStr',
-                  style: theme.textStyles.titleEmphasis.copyWith(
-                    color: kind.isLiability ? _liabilityAmountColor(context) : null,
-                  ),
-                ),
-              ],
+            iconColor: theme.colorScheme.onSurfaceVariant,
+            collapsedIconColor: theme.colorScheme.onSurfaceVariant.withValues(
+              alpha: 0.72,
+            ),
+            title: _AccountGroupHeader(
+              kind: kind,
+              totalText: totalStr,
+              sectionColor: sectionColor,
             ),
             children: [
-              ...accounts.map(
-                (a) => _AccountListTile(
-                  account: a,
-                  balance: balances[a.id] ?? 0,
+              for (final account in accounts) ...[
+                _AccountListTile(
+                  account: account,
+                  balance: balances[account.id] ?? 0,
                   isLiability: kind.isLiability,
                   privacyMode: privacyMode,
-                  onTap: () => onTapAccount(a),
+                  onTap: () => onTapAccount(account),
                 ),
+                const SizedBox(height: 6),
+              ],
+              _AddAccountListTile(
+                label: kind.addButtonLabel,
+                sectionColor: sectionColor,
+                onTap: onAdd,
               ),
-              _AddAccountListTile(label: kind.addButtonLabel, onTap: onAdd),
             ],
           ),
         ),
@@ -94,48 +106,155 @@ class AccountGroupSection extends StatelessWidget {
     );
   }
 
-  Color _sectionColor(BuildContext context) {
-    final c = AccountingColors.of(context);
+  bool get _isPrimarySection {
+    return kind == AccountGroupKind.currentAssets ||
+        kind == AccountGroupKind.creditCard;
+  }
+
+  String get _emptyAddButtonLabel {
     switch (kind) {
       case AccountGroupKind.currentAssets:
-        return c.income;
+        return '新增第一個帳戶';
       case AccountGroupKind.creditCard:
-        return c.expense;
+        return '新增第一張信用卡';
       case AccountGroupKind.investments:
-        return c.transfer;
+        return '新增第一個投資帳戶';
       case AccountGroupKind.loans:
-        return c.neutral;
+        return '新增第一個貸款帳戶';
     }
   }
 
-  Color _liabilityAmountColor(BuildContext context) {
-    return AccountingColors.of(context).liability;
+  Color _sectionColor(BuildContext context) {
+    final theme = Theme.of(context);
+    final accountingColors = AccountingColors.of(context);
+    switch (kind) {
+      case AccountGroupKind.currentAssets:
+        return theme.colorScheme.primary;
+      case AccountGroupKind.creditCard:
+        return accountingColors.liability;
+      case AccountGroupKind.investments:
+        return ChartPalette.of(context).palette[2];
+      case AccountGroupKind.loans:
+        return Color.lerp(
+          accountingColors.liability,
+          theme.colorScheme.onSurfaceVariant,
+          0.32,
+        )!;
+    }
+  }
+}
+
+class _AccountGroupHeader extends StatelessWidget {
+  const _AccountGroupHeader({
+    required this.kind,
+    required this.totalText,
+    required this.sectionColor,
+  });
+
+  final AccountGroupKind kind;
+  final String totalText;
+  final Color sectionColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final amountColor = kind.isLiability
+        ? AccountingColors.of(context).liability
+        : theme.colorScheme.onSurface;
+    final descriptor = switch (kind) {
+      AccountGroupKind.creditCard => '未繳',
+      AccountGroupKind.investments => '市值',
+      AccountGroupKind.loans => '未還',
+      AccountGroupKind.currentAssets => null,
+    };
+    final amountText = descriptor == null ? '\$$totalText' : '$descriptor \$$totalText';
+
+    return Row(
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: sectionColor.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(kind.sectionIcon, color: sectionColor, size: 20),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                kind.title,
+                style: theme.textStyles.sectionLabel,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                amountText,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textStyles.titleSmallEmphasis.copyWith(color: amountColor),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
 
 class _AddAccountListTile extends StatelessWidget {
-  const _AddAccountListTile({required this.label, required this.onTap});
+  const _AddAccountListTile({
+    required this.label,
+    required this.sectionColor,
+    required this.onTap,
+  });
 
   final String label;
+  final Color sectionColor;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return ListTile(
-      onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      leading: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.35)),
+    return Material(
+      color: sectionColor.withValues(alpha: 0.08),
+      borderRadius: BorderRadius.circular(12),
+      clipBehavior: Clip.antiAlias,
+      child: ListTile(
+        onTap: onTap,
+        minTileHeight: 60,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: sectionColor.withValues(alpha: 0.22)),
+          ),
+          child: Icon(Icons.add, color: sectionColor, size: 22),
         ),
-        child: Icon(Icons.add, color: theme.colorScheme.onSurfaceVariant, size: 24),
+        title: Text(
+          label,
+          style: theme.textStyles.title.copyWith(color: theme.colorScheme.onSurface),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        trailing: Icon(
+          Icons.chevron_right,
+          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.72),
+          size: 20,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: sectionColor.withValues(alpha: 0.16)),
+        ),
       ),
-      title: Text(label, style: theme.textStyles.bodyLargeMuted),
     );
   }
 }
@@ -162,23 +281,42 @@ class _AccountListTile extends StatelessWidget {
     final amountStr = privacyMode ? '****' : formatAmountForDisplay(displayBalance);
     final icon = _iconForAccount(account);
 
-    return ListTile(
-      onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      leading: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
+    return Material(
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.34),
+      borderRadius: BorderRadius.circular(12),
+      clipBehavior: Clip.antiAlias,
+      child: ListTile(
+        onTap: onTap,
+        minTileHeight: 60,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: theme.colorScheme.onSurfaceVariant, size: 22),
         ),
-        child: Icon(icon, color: theme.colorScheme.primary, size: 24),
-      ),
-      title: Text(account.name ?? _defaultName(account), style: theme.textStyles.title),
-      trailing: Text(
-        '\$$amountStr',
-        style: theme.textStyles.titleSmallEmphasis.copyWith(
-          color: isLiability ? AccountingColors.of(context).liability : null,
+        title: Text(
+          account.name ?? _defaultName(account),
+          style: theme.textStyles.title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        trailing: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 132),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerRight,
+            child: Text(
+              '\$$amountStr',
+              maxLines: 1,
+              style: theme.textStyles.titleSmallEmphasis.copyWith(
+                color: isLiability ? AccountingColors.of(context).liability : null,
+              ),
+            ),
+          ),
         ),
       ),
     );
