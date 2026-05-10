@@ -30,15 +30,14 @@ class _AccountPageState extends State<AccountPage> {
   bool _privacyMode = false;
   late Future<_AccountPageData> _future;
   final ScrollController _scrollController = ScrollController();
-  double _headerCollapseProgress = 0;
-  static const double _headerCollapseDistance = 72;
+  static const double _expandedHeaderHeight = 242;
+  static const double _collapsedHeaderHeight = 116;
 
   @override
   void initState() {
     super.initState();
     _future = _loadData();
     widget.refreshTrigger?.addListener(_onRefresh);
-    _scrollController.addListener(_onScroll);
   }
 
   @override
@@ -53,7 +52,6 @@ class _AccountPageState extends State<AccountPage> {
   @override
   void dispose() {
     widget.refreshTrigger?.removeListener(_onRefresh);
-    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
   }
@@ -61,22 +59,6 @@ class _AccountPageState extends State<AccountPage> {
   void _onRefresh() {
     setState(() {
       _future = _loadData();
-    });
-  }
-
-  void _onScroll() {
-    if (!_scrollController.hasClients) {
-      return;
-    }
-
-    final rawCollapseProgress = (_scrollController.offset / _headerCollapseDistance)
-        .clamp(0.0, 1.0);
-    final nextCollapseProgress = Curves.easeOutCubic.transform(rawCollapseProgress);
-    if ((nextCollapseProgress - _headerCollapseProgress).abs() < 0.001) {
-      return;
-    }
-    setState(() {
-      _headerCollapseProgress = nextCollapseProgress;
     });
   }
 
@@ -308,79 +290,109 @@ class _AccountPageState extends State<AccountPage> {
 
               final netWorth = data.totalAssets - data.totalLiabilities;
 
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+              return Stack(
                 children: [
-                  NetWorthHeader(
-                    netWorth: netWorth,
-                    totalAssets: data.totalAssets,
-                    totalLiabilities: data.totalLiabilities,
-                    accountCount: data.accounts.length,
-                    privacyMode: _privacyMode,
-                    onPrivacyToggle: () => setState(() => _privacyMode = !_privacyMode),
-                    onTotalAssetsTap: () =>
-                        _showAccountCompositionSheet(data, isLiability: false),
-                    onTotalLiabilitiesTap: () =>
-                        _showAccountCompositionSheet(data, isLiability: true),
-                    collapseProgress: _headerCollapseProgress,
-                  ),
-                  Expanded(
-                    child: CustomScrollView(
-                      controller: _scrollController,
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      slivers: [
-                        appSliverRefreshControl(
-                          onRefresh: () =>
-                              runRefreshWithSnapBack(_scrollController, () async {
-                                // NOTE: placebo effect
-                                await Future.delayed(const Duration(milliseconds: 600));
-                                _onRefresh();
-                                await _future;
-                              }),
+                  CustomScrollView(
+                    controller: _scrollController,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    slivers: [
+                      appSliverRefreshControl(
+                        statusBarOverlapInset: _expandedHeaderHeight,
+                        onRefresh: () =>
+                            runRefreshWithSnapBack(_scrollController, () async {
+                              // NOTE: placebo effect
+                              await Future.delayed(const Duration(milliseconds: 600));
+                              _onRefresh();
+                              await _future;
+                            }),
+                      ),
+                      const SliverToBoxAdapter(
+                        child: SizedBox(height: _expandedHeaderHeight),
+                      ),
+                      SliverToBoxAdapter(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const SizedBox(height: 24),
+                            AccountGroupSection(
+                              kind: AccountGroupKind.currentAssets,
+                              accounts: currentAssets,
+                              balances: data.balances,
+                              privacyMode: _privacyMode,
+                              onAdd: _onAddCurrentAssets,
+                              onTapAccount: _onTapAccount,
+                            ),
+                            AccountGroupSection(
+                              kind: AccountGroupKind.creditCard,
+                              accounts: creditCards,
+                              balances: data.balances,
+                              privacyMode: _privacyMode,
+                              onAdd: _onAddCreditCard,
+                              onTapAccount: _onTapAccount,
+                            ),
+                            AccountGroupSection(
+                              kind: AccountGroupKind.investments,
+                              accounts: investments,
+                              balances: data.balances,
+                              privacyMode: _privacyMode,
+                              onAdd: _onAddInvestments,
+                              onTapAccount: _onTapAccount,
+                            ),
+                            AccountGroupSection(
+                              kind: AccountGroupKind.loans,
+                              accounts: loans,
+                              balances: data.balances,
+                              privacyMode: _privacyMode,
+                              onAdd: _onAddLoans,
+                              onTapAccount: _onTapAccount,
+                            ),
+                            const SizedBox(height: 88),
+                          ],
                         ),
-                        SliverToBoxAdapter(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              const SizedBox(height: 24),
-                              AccountGroupSection(
-                                kind: AccountGroupKind.currentAssets,
-                                accounts: currentAssets,
-                                balances: data.balances,
-                                privacyMode: _privacyMode,
-                                onAdd: _onAddCurrentAssets,
-                                onTapAccount: _onTapAccount,
+                      ),
+                    ],
+                  ),
+                  AnimatedBuilder(
+                    animation: _scrollController,
+                    builder: (context, child) {
+                      final scrollOffset = _scrollController.hasClients
+                          ? _scrollController.offset
+                          : 0.0;
+                      final collapseRange =
+                          _expandedHeaderHeight - _collapsedHeaderHeight;
+                      final collapseProgress = (scrollOffset / collapseRange).clamp(
+                        0.0,
+                        1.0,
+                      );
+                      final headerHeight =
+                          _expandedHeaderHeight - collapseProgress * collapseRange;
+
+                      return Align(
+                        alignment: Alignment.topCenter,
+                        child: SizedBox(
+                          height: headerHeight,
+                          width: double.infinity,
+                          child: ClipRect(
+                            child: NetWorthHeader(
+                              netWorth: netWorth,
+                              totalAssets: data.totalAssets,
+                              totalLiabilities: data.totalLiabilities,
+                              accountCount: data.accounts.length,
+                              privacyMode: _privacyMode,
+                              onPrivacyToggle: () =>
+                                  setState(() => _privacyMode = !_privacyMode),
+                              onTotalAssetsTap: () => _showAccountCompositionSheet(
+                                data,
+                                isLiability: false,
                               ),
-                              AccountGroupSection(
-                                kind: AccountGroupKind.creditCard,
-                                accounts: creditCards,
-                                balances: data.balances,
-                                privacyMode: _privacyMode,
-                                onAdd: _onAddCreditCard,
-                                onTapAccount: _onTapAccount,
-                              ),
-                              AccountGroupSection(
-                                kind: AccountGroupKind.investments,
-                                accounts: investments,
-                                balances: data.balances,
-                                privacyMode: _privacyMode,
-                                onAdd: _onAddInvestments,
-                                onTapAccount: _onTapAccount,
-                              ),
-                              AccountGroupSection(
-                                kind: AccountGroupKind.loans,
-                                accounts: loans,
-                                balances: data.balances,
-                                privacyMode: _privacyMode,
-                                onAdd: _onAddLoans,
-                                onTapAccount: _onTapAccount,
-                              ),
-                              const SizedBox(height: 88),
-                            ],
+                              onTotalLiabilitiesTap: () =>
+                                  _showAccountCompositionSheet(data, isLiability: true),
+                              collapseProgress: collapseProgress,
+                            ),
                           ),
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                 ],
               );
