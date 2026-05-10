@@ -10,7 +10,14 @@ class MetaChip extends StatelessWidget {
     this.iconColor,
     this.trailing,
     this.backgroundColor,
+    this.truncateLabel = false,
   });
+
+  static const double horizontalPadding = 12;
+  static const double verticalPadding = 8;
+  static const double leadingIconSize = 18;
+  static const double labelSpacing = 6;
+  static const double trailingSpacing = 2;
 
   final IconData icon;
   final String label;
@@ -19,6 +26,7 @@ class MetaChip extends StatelessWidget {
   final Color? iconColor;
   final Widget? trailing;
   final Color? backgroundColor;
+  final bool truncateLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -32,14 +40,30 @@ class MetaChip extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(20),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(
+            horizontal: horizontalPadding,
+            vertical: verticalPadding,
+          ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 18, color: effectiveIconColor),
-              const SizedBox(width: 6),
-              Text(label, style: theme.textStyles.body),
-              if (trailing != null) ...[const SizedBox(width: 2), trailing!],
+              Icon(icon, size: leadingIconSize, color: effectiveIconColor),
+              const SizedBox(width: labelSpacing),
+              if (truncateLabel)
+                Flexible(
+                  child: Text(
+                    label,
+                    style: theme.textStyles.body,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                )
+              else
+                Text(label, style: theme.textStyles.body),
+              if (trailing != null) ...[
+                const SizedBox(width: trailingSpacing),
+                trailing!,
+              ],
             ],
           ),
         ),
