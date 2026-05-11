@@ -19,7 +19,6 @@ import 'package:mobile/features/entry/presentation/widgets/sticky_date_header.da
     show buildDateHeaderSection, DateHeaderContent;
 import 'package:mobile/features/profile/data/services/achievement.dart';
 import 'package:mobile/shared/utils/refresh_snap_back.dart';
-import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/app_refresh_indicator.dart';
 import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
 
@@ -243,6 +242,7 @@ class _JournalPageState extends State<JournalPage> with SingleTickerProviderStat
                                   income: summary.income,
                                   expense: summary.expense,
                                   balance: summary.balance,
+                                  hasEntries: data.entries.isNotEmpty,
                                   privacyMode: _privacyMode,
                                 ),
                               ),
@@ -281,6 +281,7 @@ class _JournalPageState extends State<JournalPage> with SingleTickerProviderStat
                                         income: summary.income,
                                         expense: summary.expense,
                                         balance: summary.balance,
+                                        hasEntries: data.entries.isNotEmpty,
                                         privacyMode: _privacyMode,
                                       ),
                                     ),
@@ -365,8 +366,20 @@ class _JournalPageState extends State<JournalPage> with SingleTickerProviderStat
                       axisAlignment: -1,
                       child: CollapsedSummaryBar(
                         future: _future,
-                        getSummaryText: (data) =>
-                            '本月結餘 ${_privacyMode ? '****' : _formatBalance(_computeSummary((data as _JournalData).entries).balance)}',
+                        getSummaryText: (data) {
+                          final journalData = data as _JournalData;
+                          final hasEntries = journalData.entries.isNotEmpty;
+                          final summary = _computeSummary(journalData.entries);
+                          final title = monthSummaryTitle(
+                            balance: summary.balance,
+                            hasEntries: hasEntries,
+                            privacyMode: _privacyMode,
+                          );
+                          final balanceText = _privacyMode && hasEntries
+                              ? '****'
+                              : formatMonthSummaryBalance(summary.balance);
+                          return '$title $balanceText';
+                        },
                       ),
                     ),
                   ),
@@ -392,11 +405,6 @@ class _JournalPageState extends State<JournalPage> with SingleTickerProviderStat
       }
     }
     return _MonthSummary(income: income, expense: expense, balance: income - expense);
-  }
-
-  static String _formatBalance(double v) {
-    if (v >= 0) return '+${formatAmountForDisplay(v)}';
-    return '-${formatAmountForDisplay(-v)}';
   }
 }
 
