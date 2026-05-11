@@ -49,6 +49,7 @@ Ensure that the API server is running locally first.
 2. Install dependencies:
 
    ```bash
+   flutter clean
    flutter pub get
    ```
 
