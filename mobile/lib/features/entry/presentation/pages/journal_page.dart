@@ -366,9 +366,10 @@ class _JournalPageState extends State<JournalPage> with SingleTickerProviderStat
                       axisAlignment: -1,
                       child: CollapsedSummaryBar(
                         future: _future,
-                        getSummaryText: (data) {
+                        getSummary: (data) {
                           final journalData = data as _JournalData;
                           final hasEntries = journalData.entries.isNotEmpty;
+                          if (!hasEntries) return null;
                           final summary = _computeSummary(journalData.entries);
                           final title = monthSummaryTitle(
                             balance: summary.balance,
@@ -378,7 +379,16 @@ class _JournalPageState extends State<JournalPage> with SingleTickerProviderStat
                           final balanceText = _privacyMode && hasEntries
                               ? '****'
                               : formatMonthSummaryBalance(summary.balance);
-                          return '$title $balanceText';
+                          final tone = _privacyMode || summary.balance == 0
+                              ? CollapsedSummaryTone.neutral
+                              : summary.balance > 0
+                              ? CollapsedSummaryTone.income
+                              : CollapsedSummaryTone.expense;
+                          return CollapsedSummaryBarData(
+                            title: title,
+                            amount: balanceText,
+                            tone: tone,
+                          );
                         },
                       ),
                     ),
