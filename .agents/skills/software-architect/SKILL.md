@@ -105,30 +105,9 @@ The backend environment exists only inside Docker. Do not run backend-related (`
 - Avoid redundant filename suffixes when the directory already describes the role, such as `repositories/achievement.dart` instead of `repositories/achievement_repository.dart`.
 - For map (dart) and dict (python) data structures, prefer `xxxToYyy`/`xxx_to_yyy` naming convention for clarity.
 
-    ```dart
-    final Map<String, List<String>> _entryIdToTagTitles = {};
-    ```
-
-    ```python
-    entry_id_to_tag_titles = {}
-    ```
-
 ## Code Style
 
 - For small groups of shared string constants in Flutter/Dart, prefer top-level `const` values in a dedicated library over a class that only holds `static const` members.
-
-    ```dart
-    // ✅ Prefer in e.g. `data/constants/daily_reminder.dart`
-    const String dailyReminderTitle = '...';
-    const String dailyReminderSubtitle = '...';
-
-    // ❌ Avoid unless you need namespacing at scale or non-const members
-    class DailyReminderCopy {
-    DailyReminderCopy._();
-    static const String title = '...';
-    }
-    ```
-
 - In Flutter/Dart, use a namespace class only when the group grows, needs `static` methods, or needs disambiguation from other top-level names.
 
 ## Comments And Documentation
