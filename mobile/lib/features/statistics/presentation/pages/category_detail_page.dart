@@ -10,7 +10,7 @@ import 'package:mobile/features/entry/presentation/entry_list_handlers.dart';
 import 'package:mobile/features/entry/presentation/widgets/entry_row.dart';
 import 'package:mobile/features/statistics/data/services/statistics.dart';
 import 'package:mobile/features/statistics/domain/date_range_preset.dart';
-import 'package:mobile/features/statistics/presentation/constants/category_colors.dart';
+import 'package:mobile/shared/theme/category_colors.dart';
 import 'package:mobile/features/statistics/presentation/widgets/category_monthly_bar_chart.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';

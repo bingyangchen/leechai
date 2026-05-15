@@ -6,7 +6,7 @@ import 'package:mobile/features/budget/presentation/widgets/budget_progress_card
 import 'package:mobile/features/statistics/data/services/statistics.dart';
 import 'package:mobile/features/statistics/domain/category_breakdown_item.dart';
 import 'package:mobile/features/statistics/domain/date_range_preset.dart';
-import 'package:mobile/features/statistics/presentation/constants/category_colors.dart';
+import 'package:mobile/shared/theme/category_colors.dart';
 import 'package:mobile/features/statistics/presentation/pages/cashflow_detail_page.dart';
 import 'package:mobile/features/statistics/presentation/pages/category_detail_page.dart';
 import 'package:mobile/features/statistics/presentation/widgets/category_donut_chart.dart';

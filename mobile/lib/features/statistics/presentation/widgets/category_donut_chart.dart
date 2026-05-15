@@ -1,7 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/features/statistics/domain/category_breakdown_item.dart';
-import 'package:mobile/features/statistics/presentation/constants/category_colors.dart';
+import 'package:mobile/shared/theme/category_colors.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 

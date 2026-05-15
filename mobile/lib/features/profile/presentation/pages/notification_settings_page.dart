@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mobile/features/profile/data/constants/daily_reminder.dart';
+import 'package:mobile/features/profile/constants/daily_reminder.dart';
 import 'package:mobile/features/profile/data/repositories/notification_settings.dart';
 import 'package:mobile/features/profile/data/services/daily_reminder_notification.dart';
 import 'package:mobile/features/profile/domain/notification_settings.dart';

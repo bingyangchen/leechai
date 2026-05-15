@@ -7,6 +7,88 @@
 - Xcode (for iOS development, macOS only)
 - CocoaPods (for iOS dependencies)
 
+## Layered Architecture
+
+Code under **`lib/`** matches the diagram: each **`features/<area>/`** has **`presentation/`**, **`domain/`**, **`data/`**, and optionally **`constants/`** beside those folders; **`core/`** owns **`AppDatabase`**, which runs each feature’s **`schema/`** migrations; **`shared/`** is reused widgets and theme.
+
+```mermaid
+flowchart TB
+  subgraph entry_layer["Application entry"]
+    main_dart["main.dart"]
+    shell_dart["shell.dart"]
+    main_dart --> shell_dart
+  end
+
+  subgraph presentation["presentation/"]
+    pres_pages["pages/"]
+    pres_widgets["widgets/"]
+    pres_constants["constants/"]
+    pres_pages --> pres_widgets
+    pres_pages --> pres_constants
+    pres_widgets --> pres_constants
+  end
+
+  subgraph feat_root["Feature root optional"]
+    feat_constants["constants/"]
+  end
+
+  subgraph domain["domain/"]
+    domain_files["*.dart — entities, enums, pure logic"]
+  end
+
+  subgraph data["data/"]
+    data_repo["repositories/"]
+    data_schema["schema/ — SQLite DDL & seeds"]
+    data_svc["services/"]
+    data_api["apis/ — HTTP wrappers & DTOs"]
+    data_svc --> data_repo
+    data_svc --> data_api
+    data_repo --> domain_files
+    data_svc --> domain_files
+    data_schema -.->|some schemas| domain_files
+  end
+
+  subgraph core_layer["core/"]
+    core_db["database — AppDatabase, schema.dart"]
+    core_net["network — ApiClient"]
+    core_auth["auth — credential_store, session events"]
+    core_notif["notifications/"]
+  end
+
+  subgraph shared_layer["shared/"]
+    shared_bundle["widgets • theme • scopes • utils • constants"]
+  end
+
+  main_dart --> core_notif
+
+  shell_dart --> pres_pages
+
+  pres_pages --> domain_files
+  pres_widgets --> domain_files
+  pres_constants --> domain_files
+
+  pres_pages --> feat_constants
+  pres_widgets --> feat_constants
+  data_svc --> feat_constants
+
+  pres_pages --> data_repo
+  pres_pages --> data_svc
+  pres_widgets --> data_repo
+  pres_widgets --> data_svc
+
+  pres_pages --> shared_bundle
+  pres_widgets --> shared_bundle
+
+  core_db --> data_schema
+  data_repo --> core_db
+  data_svc --> core_db
+
+  data_api --> core_net
+  data_svc --> core_net
+  data_svc -.->|auth session events| core_auth
+  data_repo -.->|credential adapters, auth| core_auth
+```
+
 ## Quick Start
 
 Ensure that the API server is running locally first.

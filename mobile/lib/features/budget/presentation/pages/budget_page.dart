@@ -7,7 +7,7 @@ import 'package:mobile/features/budget/data/repositories/budget.dart';
 import 'package:mobile/features/budget/data/services/budget.dart';
 import 'package:mobile/features/budget/presentation/widgets/add_category_budget_sheet.dart';
 import 'package:mobile/features/statistics/data/services/statistics.dart';
-import 'package:mobile/features/statistics/presentation/constants/category_colors.dart';
+import 'package:mobile/shared/theme/category_colors.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/snackbar.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
