@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile/features/account/domain/account.dart';
 import 'package:mobile/features/account/domain/asset_type.dart';
 import 'package:mobile/features/account/domain/liability_type.dart';
-import 'package:mobile/features/statistics/presentation/constants/category_colors.dart';
+import 'package:mobile/shared/theme/category_colors.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 
