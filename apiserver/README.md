@@ -76,3 +76,23 @@
     ```bash
     alembic upgrade head
     ```
+
+## 🚀 Production Deployment
+
+On the production host, configure `.env` with `ENVIRONMENT=prod`, `DOCKER_USERNAME`, and `DOCKER_ACCESS_TOKEN` (do not put `image_tag` in `.env`). The working tree must be clean; the script switches to `main` and runs `git pull origin main` before deploying.
+
+Images built from `main` are pushed with a tag equal to the **full Git commit hash** (40 hex characters). CI builds on every push to `main`.
+
+- **Deploy latest `main`:** after `git pull`, the deploy uses the current `HEAD` commit as the image tag.
+
+  ```bash
+  make deploy
+  ```
+
+- **Deploy a specific commit** (pin or rollback): pass the same full hash the registry uses for that image.
+
+  ```bash
+  make deploy image_tag={FULL_GIT_COMMIT_HASH}
+  ```
+
+**Rollback:** If the version you just deployed is bad, deploy again with the **previous known-good commit’s full hash** (the image must already exist in the registry from an earlier CI run). Example: `make deploy image_tag=abcdef0123456789abcdef0123456789abcdef01`.

@@ -116,7 +116,7 @@ Ensure that the API server is running locally first.
 - **Step 1**: From the `mobile` directory: `flutter pub add {DEPENDENCY}` or `flutter pub remove {DEPENDENCY}`.
 - **Step 2**: For iOS-only dependencies: go to `mobile/ios` and run `pod install`.
 
-## Release
+## 🚀 Release
 
 ### Build for iOS
 
