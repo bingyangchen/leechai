@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Annotated
 from uuid import UUID
 
@@ -39,6 +39,7 @@ MODEL_TO_CHANGE = {
     Budget: BudgetChange,
     CategoryBudget: CategoryBudgetChange,
 }
+SYNC_SAFETY_BUFFER = timedelta(seconds=10)
 
 
 def _utc_now() -> datetime:
@@ -52,7 +53,9 @@ class SyncService:
     async def pull(
         self, user_id: UUID, last_synced_at: datetime | None
     ) -> tuple[Changes, datetime]:
+        sync_anchor = _utc_now()
         changes = Changes()
+
         async with self._db_session.begin():
             for model in (
                 Entry,
@@ -66,7 +69,7 @@ class SyncService:
                 statement = select(model).where(model.user_id == user_id)
                 if last_synced_at is not None:
                     statement = statement.where(
-                        model.server_updated_at > last_synced_at
+                        model.server_updated_at > (last_synced_at - SYNC_SAFETY_BUFFER)
                     )
                 result = await self._db_session.execute(statement)
                 rows = result.scalars().all()
@@ -77,7 +80,7 @@ class SyncService:
                     [change_class.model_validate(row) for row in rows],
                 )
 
-        return changes, _utc_now()
+        return changes, sync_anchor
 
     async def push(self, user_id: UUID, changes: Changes) -> datetime:
         async with self._db_session.begin():
