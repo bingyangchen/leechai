@@ -205,7 +205,7 @@ String _formatWithDigitLimit(double value, int maxDigits) {
       : abs
             .toStringAsFixed(decimalPlaces)
             .replaceFirst(RegExp(r'\.0+$'), '')
-            .replaceFirst(RegExp(r'(\.\d*[1-9])0+$'), r'$1');
+            .replaceFirstMapped(RegExp(r'(\.\d*[1-9])0+$'), (m) => m[1]!);
 
   return '$sign$rounded';
 }
