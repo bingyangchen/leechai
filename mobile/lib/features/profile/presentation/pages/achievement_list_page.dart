@@ -145,26 +145,16 @@ class _AchievementListPageState extends State<AchievementListPage>
   void _onRefreshTriggered() {
     final loadData = widget.loadData;
     if (loadData == null || !mounted) return;
+    final before = _countUnlocked(_achievements);
     loadData().then((data) {
       if (mounted) {
         setState(() {
           _achievements = data.achievements;
+          final after = _countUnlocked(_achievements);
+          if (after != before) {
+            _pulseController.forward(from: 0);
+          }
         });
-      }
-    });
-  }
-
-  Future<void> _onPullRefresh() async {
-    final loadData = widget.loadData;
-    if (loadData == null) return;
-    final before = _countUnlocked(_achievements);
-    final data = await loadData();
-    if (!mounted) return;
-    setState(() {
-      _achievements = data.achievements;
-      final after = _countUnlocked(_achievements);
-      if (after != before) {
-        _pulseController.forward(from: 0);
       }
     });
   }
@@ -290,212 +280,205 @@ class _AchievementListPageState extends State<AchievementListPage>
               ),
             ),
           ),
-          RefreshIndicator(
-            color: colorScheme.primary,
-            onRefresh: _onPullRefresh,
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                SliverToBoxAdapter(
-                  child: FadeTransition(
-                    opacity: heroFade,
-                    child: SlideTransition(
-                      position:
-                          Tween<Offset>(
-                            begin: const Offset(0, 0.02),
-                            end: Offset.zero,
-                          ).animate(
-                            CurvedAnimation(
-                              parent: _entranceController,
-                              curve: const Interval(0.0, 0.65, curve: Curves.easeOut),
-                            ),
+          CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: FadeTransition(
+                  opacity: heroFade,
+                  child: SlideTransition(
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(0, 0.02),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: _entranceController,
+                            curve: const Interval(0.0, 0.65, curve: Curves.easeOut),
                           ),
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                        child: _HeroSummaryCard(
-                          unlockedCount: unlockedCount,
-                          totalCount: totalCount,
-                          percent: percent,
-                          allUnlocked: allUnlocked,
-                          recentLine: recentLine,
-                          pulseScale: _pulseScale,
                         ),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                      child: _HeroSummaryCard(
+                        unlockedCount: unlockedCount,
+                        totalCount: totalCount,
+                        percent: percent,
+                        allUnlocked: allUnlocked,
+                        recentLine: recentLine,
+                        pulseScale: _pulseScale,
                       ),
                     ),
                   ),
                 ),
-                SliverToBoxAdapter(
-                  child: FadeTransition(
-                    opacity: bodyFade,
-                    child: SlideTransition(
-                      position: bodySlide,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            child: SegmentedButton<_AchievementFilter>(
-                              showSelectedIcon: false,
-                              style: SegmentedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 4,
-                                  vertical: 8,
-                                ),
-                                visualDensity: VisualDensity.compact,
-                              ),
-                              segments: const [
-                                ButtonSegment<_AchievementFilter>(
-                                  value: _AchievementFilter.all,
-                                  label: Text('全部'),
-                                ),
-                                ButtonSegment<_AchievementFilter>(
-                                  value: _AchievementFilter.inProgress,
-                                  label: Text('進行中'),
-                                ),
-                                ButtonSegment<_AchievementFilter>(
-                                  value: _AchievementFilter.unlocked,
-                                  label: Text('已解鎖'),
-                                ),
-                                ButtonSegment<_AchievementFilter>(
-                                  value: _AchievementFilter.locked,
-                                  label: Text('未解鎖'),
-                                ),
-                              ],
-                              selected: {_filter},
-                              onSelectionChanged: (selection) {
-                                setState(() {
-                                  _filter = selection.first;
-                                });
-                              },
-                            ),
+              ),
+              SliverToBoxAdapter(
+                child: FadeTransition(
+                  opacity: bodyFade,
+                  child: SlideTransition(
+                    position: bodySlide,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
                           ),
-                          AnimatedCrossFade(
-                            duration: const Duration(milliseconds: 220),
-                            sizeCurve: Curves.easeInOut,
-                            firstCurve: Curves.easeInOut,
-                            secondCurve: Curves.easeInOut,
-                            crossFadeState: showNextSection
-                                ? CrossFadeState.showFirst
-                                : CrossFadeState.showSecond,
-                            firstChild: Column(
-                              key: const ValueKey('achievement_next_steps'),
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                                  child: Row(
-                                    children: [
-                                      Text('下一步', style: textStyles.titleSmallEmphasis),
-                                      const Spacer(),
-                                      Text(
-                                        '依完成度',
-                                        style: textStyles.labelSmallMuted.copyWith(
-                                          fontSize:
-                                              theme.textTheme.labelSmall?.fontSize,
-                                        ),
+                          child: SegmentedButton<_AchievementFilter>(
+                            showSelectedIcon: false,
+                            style: SegmentedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 8,
+                              ),
+                              visualDensity: VisualDensity.compact,
+                            ),
+                            segments: const [
+                              ButtonSegment<_AchievementFilter>(
+                                value: _AchievementFilter.all,
+                                label: Text('全部'),
+                              ),
+                              ButtonSegment<_AchievementFilter>(
+                                value: _AchievementFilter.inProgress,
+                                label: Text('進行中'),
+                              ),
+                              ButtonSegment<_AchievementFilter>(
+                                value: _AchievementFilter.unlocked,
+                                label: Text('已解鎖'),
+                              ),
+                              ButtonSegment<_AchievementFilter>(
+                                value: _AchievementFilter.locked,
+                                label: Text('未解鎖'),
+                              ),
+                            ],
+                            selected: {_filter},
+                            onSelectionChanged: (selection) {
+                              setState(() {
+                                _filter = selection.first;
+                              });
+                            },
+                          ),
+                        ),
+                        AnimatedCrossFade(
+                          duration: const Duration(milliseconds: 220),
+                          sizeCurve: Curves.easeInOut,
+                          firstCurve: Curves.easeInOut,
+                          secondCurve: Curves.easeInOut,
+                          crossFadeState: showNextSection
+                              ? CrossFadeState.showFirst
+                              : CrossFadeState.showSecond,
+                          firstChild: Column(
+                            key: const ValueKey('achievement_next_steps'),
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                                child: Row(
+                                  children: [
+                                    Text('下一步', style: textStyles.titleSmallEmphasis),
+                                    const Spacer(),
+                                    Text(
+                                      '依完成度',
+                                      style: textStyles.labelSmallMuted.copyWith(
+                                        fontSize: theme.textTheme.labelSmall?.fontSize,
                                       ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(
+                                height: 128,
+                                child: ListView.separated(
+                                  scrollDirection: Axis.horizontal,
+                                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                                  physics: const BouncingScrollPhysics(),
+                                  itemCount: nextCards.length,
+                                  separatorBuilder: (context, index) =>
+                                      const SizedBox(width: 12),
+                                  itemBuilder: (context, index) {
+                                    final cardWidth = mediaQuery.size.width * 0.72;
+                                    return SizedBox(
+                                      width: cardWidth,
+                                      child: _NextAchievementCard(
+                                        item: nextCards[index],
+                                        onTap: () =>
+                                            _openAchievementDetail(nextCards[index]),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                            ],
+                          ),
+                          secondChild: const SizedBox(
+                            key: ValueKey('achievement_next_steps_placeholder'),
+                            width: double.infinity,
+                          ),
+                        ),
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 220),
+                          switchInCurve: Curves.easeInOut,
+                          switchOutCurve: Curves.easeInOut,
+                          transitionBuilder: (child, animation) {
+                            return FadeTransition(opacity: animation, child: child);
+                          },
+                          child: filtered.isEmpty
+                              ? _FilterEmptyState(
+                                  key: ValueKey(_filter),
+                                  filter: _filter,
+                                  onViewAll: () {
+                                    setState(() {
+                                      _filter = _AchievementFilter.all;
+                                    });
+                                  },
+                                )
+                              : Padding(
+                                  key: ValueKey(_filter),
+                                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: [
+                                      for (
+                                        var groupIndex = 0;
+                                        groupIndex < _achievementGroups.length;
+                                        groupIndex++
+                                      ) ...[
+                                        _AchievementGroupSection(
+                                          group: _achievementGroups[groupIndex],
+                                          items: filtered,
+                                          onOpen: _openAchievementDetail,
+                                        ),
+                                        if (groupIndex < _achievementGroups.length - 1)
+                                          const SizedBox(height: 16),
+                                      ],
                                     ],
                                   ),
                                 ),
-                                SizedBox(
-                                  height: 128,
-                                  child: ListView.separated(
-                                    scrollDirection: Axis.horizontal,
-                                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                                    physics: const BouncingScrollPhysics(),
-                                    itemCount: nextCards.length,
-                                    separatorBuilder: (context, index) =>
-                                        const SizedBox(width: 12),
-                                    itemBuilder: (context, index) {
-                                      final cardWidth = mediaQuery.size.width * 0.72;
-                                      return SizedBox(
-                                        width: cardWidth,
-                                        child: _NextAchievementCard(
-                                          item: nextCards[index],
-                                          onTap: () =>
-                                              _openAchievementDetail(nextCards[index]),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                              ],
-                            ),
-                            secondChild: const SizedBox(
-                              key: ValueKey('achievement_next_steps_placeholder'),
-                              width: double.infinity,
-                            ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            16,
+                            24,
+                            16,
+                            24 + mediaQuery.padding.bottom,
                           ),
-                          AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 220),
-                            switchInCurve: Curves.easeInOut,
-                            switchOutCurve: Curves.easeInOut,
-                            transitionBuilder: (child, animation) {
-                              return FadeTransition(opacity: animation, child: child);
-                            },
-                            child: filtered.isEmpty
-                                ? _FilterEmptyState(
-                                    key: ValueKey(_filter),
-                                    filter: _filter,
-                                    onViewAll: () {
-                                      setState(() {
-                                        _filter = _AchievementFilter.all;
-                                      });
-                                    },
-                                  )
-                                : Padding(
-                                    key: ValueKey(_filter),
-                                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                                      children: [
-                                        for (
-                                          var groupIndex = 0;
-                                          groupIndex < _achievementGroups.length;
-                                          groupIndex++
-                                        ) ...[
-                                          _AchievementGroupSection(
-                                            group: _achievementGroups[groupIndex],
-                                            items: filtered,
-                                            onOpen: _openAchievementDetail,
-                                          ),
-                                          if (groupIndex <
-                                              _achievementGroups.length - 1)
-                                            const SizedBox(height: 16),
-                                        ],
-                                      ],
-                                    ),
-                                  ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.fromLTRB(
-                              16,
-                              24,
-                              16,
-                              24 + mediaQuery.padding.bottom,
-                            ),
-                            child: Text(
-                              '成就僅為紀念，不影響你的帳本資料。',
-                              textAlign: TextAlign.center,
-                              style: textStyles.bodySmallMuted.copyWith(
-                                color: colorScheme.onSurfaceVariant.withValues(
-                                  alpha: 0.75,
-                                ),
+                          child: Text(
+                            '成就僅為紀念，不影響你的帳本資料。',
+                            textAlign: TextAlign.center,
+                            style: textStyles.bodySmallMuted.copyWith(
+                              color: colorScheme.onSurfaceVariant.withValues(
+                                alpha: 0.75,
                               ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),
