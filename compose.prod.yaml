@@ -15,7 +15,7 @@ services:
     command: ["nginx", "-g", "daemon off;"]
 
   apiserver:
-    image: ${DOCKER_USERNAME}/apiserver:${image_tag}
+    image: ${DOCKER_USERNAME}/apiserver:${IMAGE_TAG}
     env_file:
       - .env
     depends_on:
