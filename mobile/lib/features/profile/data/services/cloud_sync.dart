@@ -157,7 +157,13 @@ class CloudSyncService {
       final batch = db.batch();
       for (final row in rows) {
         final whereArgs = primaryKey.map((col) => row[col]).toList();
-        batch.update(table, {'synced': 1}, where: whereClause, whereArgs: whereArgs);
+        final updatedAt = row['updated_at'] as String;
+        batch.update(
+          table,
+          {'synced': 1},
+          where: '$whereClause AND updated_at = ?',
+          whereArgs: [...whereArgs, updatedAt],
+        );
       }
       await batch.commit(noResult: true);
     }
