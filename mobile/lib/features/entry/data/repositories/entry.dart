@@ -50,6 +50,25 @@ class EntryRepository {
     );
   }
 
+  static Future<List<Map<String, Object?>>> getHistoryByAccountId(
+    String accountId,
+  ) async {
+    final db = await AppDatabase.database;
+    return db.query(
+      _table,
+      columns: [
+        'occurred_at',
+        'amount',
+        'debit_account_id',
+        'credit_account_id',
+        'type',
+      ],
+      where: 'deleted_at IS NULL AND (debit_account_id = ? OR credit_account_id = ?)',
+      whereArgs: [accountId, accountId],
+      orderBy: 'occurred_at ASC',
+    );
+  }
+
   static Future<bool> existsByAccountId(String accountId) async {
     final db = await AppDatabase.database;
     final rows = await db.query(

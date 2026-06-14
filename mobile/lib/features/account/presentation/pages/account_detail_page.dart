@@ -5,7 +5,6 @@ import 'package:mobile/features/account/data/services/account_balance.dart';
 import 'package:mobile/features/account/domain/account.dart';
 import 'package:mobile/features/account/domain/asset_type.dart';
 import 'package:mobile/features/account/domain/constants.dart';
-import 'package:mobile/features/account/domain/liability_type.dart';
 import 'package:mobile/features/account/presentation/widgets/account_summary_header.dart';
 import 'package:mobile/features/account/presentation/widgets/add_account_sheet.dart';
 import 'package:mobile/features/entry/data/repositories/entry.dart'
@@ -61,9 +60,6 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
   }
 
   Future<_DetailData> _loadData() async {
-    _entries.clear();
-    _entryIdToTagTitles.clear();
-    _hasMoreEntries = true;
     _isLoadingInitialEntries = true;
     _isLoadingMoreEntries = false;
     _loadMoreError = null;
@@ -79,74 +75,71 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
       final balance = balances[widget.accountId] ?? 0;
       final hasEntries = await EntryRepository.existsByAccountId(widget.accountId);
       final firstBatch = await _loadEntryBatch(offset: 0);
+
+      _entries.clear();
+      _entryIdToTagTitles.clear();
       _entries.addAll(firstBatch.entries);
       _entryIdToTagTitles.addAll(firstBatch.entryIdToTagTitles);
       _hasMoreEntries = firstBatch.entries.length == _entryBatchSize;
 
-      final allEntries = await EntryRepository.getByAccountId(widget.accountId);
+      final List<({DateTime date, double balance})> balanceHistory = [];
+      final isSecurities = account.subType == AssetType.securities.name;
 
-      double totalAdjustments = 0.0;
-      for (final e in allEntries) {
-        if (e['type'] == 'adjustment') {
+      if (isSecurities) {
+        final chronological = await EntryRepository.getHistoryByAccountId(
+          widget.accountId,
+        );
+        final Map<String, ({DateTime date, double balance})> dailyBalances = {};
+
+        double runningBalance = account.initialBalance;
+        if (chronological.isNotEmpty) {
+          final firstEntryDate = DateTime.parse(
+            chronological.first['occurred_at'] as String,
+          ).toLocal();
+          final dayBefore = DateTime(
+            firstEntryDate.year,
+            firstEntryDate.month,
+            firstEntryDate.day,
+          ).subtract(const Duration(days: 1));
+          final dayBeforeKey =
+              '${dayBefore.year}-${dayBefore.month.toString().padLeft(2, '0')}-${dayBefore.day.toString().padLeft(2, '0')}';
+          dailyBalances[dayBeforeKey] = (date: dayBefore, balance: runningBalance);
+        }
+
+        for (final e in chronological) {
+          final occurredAtStr = e['occurred_at'] as String;
+          final occurredAt = DateTime.parse(occurredAtStr).toLocal();
           final amount = (e['amount'] as num?)?.toDouble() ?? 0.0;
-          if (e['debit_account_id'] == widget.accountId) {
-            totalAdjustments += amount;
-          } else if (e['credit_account_id'] == widget.accountId) {
-            totalAdjustments -= amount;
+          final debitId = e['debit_account_id'] as String? ?? '';
+          final creditId = e['credit_account_id'] as String? ?? '';
+
+          if (account.id == debitId) {
+            if (account.type == AccountType.asset) {
+              runningBalance += amount;
+            } else {
+              runningBalance -= amount;
+            }
           }
-        }
-      }
-
-      final chronological = allEntries.reversed.toList();
-      final Map<String, ({DateTime date, double balance})> dailyBalances = {};
-
-      double runningBalance = account.initialBalance;
-      if (chronological.isNotEmpty) {
-        final firstEntryDate = DateTime.parse(
-          chronological.first['occurred_at'] as String,
-        ).toLocal();
-        final dayBefore = DateTime(
-          firstEntryDate.year,
-          firstEntryDate.month,
-          firstEntryDate.day,
-        ).subtract(const Duration(days: 1));
-        final dayBeforeKey =
-            '${dayBefore.year}-${dayBefore.month.toString().padLeft(2, '0')}-${dayBefore.day.toString().padLeft(2, '0')}';
-        dailyBalances[dayBeforeKey] = (date: dayBefore, balance: runningBalance);
-      }
-
-      for (final e in chronological) {
-        final occurredAtStr = e['occurred_at'] as String;
-        final occurredAt = DateTime.parse(occurredAtStr).toLocal();
-        final amount = (e['amount'] as num?)?.toDouble() ?? 0.0;
-        final debitId = e['debit_account_id'] as String? ?? '';
-        final creditId = e['credit_account_id'] as String? ?? '';
-
-        if (account.id == debitId) {
-          if (account.type == AccountType.asset) {
-            runningBalance += amount;
-          } else {
-            runningBalance -= amount;
+          if (account.id == creditId) {
+            if (account.type == AccountType.asset) {
+              runningBalance -= amount;
+            } else {
+              runningBalance += amount;
+            }
           }
-        }
-        if (account.id == creditId) {
-          if (account.type == AccountType.asset) {
-            runningBalance -= amount;
-          } else {
-            runningBalance += amount;
-          }
+
+          final dayKey =
+              '${occurredAt.year}-${occurredAt.month.toString().padLeft(2, '0')}-${occurredAt.day.toString().padLeft(2, '0')}';
+          dailyBalances[dayKey] = (
+            date: DateTime(occurredAt.year, occurredAt.month, occurredAt.day),
+            balance: runningBalance,
+          );
         }
 
-        final dayKey =
-            '${occurredAt.year}-${occurredAt.month.toString().padLeft(2, '0')}-${occurredAt.day.toString().padLeft(2, '0')}';
-        dailyBalances[dayKey] = (
-          date: DateTime(occurredAt.year, occurredAt.month, occurredAt.day),
-          balance: runningBalance,
+        balanceHistory.addAll(
+          dailyBalances.values.toList()..sort((a, b) => a.date.compareTo(b.date)),
         );
       }
-
-      final balanceHistory = dailyBalances.values.toList()
-        ..sort((a, b) => a.date.compareTo(b.date));
 
       if (balanceHistory.isEmpty) {
         final today = DateTime.now();
@@ -160,7 +153,6 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
         balance: balance,
         hasEntries: hasEntries,
         balanceHistory: balanceHistory,
-        totalAdjustments: totalAdjustments,
       );
     } finally {
       _isLoadingInitialEntries = false;
@@ -347,11 +339,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
   }
 
   Future<void> _onDeleteAccount(_DetailData data) async {
-    final accountName =
-        data.account.name ??
-        (AssetTypeX.fromName(data.account.subType)?.label ??
-            LiabilityTypeX.fromName(data.account.subType)?.label ??
-            data.account.subType);
+    final accountName = data.account.displayName;
 
     final confirm = await ConfirmDeleteDialog.show(
       context,
@@ -419,12 +407,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
           future: _future,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
-              final name =
-                  snapshot.data!.account.name ??
-                  (AssetTypeX.fromName(snapshot.data!.account.subType)?.label ??
-                      LiabilityTypeX.fromName(snapshot.data!.account.subType)?.label ??
-                      snapshot.data!.account.subType);
-              return Text(name);
+              return Text(snapshot.data!.account.displayName);
             }
             return const Text('帳戶');
           },
@@ -605,7 +588,6 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
                   balance: data.balance,
                   privacyMode: _privacyMode,
                   balanceHistory: data.balanceHistory,
-                  totalAdjustments: data.totalAdjustments,
                   topPadding: topPadding,
                   onUpdateMarketValue: _onUpdateMarketValue,
                 ),
@@ -656,7 +638,6 @@ class _DetailData {
     required this.balance,
     required this.hasEntries,
     required this.balanceHistory,
-    required this.totalAdjustments,
   });
 
   final Account account;
@@ -664,7 +645,6 @@ class _DetailData {
   final double balance;
   final bool hasEntries;
   final List<({DateTime date, double balance})> balanceHistory;
-  final double totalAdjustments;
 }
 
 class _EntryBatchData {
@@ -721,11 +701,7 @@ class _MarketValueSheetContentState extends State<_MarketValueSheetContent> {
     super.dispose();
   }
 
-  String get _accountName =>
-      widget.account.name ??
-      (AssetTypeX.fromName(widget.account.subType)?.label ??
-          LiabilityTypeX.fromName(widget.account.subType)?.label ??
-          widget.account.subType);
+  String get _accountName => widget.account.displayName;
 
   double? get _value {
     final raw = stripAmount(_controller.text);

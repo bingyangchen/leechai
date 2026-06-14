@@ -81,9 +81,9 @@ class _CategoryFormSheetState extends State<_CategoryFormSheet> {
 
   Future<void> _onDelete() async {
     final account = widget.existingCategory!;
-    final entries = await EntryRepository.getByAccountId(account.id);
+    final hasEntries = await EntryRepository.existsByAccountId(account.id);
     if (!mounted) return;
-    if (entries.isNotEmpty) {
+    if (hasEntries) {
       await showDialog<void>(
         context: context,
         builder: (c) => AlertDialog(

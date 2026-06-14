@@ -12,7 +12,6 @@ class AccountSummaryHeader extends StatelessWidget {
     required this.balance,
     required this.privacyMode,
     required this.balanceHistory,
-    required this.totalAdjustments,
     required this.topPadding,
     this.onUpdateMarketValue,
   });
@@ -21,7 +20,6 @@ class AccountSummaryHeader extends StatelessWidget {
   final double balance;
   final bool privacyMode;
   final List<({DateTime date, double balance})> balanceHistory;
-  final double totalAdjustments;
   final double topPadding;
   final VoidCallback? onUpdateMarketValue;
 
