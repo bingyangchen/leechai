@@ -33,6 +33,10 @@ start:
 stop:
 	$(SHELL) ./scripts/stop.sh
 
+.PHONY: migrate-prod
+migrate-prod:
+	$(SHELL) ./scripts/migrate.sh prod
+
 .PHONY: start-and-recycle
 start-and-recycle:
 	$(SHELL) ./scripts/start.sh --recycle
@@ -55,8 +59,12 @@ cert:
 
 .PHONY: deploy
 deploy:
-	$(SHELL) ./scripts/prod/deploy.sh "$(image_tag)"
+	$(SHELL) ./scripts/prod/deploy.sh
 
 .PHONY: build-mobile-ios-ipa
 build-mobile-ios-ipa:
 	$(SHELL) ./scripts/mobile/build-ios-ipa.sh
+
+.PHONY: test
+test:
+	$(SHELL) ./scripts/test.sh

@@ -363,7 +363,7 @@ class _JournalPageState extends State<JournalPage> with SingleTickerProviderStat
                     child: SizeTransition(
                       sizeFactor: _collapsedBarAnimation,
                       axis: Axis.vertical,
-                      axisAlignment: -1,
+                      alignment: Alignment.topLeft,
                       child: CollapsedSummaryBar(
                         future: _future,
                         getSummary: (data) {

@@ -79,7 +79,7 @@ async def logout(
     return Response(status_code=204)
 
 
-@router.get("/me", response_model=MeResponse)
+@router.get("/me")
 async def get_me(
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> MeResponse:

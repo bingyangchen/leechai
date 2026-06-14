@@ -21,6 +21,13 @@ class Account {
   final IconData? icon;
   final double initialBalance;
 
+  String get displayName {
+    if (name != null && name!.isNotEmpty) return name!;
+    return AssetTypeX.fromName(subType)?.label ??
+        LiabilityTypeX.fromName(subType)?.label ??
+        subType;
+  }
+
   bool get isPaymentMethod {
     switch (type) {
       case AccountType.asset:

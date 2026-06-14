@@ -158,7 +158,7 @@ class AccountRepository {
     );
   }
 
-  static Future<bool> delete(String accountId) async {
+  static Future<bool> softDelete(String accountId) async {
     final db = await AppDatabase.database;
     final entries = await db.query(
       'entry',

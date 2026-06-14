@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 source "$(dirname "$(realpath "$0")")/../common.sh"
 
 check_triggered_by_make
+load_env_vars
 check_env prod
 
 if [[ -n "$(git status -s)" ]]; then
@@ -14,15 +15,10 @@ fi
 git switch main
 git pull origin main
 
-if [[ -n "${1:-}" ]]; then
-    export image_tag="$1"
-else
-    export image_tag="$(git rev-parse HEAD)"
-fi
-
-printf "${BLUE}image_tag: ${image_tag}${RESET}\n"
+export IMAGE_TAG="$(resolve_prod_pull_image_tag)"
 
 make pull-images-prod
+make migrate-prod
 make start-and-recycle
 
 printf "${GREEN} ✔ Deploy completed${RESET}\n"

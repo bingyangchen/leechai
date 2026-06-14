@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import Index, Integer, String, UniqueConstraint, func
+from sqlalchemy import Index, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.schema import ForeignKey, PrimaryKeyConstraint
 
@@ -64,7 +64,6 @@ class Tag(BaseDbModel):
     __tablename__ = "tag"
     __table_args__ = (
         PrimaryKeyConstraint("user_id", "id"),
-        UniqueConstraint("user_id", "title", "deleted_at"),
         Index("ix_tag_user_id_server_updated_at", "user_id", "server_updated_at"),
     )
     user_id: Mapped[UUID] = mapped_column(
@@ -103,7 +102,6 @@ class Budget(BaseDbModel):
     __tablename__ = "budget"
     __table_args__ = (
         PrimaryKeyConstraint("user_id", "id"),
-        UniqueConstraint("user_id", "year", "month"),
         Index("ix_budget_user_id_server_updated_at", "user_id", "server_updated_at"),
     )
 
@@ -126,7 +124,6 @@ class CategoryBudget(BaseDbModel):
     __tablename__ = "category_budget"
     __table_args__ = (
         PrimaryKeyConstraint("user_id", "id"),
-        UniqueConstraint("user_id", "year", "month", "account_id"),
         Index(
             "ix_category_budget_user_id_server_updated_at",
             "user_id",
