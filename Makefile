@@ -64,3 +64,7 @@ deploy:
 .PHONY: build-mobile-ios-ipa
 build-mobile-ios-ipa:
 	$(SHELL) ./scripts/mobile/build-ios-ipa.sh
+
+.PHONY: test
+test:
+	$(SHELL) ./scripts/test.sh
