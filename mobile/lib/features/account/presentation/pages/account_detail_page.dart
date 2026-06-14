@@ -6,6 +6,7 @@ import 'package:mobile/features/account/domain/account.dart';
 import 'package:mobile/features/account/domain/asset_type.dart';
 import 'package:mobile/features/account/domain/constants.dart';
 import 'package:mobile/features/account/domain/liability_type.dart';
+import 'package:mobile/features/account/presentation/widgets/account_summary_header.dart';
 import 'package:mobile/features/account/presentation/widgets/add_account_sheet.dart';
 import 'package:mobile/features/entry/data/repositories/entry.dart'
     show EntryRepository;
@@ -18,13 +19,10 @@ import 'package:mobile/features/entry/presentation/widgets/sticky_date_header.da
 import 'package:mobile/features/profile/data/services/achievement.dart';
 import 'package:mobile/shared/scopes/data_refresh.dart';
 import 'package:mobile/shared/theme/app_theme.dart';
-import 'package:mobile/shared/utils/refresh_snap_back.dart';
 import 'package:mobile/shared/utils/snackbar.dart';
 import 'package:mobile/shared/utils/thousand_separator_input_formatter.dart';
 import 'package:mobile/shared/widgets/app_bottom_sheet.dart';
-import 'package:mobile/shared/widgets/app_refresh_indicator.dart';
 import 'package:mobile/shared/widgets/confirm_delete_dialog.dart';
-import 'package:mobile/shared/widgets/haptic_refresh_wrapper.dart';
 
 class AccountDetailPage extends StatefulWidget {
   const AccountDetailPage({super.key, required this.accountId});
@@ -85,11 +83,84 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
       _entryIdToTagTitles.addAll(firstBatch.entryIdToTagTitles);
       _hasMoreEntries = firstBatch.entries.length == _entryBatchSize;
 
+      final allEntries = await EntryRepository.getByAccountId(widget.accountId);
+
+      double totalAdjustments = 0.0;
+      for (final e in allEntries) {
+        if (e['type'] == 'adjustment') {
+          final amount = (e['amount'] as num?)?.toDouble() ?? 0.0;
+          if (e['debit_account_id'] == widget.accountId) {
+            totalAdjustments += amount;
+          } else if (e['credit_account_id'] == widget.accountId) {
+            totalAdjustments -= amount;
+          }
+        }
+      }
+
+      final chronological = allEntries.reversed.toList();
+      final Map<String, ({DateTime date, double balance})> dailyBalances = {};
+
+      double runningBalance = account.initialBalance;
+      if (chronological.isNotEmpty) {
+        final firstEntryDate = DateTime.parse(
+          chronological.first['occurred_at'] as String,
+        ).toLocal();
+        final dayBefore = DateTime(
+          firstEntryDate.year,
+          firstEntryDate.month,
+          firstEntryDate.day,
+        ).subtract(const Duration(days: 1));
+        final dayBeforeKey =
+            '${dayBefore.year}-${dayBefore.month.toString().padLeft(2, '0')}-${dayBefore.day.toString().padLeft(2, '0')}';
+        dailyBalances[dayBeforeKey] = (date: dayBefore, balance: runningBalance);
+      }
+
+      for (final e in chronological) {
+        final occurredAtStr = e['occurred_at'] as String;
+        final occurredAt = DateTime.parse(occurredAtStr).toLocal();
+        final amount = (e['amount'] as num?)?.toDouble() ?? 0.0;
+        final debitId = e['debit_account_id'] as String? ?? '';
+        final creditId = e['credit_account_id'] as String? ?? '';
+
+        if (account.id == debitId) {
+          if (account.type == AccountType.asset) {
+            runningBalance += amount;
+          } else {
+            runningBalance -= amount;
+          }
+        }
+        if (account.id == creditId) {
+          if (account.type == AccountType.asset) {
+            runningBalance -= amount;
+          } else {
+            runningBalance += amount;
+          }
+        }
+
+        final dayKey =
+            '${occurredAt.year}-${occurredAt.month.toString().padLeft(2, '0')}-${occurredAt.day.toString().padLeft(2, '0')}';
+        dailyBalances[dayKey] = (
+          date: DateTime(occurredAt.year, occurredAt.month, occurredAt.day),
+          balance: runningBalance,
+        );
+      }
+
+      final balanceHistory = dailyBalances.values.toList()
+        ..sort((a, b) => a.date.compareTo(b.date));
+
+      if (balanceHistory.isEmpty) {
+        final today = DateTime.now();
+        final todayNormalized = DateTime(today.year, today.month, today.day);
+        balanceHistory.add((date: todayNormalized, balance: account.initialBalance));
+      }
+
       return _DetailData(
         account: account,
         accounts: allAccounts,
         balance: balance,
         hasEntries: hasEntries,
+        balanceHistory: balanceHistory,
+        totalAdjustments: totalAdjustments,
       );
     } finally {
       _isLoadingInitialEntries = false;
@@ -338,7 +409,11 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         toolbarHeight: kToolbarHeight,
         title: FutureBuilder<_DetailData>(
           future: _future,
@@ -355,19 +430,6 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
           },
         ),
         actions: [
-          FutureBuilder<_DetailData>(
-            future: _future,
-            builder: (context, snapshot) {
-              final isSecurities =
-                  snapshot.data?.account.subType == AssetType.securities.name;
-              if (!isSecurities) return const SizedBox.shrink();
-              return TextButton.icon(
-                onPressed: _onUpdateMarketValue,
-                icon: const Icon(Icons.show_chart, size: 18),
-                label: const Text('更新市值'),
-              );
-            },
-          ),
           IconButton(
             onPressed: () => setState(() => _privacyMode = !_privacyMode),
             icon: Icon(
@@ -393,72 +455,55 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
           if (data == null) return const SizedBox.shrink();
           WidgetsBinding.instance.addPostFrameCallback((_) => _maybeLoadMoreEntries());
 
+          final topPadding = MediaQuery.of(context).padding.top + 28;
+          final isSecurities = data.account.subType == AssetType.securities.name;
+          final hasChart = isSecurities && data.balanceHistory.length >= 2;
+          final headerHeight = (hasChart ? 196.0 : 80.0) + topPadding;
+
+          Widget scrollContent;
           final grouped = groupEntriesByDate(_entries);
           if (_entries.isEmpty) {
-            return HapticRefreshWrapper(
-              child: CustomScrollView(
-                controller: _scrollController,
-                physics: const BouncingScrollPhysics(
-                  parent: AlwaysScrollableScrollPhysics(),
-                ),
-                slivers: [
-                  appSliverRefreshControl(
-                    onRefresh: () =>
-                        runRefreshWithSnapBack(_scrollController, () async {
-                          // NOTE: placebo effect
-                          await Future.delayed(const Duration(milliseconds: 600));
-                          _onRefresh();
-                          await _future;
-                        }),
-                  ),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 100),
-                      child: SizedBox(
-                        height: 400,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Icon(
-                              Icons.receipt_long_outlined,
-                              size: 64,
-                              color: theme.colorScheme.outline.withValues(alpha: 0.5),
+            scrollContent = CustomScrollView(
+              controller: _scrollController,
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(child: SizedBox(height: headerHeight)),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 40),
+                    child: SizedBox(
+                      height: 400,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.receipt_long_outlined,
+                            size: 64,
+                            color: theme.colorScheme.outline.withValues(alpha: 0.5),
+                          ),
+                          const SizedBox(height: 16),
+                          Text('此帳戶尚無交易紀錄', style: theme.textStyles.titleMuted),
+                          if (_isLoadingMoreEntries) ...[
+                            const SizedBox(height: 20),
+                            const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             ),
-                            const SizedBox(height: 16),
-                            Text('此帳戶尚無交易紀錄', style: theme.textStyles.titleMuted),
-                            if (_isLoadingMoreEntries) ...[
-                              const SizedBox(height: 20),
-                              const SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              ),
-                            ],
                           ],
-                        ),
+                        ],
                       ),
                     ),
                   ),
-                ],
-              ),
-            );
-          }
-
-          return HapticRefreshWrapper(
-            child: CustomScrollView(
-              controller: _scrollController,
-              physics: const BouncingScrollPhysics(
-                parent: AlwaysScrollableScrollPhysics(),
-              ),
-              slivers: [
-                appSliverRefreshControl(
-                  onRefresh: () => runRefreshWithSnapBack(_scrollController, () async {
-                    // NOTE: placebo effect
-                    await Future.delayed(const Duration(milliseconds: 600));
-                    _onRefresh();
-                    await _future;
-                  }),
                 ),
+              ],
+            );
+          } else {
+            scrollContent = CustomScrollView(
+              controller: _scrollController,
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(child: SizedBox(height: headerHeight)),
                 for (final e in grouped.entries) ...[
                   SliverToBoxAdapter(
                     child: buildDateHeaderSection(
@@ -515,7 +560,88 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
                   ),
                 const SliverPadding(padding: EdgeInsets.only(bottom: 88)),
               ],
-            ),
+            );
+          }
+
+          return Stack(
+            children: [
+              // Layer 2: Scrollable content (List of Entries)
+              Positioned.fill(child: scrollContent),
+
+              // Layer 1: Background Mural with parallax, fade and dynamic clip height (On top for tap/scroll interactivity!)
+              AnimatedBuilder(
+                animation: _scrollController,
+                builder: (context, child) {
+                  final scrollOffset = _scrollController.hasClients
+                      ? _scrollController.offset
+                      : 0.0;
+                  final translateY = -scrollOffset * 0.3;
+                  final opacity = (1.0 - scrollOffset / 300.0).clamp(0.0, 1.0);
+                  final visibleHeight = (headerHeight - scrollOffset).clamp(
+                    0.0,
+                    double.infinity,
+                  );
+
+                  return Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: visibleHeight,
+                    child: ClipRect(
+                      child: OverflowBox(
+                        alignment: Alignment.topCenter,
+                        minHeight: headerHeight,
+                        maxHeight: headerHeight,
+                        child: Transform.translate(
+                          offset: Offset(0, translateY),
+                          child: Opacity(opacity: opacity, child: child),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+                child: AccountSummaryHeader(
+                  account: data.account,
+                  balance: data.balance,
+                  privacyMode: _privacyMode,
+                  balanceHistory: data.balanceHistory,
+                  totalAdjustments: data.totalAdjustments,
+                  topPadding: topPadding,
+                  onUpdateMarketValue: _onUpdateMarketValue,
+                ),
+              ),
+
+              // Layer 3: Custom AppBar background fading in
+              AnimatedBuilder(
+                animation: _scrollController,
+                builder: (context, child) {
+                  final scrollOffset = _scrollController.hasClients
+                      ? _scrollController.offset
+                      : 0.0;
+                  final opacity = ((scrollOffset - 40) / 60).clamp(0.0, 1.0);
+
+                  return Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: MediaQuery.of(context).padding.top,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface.withValues(alpha: opacity),
+                        border: Border(
+                          bottom: BorderSide(
+                            color: theme.colorScheme.outline.withValues(
+                              alpha: opacity * 0.12,
+                            ),
+                            width: 1,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
           );
         },
       ),
@@ -529,12 +655,16 @@ class _DetailData {
     required this.accounts,
     required this.balance,
     required this.hasEntries,
+    required this.balanceHistory,
+    required this.totalAdjustments,
   });
 
   final Account account;
   final Map<String, Account> accounts;
   final double balance;
   final bool hasEntries;
+  final List<({DateTime date, double balance})> balanceHistory;
+  final double totalAdjustments;
 }
 
 class _EntryBatchData {
