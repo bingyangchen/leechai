@@ -20,11 +20,11 @@ class _AchievementGroup {
 
 const List<_AchievementGroup> _achievementGroups = [
   _AchievementGroup(
-    title: '入門與紀錄',
+    title: '習慣起步',
     ids: ['first_entry', 'first_income', 'hundred_entries', 'thousand_entries'],
   ),
   _AchievementGroup(
-    title: '連續與節奏',
+    title: '持之以恆',
     ids: [
       'streak_7_days',
       'streak_30_days',
@@ -34,18 +34,25 @@ const List<_AchievementGroup> _achievementGroups = [
       'backfill_streak_3',
     ],
   ),
-  _AchievementGroup(title: '帳戶與分類', ids: ['second_account', 'first_custom_tag']),
+  _AchievementGroup(title: '井井有條', ids: ['second_account', 'first_custom_tag']),
   _AchievementGroup(
-    title: '預算與現金流',
+    title: '財務守護',
     ids: ['first_budget', 'budget_guardian', 'positive_cashflow'],
   ),
-  _AchievementGroup(title: '里程碑與彩蛋', ids: ['one_year', 'night_owl', 'lucky_777']),
+  _AchievementGroup(title: '時光與驚喜', ids: ['one_year', 'night_owl', 'lucky_777']),
 ];
 
+final Map<String, int> _achievementIdToOrder = {
+  for (int i = 0; i < achievementDefinitions.length; i++)
+    achievementDefinitions[i].id: i,
+};
+
 int _displayOrderIndex(String id) {
-  final index = achievementDefinitions.indexWhere((definition) => definition.id == id);
-  return index < 0 ? 9999 : index;
+  return _achievementIdToOrder[id] ?? 9999;
 }
+
+int _sortByDisplayOrder(AchievementItem a, AchievementItem b) =>
+    _displayOrderIndex(a.id).compareTo(_displayOrderIndex(b.id));
 
 bool _achievementMatchesInProgress(AchievementItem item) {
   return !item.isUnlocked &&
@@ -94,11 +101,59 @@ class _AchievementListPageState extends State<AchievementListPage>
   late AnimationController _entranceController;
   late AnimationController _pulseController;
   late Animation<double> _pulseScale;
+  late List<AchievementItem> _filteredAchievements;
+  late List<AchievementItem> _nextCards;
+  late bool _showNextSection;
+  late String? _recentLine;
+  late int _totalCount;
+  late int _unlockedCount;
+  late bool _allUnlocked;
+  late int _percent;
+  late Map<_AchievementGroup, List<AchievementItem>> _groupItems;
+
+  void _updateCachedValues(List<AchievementItem> achievements) {
+    _achievements = achievements;
+    _filteredAchievements =
+        _achievements.where((item) => _achievementMatchesFilter(item, _filter)).toList()
+          ..sort(_sortByDisplayOrder);
+
+    _totalCount = _achievements.length;
+    _unlockedCount = _countUnlocked(_achievements);
+    _allUnlocked = _totalCount > 0 && _unlockedCount == _totalCount;
+    _percent = _totalCount > 0 ? ((_unlockedCount / _totalCount) * 100).round() : 0;
+
+    final inProgressForNext =
+        _achievements.where(_achievementMatchesInProgress).toList()..sort((a, b) {
+          final byProgress = b.progress.compareTo(a.progress);
+          if (byProgress != 0) return byProgress;
+          return _displayOrderIndex(a.id).compareTo(_displayOrderIndex(b.id));
+        });
+    _nextCards = inProgressForNext.take(4).toList();
+    _showNextSection =
+        (_filter == _AchievementFilter.all ||
+            _filter == _AchievementFilter.inProgress) &&
+        _nextCards.isNotEmpty;
+
+    final recentUnlock =
+        _achievements.where((a) => a.isUnlocked && a.unlockedAt != null).toList()
+          ..sort((a, b) => b.unlockedAt!.compareTo(a.unlockedAt!));
+    _recentLine = recentUnlock.isEmpty
+        ? null
+        : '最近解鎖：${recentUnlock.first.name} · ${DateFormat('y/MM/dd').format(recentUnlock.first.unlockedAt!)}';
+
+    _groupItems = {};
+    for (final group in _achievementGroups) {
+      final idSet = group.ids.toSet();
+      _groupItems[group] =
+          _filteredAchievements.where((item) => idSet.contains(item.id)).toList()
+            ..sort(_sortByDisplayOrder);
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _achievements = widget.achievements;
+    _updateCachedValues(widget.achievements);
     widget.refreshTrigger?.addListener(_onRefreshTriggered);
     _entranceController = AnimationController(
       vsync: this,
@@ -129,6 +184,9 @@ class _AchievementListPageState extends State<AchievementListPage>
       oldWidget.refreshTrigger?.removeListener(_onRefreshTriggered);
       widget.refreshTrigger?.addListener(_onRefreshTriggered);
     }
+    if (!listEquals(oldWidget.achievements, widget.achievements)) {
+      _updateCachedValues(widget.achievements);
+    }
   }
 
   @override
@@ -149,7 +207,7 @@ class _AchievementListPageState extends State<AchievementListPage>
     loadData().then((data) {
       if (mounted) {
         setState(() {
-          _achievements = data.achievements;
+          _updateCachedValues(data.achievements);
           final after = _countUnlocked(_achievements);
           if (after != before) {
             _pulseController.forward(from: 0);
@@ -174,7 +232,6 @@ class _AchievementListPageState extends State<AchievementListPage>
     showAppBottomSheet<void>(
       context,
       title: '關於成就',
-      showCloseButton: true,
       titleAlignment: AppBottomSheetTitleAlignment.left,
       mode: AppBottomSheetMode.static,
       builder: (context) {
@@ -199,34 +256,6 @@ class _AchievementListPageState extends State<AchievementListPage>
     final textStyles = theme.textStyles;
     final mediaQuery = MediaQuery.of(context);
     final topGradientHeight = mediaQuery.size.height * 0.06;
-
-    final filtered =
-        _achievements.where((item) => _achievementMatchesFilter(item, _filter)).toList()
-          ..sort(_sortByDisplayOrder);
-
-    final totalCount = _achievements.length;
-    final unlockedCount = _countUnlocked(_achievements);
-    final allUnlocked = totalCount > 0 && unlockedCount == totalCount;
-    final percent = totalCount > 0 ? ((unlockedCount / totalCount) * 100).round() : 0;
-
-    final inProgressForNext =
-        _achievements.where(_achievementMatchesInProgress).toList()..sort((a, b) {
-          final byProgress = b.progress.compareTo(a.progress);
-          if (byProgress != 0) return byProgress;
-          return _displayOrderIndex(a.id).compareTo(_displayOrderIndex(b.id));
-        });
-    final nextCards = inProgressForNext.take(4).toList();
-    final showNextSection =
-        (_filter == _AchievementFilter.all ||
-            _filter == _AchievementFilter.inProgress) &&
-        nextCards.isNotEmpty;
-
-    final recentUnlock =
-        _achievements.where((a) => a.isUnlocked && a.unlockedAt != null).toList()
-          ..sort((a, b) => b.unlockedAt!.compareTo(a.unlockedAt!));
-    final recentLine = recentUnlock.isEmpty
-        ? null
-        : '最近解鎖：${recentUnlock.first.name} · ${DateFormat('y/MM/dd').format(recentUnlock.first.unlockedAt!)}';
 
     final heroFade = CurvedAnimation(
       parent: _entranceController,
@@ -299,11 +328,11 @@ class _AchievementListPageState extends State<AchievementListPage>
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                       child: _HeroSummaryCard(
-                        unlockedCount: unlockedCount,
-                        totalCount: totalCount,
-                        percent: percent,
-                        allUnlocked: allUnlocked,
-                        recentLine: recentLine,
+                        unlockedCount: _unlockedCount,
+                        totalCount: _totalCount,
+                        percent: _percent,
+                        allUnlocked: _allUnlocked,
+                        recentLine: _recentLine,
                         pulseScale: _pulseScale,
                       ),
                     ),
@@ -354,6 +383,7 @@ class _AchievementListPageState extends State<AchievementListPage>
                             onSelectionChanged: (selection) {
                               setState(() {
                                 _filter = selection.first;
+                                _updateCachedValues(_achievements);
                               });
                             },
                           ),
@@ -363,7 +393,7 @@ class _AchievementListPageState extends State<AchievementListPage>
                           sizeCurve: Curves.easeInOut,
                           firstCurve: Curves.easeInOut,
                           secondCurve: Curves.easeInOut,
-                          crossFadeState: showNextSection
+                          crossFadeState: _showNextSection
                               ? CrossFadeState.showFirst
                               : CrossFadeState.showSecond,
                           firstChild: Column(
@@ -375,7 +405,7 @@ class _AchievementListPageState extends State<AchievementListPage>
                                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
                                 child: Row(
                                   children: [
-                                    Text('下一步', style: textStyles.titleSmallEmphasis),
+                                    Text('即將解鎖', style: textStyles.titleSmallEmphasis),
                                     const Spacer(),
                                     Text(
                                       '依完成度',
@@ -392,7 +422,7 @@ class _AchievementListPageState extends State<AchievementListPage>
                                   scrollDirection: Axis.horizontal,
                                   padding: const EdgeInsets.symmetric(horizontal: 16),
                                   physics: const BouncingScrollPhysics(),
-                                  itemCount: nextCards.length,
+                                  itemCount: _nextCards.length,
                                   separatorBuilder: (context, index) =>
                                       const SizedBox(width: 12),
                                   itemBuilder: (context, index) {
@@ -400,9 +430,9 @@ class _AchievementListPageState extends State<AchievementListPage>
                                     return SizedBox(
                                       width: cardWidth,
                                       child: _NextAchievementCard(
-                                        item: nextCards[index],
+                                        item: _nextCards[index],
                                         onTap: () =>
-                                            _openAchievementDetail(nextCards[index]),
+                                            _openAchievementDetail(_nextCards[index]),
                                       ),
                                     );
                                   },
@@ -423,13 +453,14 @@ class _AchievementListPageState extends State<AchievementListPage>
                           transitionBuilder: (child, animation) {
                             return FadeTransition(opacity: animation, child: child);
                           },
-                          child: filtered.isEmpty
+                          child: _filteredAchievements.isEmpty
                               ? _FilterEmptyState(
                                   key: ValueKey(_filter),
                                   filter: _filter,
                                   onViewAll: () {
                                     setState(() {
                                       _filter = _AchievementFilter.all;
+                                      _updateCachedValues(_achievements);
                                     });
                                   },
                                 )
@@ -446,11 +477,13 @@ class _AchievementListPageState extends State<AchievementListPage>
                                       ) ...[
                                         _AchievementGroupSection(
                                           group: _achievementGroups[groupIndex],
-                                          items: filtered,
+                                          sectionItems:
+                                              _groupItems[_achievementGroups[groupIndex]] ??
+                                              const [],
                                           onOpen: _openAchievementDetail,
                                         ),
                                         if (groupIndex < _achievementGroups.length - 1)
-                                          const SizedBox(height: 16),
+                                          const SizedBox(height: 28),
                                       ],
                                     ],
                                   ),
@@ -485,9 +518,6 @@ class _AchievementListPageState extends State<AchievementListPage>
     );
   }
 }
-
-int _sortByDisplayOrder(AchievementItem a, AchievementItem b) =>
-    _displayOrderIndex(a.id).compareTo(_displayOrderIndex(b.id));
 
 class _HeroSummaryCard extends StatelessWidget {
   const _HeroSummaryCard({
@@ -686,15 +716,13 @@ class _NextAchievementCard extends StatelessWidget {
                 ],
               ),
               const Spacer(),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(2),
-                child: SizedBox(
-                  height: 4,
-                  child: LinearProgressIndicator(
-                    value: item.progress.clamp(0.0, 1.0),
-                    backgroundColor: colorScheme.outline.withValues(alpha: 0.18),
-                    valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
-                  ),
+              SizedBox(
+                height: 4,
+                child: LinearProgressIndicator(
+                  value: item.progress.clamp(0.0, 1.0),
+                  borderRadius: BorderRadius.circular(2),
+                  backgroundColor: colorScheme.outline.withValues(alpha: 0.18),
+                  valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
                 ),
               ),
             ],
@@ -764,21 +792,18 @@ class _FilterEmptyState extends StatelessWidget {
 class _AchievementGroupSection extends StatelessWidget {
   const _AchievementGroupSection({
     required this.group,
-    required this.items,
+    required this.sectionItems,
     required this.onOpen,
   });
 
   final _AchievementGroup group;
-  final List<AchievementItem> items;
+  final List<AchievementItem> sectionItems;
   final Future<void> Function(AchievementItem item) onOpen;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textStyles = Theme.of(context).textStyles;
-    final idSet = group.ids.toSet();
-    final sectionItems = items.where((item) => idSet.contains(item.id)).toList()
-      ..sort(_sortByDisplayOrder);
 
     if (sectionItems.isEmpty) {
       return const SizedBox.shrink();
