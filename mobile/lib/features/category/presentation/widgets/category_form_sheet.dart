@@ -105,7 +105,7 @@ class _CategoryFormSheetState extends State<_CategoryFormSheet> {
     final name = account.name ?? account.subType;
     final confirm = await ConfirmDeleteDialog.show(context, content: '確定要刪除 $name 嗎？');
     if (confirm != true || !mounted) return;
-    final deleted = await AccountRepository.delete(account.id);
+    final deleted = await AccountRepository.softDelete(account.id);
     if (!mounted) return;
     if (deleted) {
       final accountId = account.id;

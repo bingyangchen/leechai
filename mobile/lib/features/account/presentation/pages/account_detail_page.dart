@@ -288,7 +288,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
     );
     if (confirm != true || !mounted) return;
 
-    final deleted = await AccountRepository.delete(data.account.id);
+    final deleted = await AccountRepository.softDelete(data.account.id);
     if (!mounted) return;
     if (deleted) {
       final accountId = data.account.id;
