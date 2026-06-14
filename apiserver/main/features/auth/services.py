@@ -58,12 +58,7 @@ class AuthService:
 
     def _create_access_token(self, user_id: UUID) -> str:
         now = int(time.time())
-        payload = {
-            "sub": str(user_id),
-            "exp": now + self._access_expire_seconds,
-            "iat": now,
-            "token_type": "access",
-        }
+        payload = {"sub": str(user_id), "exp": now + self._access_expire_seconds}
         return jwt_encode(payload, self._jwt_secret, algorithm=self._jwt_algorithm)
 
     async def _delete_refresh_token_family(self, family_id: UUID) -> None:
@@ -129,6 +124,7 @@ class AuthService:
             ).scalar_one_or_none()
             if current_row is None:
                 raise InvalidRefreshTokenError
+
             if current_row.revoked_at is not None:
                 await self._delete_refresh_token_family(current_row.family_id)
                 reuse_detected = True
