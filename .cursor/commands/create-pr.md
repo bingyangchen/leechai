@@ -12,5 +12,6 @@
 
 - 不要理會還沒有 commit 的變更（當然，也不要 revert 這些變更）。
 - 做完這些事後，在最後提供我 PR 的網址，不要有任何除了網址外的輸出。
+- 你不需要透露這個 PR 是由 AI 建立的。
 
 如果你不清楚 `gh` 的使用方式的話，請使用 skill: `~/.agents/skills/gh-create-pr/SKILL.md`。
