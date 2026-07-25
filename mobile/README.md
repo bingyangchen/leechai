@@ -116,6 +116,19 @@ Ensure that the API server is running locally first.
 - **Step 1**: From the `mobile` directory: `flutter pub add {DEPENDENCY}` or `flutter pub remove {DEPENDENCY}`.
 - **Step 2**: For iOS-only dependencies: go to `mobile/ios` and run `pod install`.
 
+## Launcher App Name (SSOT)
+
+Desktop / home-screen display name is defined only in `pubspec.yaml` under `names_launcher`.
+
+Do not hand-edit `Info.plist`, `*.lproj/InfoPlist.strings`, or Android `strings.xml` for the app name. After changing the config, regenerate:
+
+```bash
+cd mobile
+dart run names_launcher:change
+```
+
+iOS includes `zh-Hant` in `names_launcher` so the binary ships `zh-Hant.lproj` (App Store product-page Languages can list Traditional Chinese). If you add another locale, also add that `.lproj` / `values-*` resource to the Xcode / Android project if the tool does not wire it automatically.
+
 ## 🚀 Release
 
 ### Build for iOS

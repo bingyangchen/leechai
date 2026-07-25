@@ -50,12 +50,15 @@ flutter:
     - assets/icon/google_logo.webp
 
 names_launcher:
-  name: "Leechai 理柴"
+  name:
+    default: "Leechai 理柴"
   platforms:
     android:
       enable: true
     ios:
       enable: true
+      name:
+        zh-Hant: "Leechai 理柴"
 
 flutter_launcher_icons:
   android: true
